@@ -7,8 +7,8 @@
    `keytool -genkeypair -v -keystore ~/polar-upload.jks -alias polar -keyalg RSA -keysize 4096 -validity 10000`
 3. Agregar a `~/.gradle/gradle.properties` (nunca al repositorio):
    `POLAR_STORE_FILE=/Users/<usuario>/polar-upload.jks`, `POLAR_STORE_PASSWORD=…`, `POLAR_KEY_ALIAS=polar`, `POLAR_KEY_PASSWORD=…`
-   Las cuatro propiedades `POLAR_*` deben estar juntas en `~/.gradle/gradle.properties`; si falta alguna, la versión release se firma con la llave de depuración.
-4. `cd PolarAndroid && ./gradlew bundleRelease` → subir `app/build/outputs/bundle/release/app-release.aab` con *Play App Signing* activado.
+   Las cuatro propiedades `POLAR_*` deben estar juntas. Ya no hay firma debug como alternativa; si faltan, la publicación falla. Si ya distribuiste la versión GitHub, conserva su llave privada; revisa [actualizaciones-android.md](actualizaciones-android.md) antes de elegir la firma de Play.
+4. `cd PolarAndroid && ./gradlew bundlePlay` → subir `app/build/outputs/bundle/play/app-play.aab` con *Play App Signing* activado. La build `play` desactiva el actualizador externo y elimina `REQUEST_INSTALL_PACKAGES`, como exige Google Play.
 5. Publicar `docs/privacidad.md` en una URL pública (por ejemplo GitHub Pages de la cuenta personal) y pegarla en Play Console.
 
 ## Ficha
@@ -22,7 +22,7 @@
 ## Seguridad de los datos (Data safety)
 
 - ¿Recopila datos? **No.** ¿Comparte datos? **No.**
-- Datos cifrados en tránsito: no aplica (no hay red). Eliminación de datos: el usuario borra sus diseños dentro de la app.
+- La build Play no consulta ni descarga actualizaciones de GitHub. Eliminación de datos: el usuario borra sus diseños dentro de la app. La versión distribuida por GitHub usa HTTPS para consultar/descargar actualizaciones a petición; revisa la política de privacidad por canal.
 
 ## Clasificación de contenido
 

@@ -7,6 +7,7 @@ import com.polar.app.data.BitmapLoader
 import com.polar.app.data.PhotoImporter
 import com.polar.app.data.ProjectStore
 import com.polar.app.data.SettingsRepository
+import com.polar.app.data.UpdateRepository
 import com.polar.app.engine.Thumbnailer
 import com.polar.app.export.AndroidExportService
 
@@ -17,6 +18,7 @@ class AppContainer(context: Context) {
     val exports = AndroidExportService(context, bitmaps, fonts)
     val photos = PhotoImporter(context, store, bitmaps)
     val settings = SettingsRepository(context)
+    val updates by lazy { UpdateRepository(context.applicationContext) }
     val thumbnails = Thumbnailer(fonts)
 }
 

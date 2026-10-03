@@ -4,7 +4,9 @@ Diseña e imprime tus fotos: polaroids, canción con QR, boletos, películas, ca
 
 ## Instalar el APK de prueba
 
-Si trabajas en la carpeta original, el APK de prueba está en `../Polar.apk`. Al clonar desde GitHub, compílalo con los pasos siguientes: el APK no se versiona. Envíalo al teléfono, ábrelo y permite instalar desde esa fuente si te lo pide.
+La versión release firmada está en [GitHub Releases](https://github.com/Maverick-Dev01/polar/releases). Instálala una vez; después usa **Ajustes → Actualizaciones** para buscar, descargar e instalar nuevas versiones. Android pide confirmar la instalación. Tus fotos no se envían a GitHub. [Publicar nuevas versiones y conservar la firma](../docs/actualizaciones-android.md).
+
+El APK de desarrollo local `../Polar.apk` es otra instalación (`.debug`). No se elimina al instalar release. Los APK se publican como assets de release y no forman parte del historial Git.
 
 ## Compilar
 

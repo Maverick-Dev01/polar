@@ -35,7 +35,7 @@
     <string name="settings_how_print_body">En tu impresora elige el mismo papel que en Polar y la opción «Tamaño real» o escala 100 %. Así cada tarjeta sale de su medida y las marcas de corte quedan en su lugar.</string>
     <string name="settings_licenses">Licencias de las fuentes</string>
     <string name="settings_privacy_title">Tus fotos se quedan en tu teléfono</string>
-    <string name="settings_privacy_body">Polar funciona sin internet, sin cuentas y sin anuncios. Nada se sube a ningún lado.</string>
+    <string name="settings_privacy_body">Tus fotos y diseños se quedan en el dispositivo. Diseñar e imprimir funciona sin internet. Sólo la búsqueda y descarga de actualizaciones utiliza conexión.</string>
     <string name="settings_version">Polar %1$s · Hecho para imprimir recuerdos</string>
     <string name="home_search">Buscar en tus diseños</string>
     <string name="home_sort_recent">Recientes</string>
@@ -333,4 +333,29 @@
     <plurals name="photos_count"><item quantity="one">%d foto</item><item quantity="other">%d fotos</item></plurals>
     <string name="unit_inches">pulg.</string>
     <string name="unit_mm">mm</string>
+    <string name="updates_title">Actualizaciones</string>
+    <string name="updates_installed">Versión instalada: %1$s</string>
+    <string name="updates_description">Busca una nueva versión en GitHub y descárgala aquí. Tus diseños se conservan al actualizar.</string>
+    <string name="updates_check">Buscar actualizaciones</string>
+    <string name="updates_checking">Buscando una nueva versión…</string>
+    <string name="updates_current">Tienes la versión más reciente.</string>
+    <string name="updates_not_published">Todavía no hay versiones publicadas.</string>
+    <string name="updates_available">Nueva versión: %1$s</string>
+    <string name="updates_download">Descargar actualización</string>
+    <string name="updates_download_title">Polar %1$s</string>
+    <string name="updates_download_description">Actualización de Polar solicitada desde Ajustes.</string>
+    <string name="updates_progress">Descargando: %1$d %%</string>
+    <string name="updates_waiting">Esperando conexión para continuar…</string>
+    <string name="updates_verifying">Verificando el archivo y su firma…</string>
+    <string name="updates_ready">Descarga verificada. Android te pedirá confirmar la instalación. Si lo solicita, permite a Polar instalar esta actualización.</string>
+    <string name="updates_install">Instalar actualización</string>
+    <string name="updates_discard">Descartar descarga</string>
+    <string name="updates_error">No se pudo buscar la actualización. Revisa tu conexión e inténtalo de nuevo.</string>
+    <string name="updates_verification_error">La descarga falló o no pasó la verificación. Puedes volver a descargarla.</string>
+    <string name="updates_incompatible">La nueva versión necesita una versión más reciente de Android.</string>
+    <string name="updates_cancelled">Descarga descartada. Puedes buscar actualizaciones cuando quieras.</string>
+    <string name="updates_permission_denied">La instalación no está permitida. Pulsa Instalar actualización para volver a habilitarla.</string>
+    <string name="updates_install_unavailable">No se pudo abrir el instalador. Puedes intentarlo de nuevo.</string>
+    <string name="updates_debug">Esta es la versión de desarrollo. Para instalar actualizaciones utiliza la versión release de GitHub.</string>
+    <string name="updates_play">Esta versión recibe sus actualizaciones desde Google Play.</string>
 </resources>

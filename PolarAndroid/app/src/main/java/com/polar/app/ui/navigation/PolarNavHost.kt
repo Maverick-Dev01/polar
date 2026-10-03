@@ -12,6 +12,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.polar.app.AppContainer
+import com.polar.app.BuildConfig
 import com.polar.app.data.AppSettings
 import com.polar.app.data.BitmapLoader
 import com.polar.app.ui.catalog.CatalogScreen
@@ -20,6 +21,7 @@ import com.polar.app.ui.home.*
 import com.polar.app.ui.onboarding.OnboardingScreen
 import com.polar.app.ui.rememberReduceMotion
 import com.polar.app.ui.settings.SettingsScreen
+import com.polar.app.ui.settings.UpdateViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -58,7 +60,7 @@ fun PolarNavHost(container: AppContainer, startOnboarding: Boolean) {
                 thumbnailFile = container.store::thumbnailFile,
                 onOpen = { nav.navigate(EditorRoute(it)) { launchSingleTop = true } },
                 onNew = { nav.navigate(CatalogRoute) },
-                onSettings = { nav.navigate(SettingsRoute) }
+                onSettings = { nav.navigate(SettingsRoute) { launchSingleTop = true } }
             )
         }
         composable<CatalogRoute> {
@@ -101,13 +103,17 @@ fun PolarNavHost(container: AppContainer, startOnboarding: Boolean) {
         }
         composable<SettingsRoute> {
             val settings by container.settings.settings.collectAsStateWithLifecycle(initialValue = AppSettings())
+            val updates: UpdateViewModel? = if (BuildConfig.GITHUB_UPDATES_ENABLED) viewModel(factory = viewModelFactory {
+                initializer { UpdateViewModel(container.updates) }
+            }) else null
             SettingsScreen(
                 settings = settings,
                 onTheme = { scope.launch { container.settings.setTheme(it) } },
                 onUnits = { scope.launch { container.settings.setUnits(it) } },
                 onPaper = { scope.launch { container.settings.setDefaultPaper(it) } },
                 onShowOnboarding = { nav.navigate(OnboardingRoute) },
-                onBack = { nav.popBackStack() }
+                onBack = { nav.popBackStack() },
+                updates = updates
             )
         }
     }

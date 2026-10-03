@@ -31,7 +31,8 @@ fun SettingsScreen(
     onUnits: (Units) -> Unit,
     onPaper: (PaperSize) -> Unit,
     onShowOnboarding: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    updates: UpdateViewModel? = null
 ) {
     var dialog by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
@@ -75,6 +76,9 @@ fun SettingsScreen(
                     }
                 }
             }
+            if (updates != null) UpdateSection(updates)
+            else Text(stringResource(R.string.updates_play), style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
             OutlinedCard {
                 RowItem(stringResource(R.string.settings_show_onboarding), onShowOnboarding)
                 HorizontalDivider()

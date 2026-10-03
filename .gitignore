@@ -21,9 +21,12 @@ PolarMac/.build/
 local.properties
 *.keystore
 *.jks
+.polar-signing/
+release-assets/
 
 # Sistema / IDE
 .DS_Store
+__pycache__/
 .idea/
 *.iml
 captures/

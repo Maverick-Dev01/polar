@@ -1,4 +1,6 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import groovy.json.JsonOutput
+import java.security.MessageDigest
 
 plugins {
     alias(libs.plugins.android.application)
@@ -15,15 +17,17 @@ android {
         applicationId = "io.github.maverickdev01.polar"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "2.1.0"
+        versionCode = providers.gradleProperty("POLAR_VERSION_CODE").getOrElse("4").toInt()
+        versionName = providers.gradleProperty("POLAR_VERSION_NAME").getOrElse("2.1.1")
+        buildConfigField("boolean", "GITHUB_UPDATES_ENABLED", "true")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
     }
 
-    // La firma de publicación sólo se crea con las cuatro propiedades juntas; si falta alguna, release se firma con la de depuración.
+    // La llave queda fuera de Git; una publicación nunca usa la firma de depuración.
     val signingKeys = listOf("POLAR_STORE_FILE", "POLAR_STORE_PASSWORD", "POLAR_KEY_ALIAS", "POLAR_KEY_PASSWORD")
-        .map { providers.gradleProperty(it).orNull }
+        .map { providers.gradleProperty(it).orElse(providers.environmentVariable(it)).orNull }
+    require(signingKeys.all { it == null } || signingKeys.all { !it.isNullOrBlank() }) { "Configura las cuatro propiedades POLAR_* de firma juntas." }
     signingConfigs {
         if (signingKeys.all { it != null }) create("release") {
             storeFile = file(signingKeys[0]!!)
@@ -38,19 +42,23 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // Sin llave propia se firma con la de depuración: sirve para probar, no para subir a Play.
-            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("release")
         }
         debug {
             applicationIdSuffix = ".debug"
             isDebuggable = true
+        }
+        create("play") {
+            initWith(getByName("release"))
+            buildConfigField("boolean", "GITHUB_UPDATES_ENABLED", "false")
+            matchingFallbacks += "release"
         }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    buildFeatures { compose = true }
+    buildFeatures { compose = true; buildConfig = true }
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
@@ -58,6 +66,38 @@ android {
         }
     }
     packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
+}
+
+tasks.matching { it.name in setOf("packageRelease", "packageReleaseBundle", "signReleaseBundle", "packagePlay", "packagePlayBundle", "signPlayBundle") }.configureEach {
+    doFirst {
+        check(listOf("POLAR_STORE_FILE", "POLAR_STORE_PASSWORD", "POLAR_KEY_ALIAS", "POLAR_KEY_PASSWORD").all {
+            !providers.gradleProperty(it).orElse(providers.environmentVariable(it)).orNull.isNullOrBlank()
+        }) { "Falta la firma privada. Ejecuta python tools/android-release.py desde la raíz o configura las cuatro propiedades POLAR_*." }
+    }
+}
+
+tasks.register("prepareGithubRelease") {
+    dependsOn("assembleRelease")
+    doLast {
+        val version = android.defaultConfig.versionName!!
+        check(version.matches(Regex("[0-9]{1,4}\\.[0-9]{1,4}\\.[0-9]{1,4}")))
+        val output = rootProject.projectDir.parentFile.resolve("release-assets")
+        output.mkdirs()
+        val apk = layout.buildDirectory.file("outputs/apk/release/app-release.apk").get().asFile
+        val published = output.resolve("Polar-$version.apk")
+        apk.copyTo(published, overwrite = true)
+        val digest = MessageDigest.getInstance("SHA-256")
+        published.inputStream().use { input -> val buffer = ByteArray(65536); while (true) { val count = input.read(buffer); if (count < 0) break; digest.update(buffer, 0, count) } }
+        val sha = digest.digest().joinToString("") { "%02x".format(it) }
+        val info = linkedMapOf("schemaVersion" to 1, "packageName" to android.defaultConfig.applicationId,
+            "versionCode" to android.defaultConfig.versionCode, "versionName" to version, "minSdk" to 26,
+            "apkUrl" to "https://github.com/Maverick-Dev01/polar/releases/download/android-v$version/Polar-$version.apk",
+            "sha256" to sha, "sizeBytes" to published.length(),
+            "notes" to providers.gradleProperty("POLAR_RELEASE_NOTES").getOrElse("Busca actualizaciones desde Ajustes. Descarga verificada e instalación con confirmación de Android."))
+        output.resolve("update.json").writeText(JsonOutput.prettyPrint(JsonOutput.toJson(info)) + "\n")
+        output.resolve("SHA256SUMS.txt").writeText("$sha  ${published.name}\n")
+        println("Release preparado: ${published.name}, update.json y SHA256SUMS.txt")
+    }
 }
 
 kotlin {

@@ -2,7 +2,9 @@
 
 Aplicaciones nativas para Android y Mac que convierten fotografías en hojas listas para imprimir: polaroids, boletos, tiras de película, calendarios, fotos con canción y moldes propios. Incluyen texto editable, encuadre, filtros no destructivos, autoguardado y exportación PDF/PNG.
 
-Versión actual: **2.1.0**, build **3**. La rama de trabajo publicada es **`global`**.
+Android: **2.1.1**, build **4**. Mac: **2.1.0**, build **3**. La rama de trabajo publicada es **`global`**.
+
+[Descargar Android release](https://github.com/Maverick-Dev01/polar/releases). Después de instalarla una vez, **Ajustes → Actualizaciones** busca y descarga nuevas versiones, con confirmación del instalador Android. [Preparar y publicar actualizaciones](docs/actualizaciones-android.md); la llave privada debe conservarse para poder publicar desde otro equipo.
 
 ## Stack tecnológico
 
@@ -15,7 +17,7 @@ Versión actual: **2.1.0**, build **3**. La rama de trabajo publicada es **`glob
 | Pruebas | JUnit 4, Robolectric, Compose UI/instrumentación Android y ejecutables de pruebas Swift. |
 | Datos | Proyectos `.polar` en JSON compatibles entre las dos apps; biblioteca y copias de fotos guardadas localmente. |
 
-Son dos aplicaciones nativas, con código de interfaz separado y el mismo contrato de proyecto/filtros. No requieren servidor, base de datos externa, Node.js, Flutter, API keys ni cuenta para usar la aplicación. Internet se necesita para clonar y descargar herramientas/dependencias la primera vez.
+Son dos aplicaciones nativas, con código de interfaz separado y el mismo contrato de proyecto/filtros. No requieren servidor, base de datos externa, Node.js, Flutter, API keys ni cuenta para usar la aplicación. Internet se necesita para clonar y descargar herramientas/dependencias la primera vez, y para buscar/descargar actualizaciones Android desde GitHub. Diseñar e imprimir sigue funcionando sin conexión.
 
 ## Continuar Android en Windows
 
@@ -79,7 +81,7 @@ Se genera `Polar.app` en la raíz, con firma local. Conserva también `PolarAndr
 
 Las fotos personales, proyectos exportados con datos personales, capturas, bibliotecas, APK/APP compilados, SDK local y llaves de firma **no se suben**. En otro equipo debes compilar la app y elegir tus propias fotos. Las licencias de las fuentes incluidas están en `PolarAndroid/app/src/main/assets/licenses/`.
 
-Para publicar en Play Store, sigue [docs/play-store.md](docs/play-store.md). La firma de publicación se configura de forma privada; sin ella, el build release existente usa firma de depuración y sirve para pruebas.
+Para publicar en Play Store, sigue [docs/play-store.md](docs/play-store.md) y usa `bundlePlay`: esa build desactiva las actualizaciones externas. La firma de publicación es privada y obligatoria; no se usa una firma debug como alternativa. Python 3 y GitHub CLI sólo se requieren para el script que prepara/publica releases, no para desarrollar Android normalmente.
 
 ## Verificación y continuidad
 
