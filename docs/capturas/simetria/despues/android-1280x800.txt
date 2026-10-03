@@ -1,0 +1,6 @@
+
+com.polar.app.SymmetryAuditCaptureTest:.
+
+Time: 36.106
+
+OK (1 test)

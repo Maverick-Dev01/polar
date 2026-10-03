@@ -1,0 +1,10 @@
+<resources>
+    <style name="Theme.Polar" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/polar_night</item>
+    </style>
+    <style name="Theme.Polar.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/polar_night</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.Polar</item>
+    </style>
+</resources>

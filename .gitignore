@@ -1,0 +1,37 @@
+# Fotos y archivos personales
+Fotitos/
+*.jpg
+*.jpeg
+*.png
+*.pdf
+*.heic
+*.polar
+Polaroid Spotify*
+verificar-fotitos.py
+
+# Compilados y paquetes
+Polar.apk
+Polar.app/
+*.apk
+*.aab
+build/
+.gradle/
+.kotlin/
+PolarMac/.build/
+local.properties
+*.keystore
+*.jks
+
+# Sistema / IDE
+.DS_Store
+.idea/
+*.iml
+captures/
+
+# Imágenes que sí son parte del código
+!PolarAndroid/app/src/**/*.png
+!PolarMac/Examples/*.png
+!PolarAndroid/app/src/test/resources/fixtures/*.polar
+
+# Ejemplo local con fotografías personales; conservarlo fuera del repositorio.
+PolarMac/Examples/Plantilla importada - hoja 1.png

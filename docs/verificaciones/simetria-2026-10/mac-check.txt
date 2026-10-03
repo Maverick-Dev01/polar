@@ -1,0 +1,17 @@
+OK: 100 ediciones/autoguardado, salida, reapertura, texto por tarjeta, historial agrupado, ajustes, duplicar/borrar/deshacer, copias intactas, quitar hojas y fallo de E/S
+ImporterChecks: natural order, canonical dedup, immediate folders, EXIF 5–8, oriented thumbnails, unreadable files, unchanged originals and 2000-photo limit passed
+OK: JSON cruzado, alcance/resolver, película, rangos, 40 RGB literales, composición, intensidad, grano y encuadre
+OK: 40 píxeles nativos, alfa, composición, intensidad cero, grano real a dos escalas, PDF/PNG y una foto de película
+OK: scopes de UI, foto de película, aplicar todas/deshacer, gesto, rehacer, comparación sin guardar y validación antes de editar
+OK: capacidad, páginas, persistencia y validación del modelo
+2026-10-02 19:47:14.107 check-ParityChecks[77213:9364122] attributedStringScaled count: 1
+2026-10-02 19:47:14.107 check-ParityChecks[77213:9364122] attributedStringScaled i: 0
+2026-10-02 19:47:14.124 check-ParityChecks[77213:9364122] attributedStringScaled count: 1
+2026-10-02 19:47:14.124 check-ParityChecks[77213:9364122] attributedStringScaled i: 0
+Parity checks passed: legacy and Android JSON, override validation/remap, dates/EXIF, 20 fonts, per-card PDF, empty cards, date layouts and native emoji
+2026-10-02 19:47:20.305 check-RendererChecks[77236:9364333] attributedStringScaled count: 1
+2026-10-02 19:47:20.305 check-RendererChecks[77236:9364333] attributedStringScaled i: 0
+Noisy fixture PDF: 664922 bytes; conservative estimate for 44 photos: 29256568 bytes.
+Renderer checks passed: 20 layouts, 8 papers × 2 orientations, empty cards omitted, typography, mixed template, PDF/PNG300, EXIF, QR, calendar, original protection and atomic output.
+OK: deshacer, selección, huecos multipágina, 44 fotos/11 hojas, roles editables, importación al límite y symlink >5MB
+TemplateChecks: transparent and white holes, borders, EXIF orientation, downsampling, fallback, row order, 64-region cap, unchanged originals, unreadable files and persistence passed

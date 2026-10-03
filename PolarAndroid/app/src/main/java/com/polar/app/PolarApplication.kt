@@ -1,0 +1,32 @@
+package com.polar.app
+
+import android.app.Application
+import android.content.Context
+import com.polar.app.data.AndroidFontProvider
+import com.polar.app.data.BitmapLoader
+import com.polar.app.data.PhotoImporter
+import com.polar.app.data.ProjectStore
+import com.polar.app.data.SettingsRepository
+import com.polar.app.engine.Thumbnailer
+import com.polar.app.export.AndroidExportService
+
+class AppContainer(context: Context) {
+    val store = ProjectStore(context.filesDir)
+    val bitmaps = BitmapLoader(context)
+    val fonts = AndroidFontProvider(context)
+    val exports = AndroidExportService(context, bitmaps, fonts)
+    val photos = PhotoImporter(context, store, bitmaps)
+    val settings = SettingsRepository(context)
+    val thumbnails = Thumbnailer(fonts)
+}
+
+class PolarApplication : Application() {
+    lateinit var container: AppContainer
+        private set
+
+    override fun onCreate() {
+        super.onCreate()
+        container = AppContainer(this)
+        container.store.emptyTrash() // lo borrado en la sesión anterior ya no se puede deshacer
+    }
+}

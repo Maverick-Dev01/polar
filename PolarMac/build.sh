@@ -1,0 +1,17 @@
+#!/bin/zsh
+set -eu
+BASE_DIR="$(cd -- "$(dirname -- "$0")" && pwd)"
+APP_DIR="$BASE_DIR/../Polar.app"
+CACHE_DIR="/private/tmp/polar-module-cache"
+mkdir -p "$APP_DIR/Contents/MacOS" "$APP_DIR/Contents/Resources" "$BASE_DIR/.build"
+xcrun swiftc -swift-version 5 -O -target arm64-apple-macos14.0 -module-cache-path "$CACHE_DIR" "$BASE_DIR"/Sources/*.swift -o "$APP_DIR/Contents/MacOS/Polar"
+xcrun swiftc -swift-version 5 -module-cache-path "$CACHE_DIR" "$BASE_DIR/Tools/Icon.swift" -o "$BASE_DIR/.build/make-icon"
+"$BASE_DIR/.build/make-icon" "$BASE_DIR/.build/Polar.iconset"
+iconutil -c icns "$BASE_DIR/.build/Polar.iconset" -o "$APP_DIR/Contents/Resources/Polar.icns"
+cp "$BASE_DIR/Info.plist" "$APP_DIR/Contents/Info.plist"
+mkdir -p "$APP_DIR/Contents/Resources/fonts" "$APP_DIR/Contents/Resources/licenses"
+cp "$BASE_DIR"/../PolarAndroid/app/src/main/res/font/*.ttf "$APP_DIR/Contents/Resources/fonts/"
+cp "$BASE_DIR"/../PolarAndroid/app/src/main/assets/fonts/*.ttf "$APP_DIR/Contents/Resources/fonts/"
+cp "$BASE_DIR"/../PolarAndroid/app/src/main/assets/licenses/* "$APP_DIR/Contents/Resources/licenses/"
+codesign --force --sign - "$APP_DIR"
+print "Lista: $APP_DIR"

@@ -1,0 +1,7 @@
+2 de octubre de 2026
+Polar Android 2.1.0 (3)
+187 pruebas / 0 fallos / 0 omitidas / 34 suites
+Lint: {'Warning': 63}
+Build limpio debug y release: exit 0
+Recorrido nativo: 6 pruebas / 0 fallos
+Capturas antes132, después216

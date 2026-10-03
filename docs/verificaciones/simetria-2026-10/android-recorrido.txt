@@ -1,0 +1,7 @@
+
+com.polar.app.DeviceSmokeTest:.....
+com.polar.app.PhotoFiltersFlowTest:.
+
+Time: 12.509
+
+OK (6 tests)

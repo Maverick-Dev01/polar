@@ -1,0 +1,2 @@
+/Users/cattaherrrera/Downloads/Polar/PolarMac/../Polar.app: replacing existing signature
+Lista: /Users/cattaherrrera/Downloads/Polar/PolarMac/../Polar.app

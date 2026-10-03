@@ -1,0 +1,2 @@
+Polar.app: valid on disk
+Polar.app: satisfies its Designated Requirement

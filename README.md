@@ -1,1 +1,90 @@
-# polar
+# Polar · Fotos para imprimir
+
+Aplicaciones nativas para Android y Mac que convierten fotografías en hojas listas para imprimir: polaroids, boletos, tiras de película, calendarios, fotos con canción y moldes propios. Incluyen texto editable, encuadre, filtros no destructivos, autoguardado y exportación PDF/PNG.
+
+Versión actual: **2.1.0**, build **3**. La rama de trabajo publicada es **`global`**.
+
+## Stack tecnológico
+
+| Parte | Tecnologías |
+| --- | --- |
+| Android | Kotlin **2.2.0**, Jetpack Compose (BOM **2025.06.01**), Material 3, AndroidX/ViewModel, coroutines **1.10.2**, kotlinx.serialization **1.9.0** y DataStore. |
+| Compilación Android | Android Gradle Plugin **8.11.1**, Gradle Wrapper **8.14.3**, bytecode Java/Kotlin **17**. `compileSdk`/`targetSdk` **36**, `minSdk` **26** (Android 8.0). |
+| Fotos, PDF y QR | Canvas/Bitmap, ColorMatrix, PdfDocument/PdfRenderer, AndroidX ExifInterface y ZXing **3.5.3**. Un motor compartido dentro de cada app genera la vista previa y la exportación. |
+| Mac | **Swift**, **SwiftUI**, **AppKit**, Core Graphics, ImageIO y Core Image. Compilación con `swiftc`/Command Line Tools, macOS **14+**, **Apple Silicon**. |
+| Pruebas | JUnit 4, Robolectric, Compose UI/instrumentación Android y ejecutables de pruebas Swift. |
+| Datos | Proyectos `.polar` en JSON compatibles entre las dos apps; biblioteca y copias de fotos guardadas localmente. |
+
+Son dos aplicaciones nativas, con código de interfaz separado y el mismo contrato de proyecto/filtros. No requieren servidor, base de datos externa, Node.js, Flutter, API keys ni cuenta para usar la aplicación. Internet se necesita para clonar y descargar herramientas/dependencias la primera vez.
+
+## Continuar Android en Windows
+
+**Sí se puede desarrollar y compilar Android desde Windows.** La app Mac requiere macOS para compilar y ejecutar SwiftUI/AppKit.
+
+1. Instala Git y [Android Studio para Windows](https://developer.android.com/studio/install), en una versión compatible con AGP 8.11.1.
+2. Usa **JDK 21** para reproducir el entorno probado; AGP requiere como mínimo JDK 17. Selecciónalo en **Settings → Build, Execution, Deployment → Build Tools → Gradle → Gradle JDK**. Para la terminal, configura `JAVA_HOME` con la misma carpeta del JDK, sin añadir `bin`. [Configuración oficial del JDK](https://developer.android.com/build/jdks).
+3. En SDK Manager instala **Android SDK Platform 36**, **Build Tools 35.0.0** y **Platform-Tools**. Para usar emulador, instala además Android Emulator y una imagen del sistema. [Compatibilidad de AGP 8.11](https://developer.android.com/build/releases/agp-8-11-0-release-notes).
+4. Clona y abre **la carpeta `PolarAndroid`**, que contiene `settings.gradle.kts`, en Android Studio. Espera a que termine la sincronización de Gradle.
+
+```powershell
+git clone --branch global https://github.com/Maverick-Dev01/polar.git
+cd polar\PolarAndroid
+.\gradlew.bat testDebugUnitTest lintDebug assembleDebug
+```
+
+Gradle se descarga con el wrapper incluido: **no hace falta instalarlo por separado**. Si Android Studio no encuentra el SDK, crea `PolarAndroid/local.properties` con tu ruta local, usando barras `/`, por ejemplo:
+
+```properties
+sdk.dir=C:/Users/TU_USUARIO/AppData/Local/Android/Sdk
+```
+
+No copies `local.properties` de la Mac: cada equipo tiene su propia ruta. No se versiona. Para probar la app, selecciona un teléfono con depuración USB o crea un dispositivo en Device Manager y pulsa Run. El emulador requiere virtualización habilitada; puedes usar un teléfono físico si prefieres evitarlo.
+
+APK generado: `PolarAndroid/app/build/outputs/apk/debug/app-debug.apk`. Para ejecutar las pruebas nativas, conecta **un** dispositivo/emulador y usa `.\gradlew.bat connectedDebugAndroidTest`. Más detalles en [PolarAndroid/README.md](PolarAndroid/README.md).
+
+## Android desde macOS o Linux
+
+Instala el SDK y JDK 21, configura la ruta local del SDK y ejecuta:
+
+```sh
+cd PolarAndroid
+./gradlew testDebugUnitTest lintDebug assembleDebug
+```
+
+## Compilar Mac
+
+En un Mac con Apple Silicon y macOS 14 o posterior, instala las Command Line Tools si no las tienes:
+
+```sh
+xcode-select --install
+```
+
+Después, desde el repositorio:
+
+```sh
+cd PolarMac
+./check.sh
+./build.sh
+```
+
+Se genera `Polar.app` en la raíz, con firma local. Conserva también `PolarAndroid`: el script Mac toma de ahí las fuentes tipográficas y sus licencias. [Uso y detalles Mac](PolarMac/README.md).
+
+## Contenido del repositorio
+
+| Ruta | Contenido |
+| --- | --- |
+| `PolarAndroid/` | App Android, wrapper, recursos y pruebas. |
+| `PolarMac/` | App Mac, scripts, pruebas y un molde vacío de ejemplo. |
+| `docs/` | Diseño, contrato de filtros, planes, verificación y guía de publicación. |
+
+Las fotos personales, proyectos exportados con datos personales, capturas, bibliotecas, APK/APP compilados, SDK local y llaves de firma **no se suben**. En otro equipo debes compilar la app y elegir tus propias fotos. Las licencias de las fuentes incluidas están en `PolarAndroid/app/src/main/assets/licenses/`.
+
+Para publicar en Play Store, sigue [docs/play-store.md](docs/play-store.md). La firma de publicación se configura de forma privada; sin ella, el build release existente usa firma de depuración y sirve para pruebas.
+
+## Verificación y continuidad
+
+[Verificación de la versión 2.1.0](docs/verificacion-simetria-filtros-2026-10-02.md): 187 pruebas Android, 6 pruebas nativas y 10 suites Mac; compilación y firma verificadas en macOS. **No se ha ejecutado la suite en un equipo Windows**. Las capturas personales referidas en ese informe permanecen locales y no aparecen al clonar.
+
+[Contrato de filtros y compatibilidad](docs/filtros.md). Los `.polar` exportados guardan referencias a fotos y plantillas: mover sólo ese JSON a otro equipo no lleva los archivos de imagen.
+
+La publicación inicial de `global` conserva el commit original del remoto y añade una copia limpia de la versión actual. El historial de desarrollo anterior permanece en las ramas locales, porque incluía una imagen personal y proyectos de trabajo; esas ramas antiguas no se publican.
