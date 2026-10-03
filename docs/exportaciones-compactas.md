@@ -55,3 +55,9 @@ La publicación utiliza la misma llave release Android que 2.1.1 y código 5; el
 - ZIP `Polar-Mac-2.1.2.zip`: 3,469,109 bytes; SHA-256 `ae0396b70bfa88945db364fb86ad843a1d76d3eeadeb935a5a79d6f19c7cf63f`.
 - Certificado release Android SHA-256 `cd5a37bea894d1f30d53704caa7fe1af83afe6aa60d957951cd3bf9f07c4444e`, igual que 2.1.1; `apksigner` verifica el APK. Se comprobó versión 2.1.2/código 5, paquete de producción y SDK 26 mínimo/36 target.
 - Mac: ejecutable arm64, plist 2.1.2/build 5, `codesign --verify --deep --strict` y contenido/integridad ZIP comprobados. La app se reabrió con su biblioteca intacta y los nuevos formatos aparecen en el menú Imprimir.
+
+## Actualización desde la app instalada
+
+En el emulador se probó la actualización pública desde 2.1.1/código 4 a 2.1.2/código 5 mediante Ajustes → Actualizaciones: búsqueda, descarga de GitHub, verificación del APK y confirmación del instalador nativo. PackageManager confirmó 2.1.2/5; al reabrir se conservó el mismo diseño en la biblioteca y el modo oscuro. No se desinstaló la app ni se borraron datos.
+
+El enlace público `releases/latest/download/update.json` coincide byte por byte con el manifiesto preparado. Se descargaron APK, ZIP Mac y checksums sin autenticación; sus tamaños y SHA-256 coinciden con los archivos locales verificados. Código publicado en `global`, release [android-v2.1.2](https://github.com/Maverick-Dev01/polar/releases/tag/android-v2.1.2).
