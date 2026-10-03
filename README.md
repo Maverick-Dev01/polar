@@ -79,11 +79,13 @@ Se genera `Polar.app` en la raíz, con firma local. Conserva también `PolarAndr
 | `PolarMac/` | App Mac, scripts, pruebas y un molde vacío de ejemplo. |
 | `docs/` | Diseño, contrato de filtros, planes, verificación y guía de publicación. |
 
-Las fotos personales, proyectos exportados con datos personales, capturas, bibliotecas, APK/APP compilados, SDK local y llaves de firma **no se suben**. En otro equipo debes compilar la app y elegir tus propias fotos. Las licencias de las fuentes incluidas están en `PolarAndroid/app/src/main/assets/licenses/`.
+Las fotos personales, proyectos exportados con datos personales, capturas, bibliotecas, APK/APP compilados, SDK local y llaves de firma **no se incluyen en el historial Git**. Los APK release firmados se publican como archivos de GitHub Releases. En otro equipo puedes descargar esa release o compilar la app y elegir tus propias fotos. Las licencias de las fuentes incluidas están en `PolarAndroid/app/src/main/assets/licenses/`.
 
 Para publicar en Play Store, sigue [docs/play-store.md](docs/play-store.md) y usa `bundlePlay`: esa build desactiva las actualizaciones externas. La firma de publicación es privada y obligatoria; no se usa una firma debug como alternativa. Python 3 y GitHub CLI sólo se requieren para el script que prepara/publica releases, no para desarrollar Android normalmente.
 
 ## Verificación y continuidad
+
+[Verificación de las actualizaciones Android 2.1.1](docs/verificacion-actualizaciones-android-2026-10-02.md): 195 pruebas unitarias, 6 pruebas nativas y actualización completa desde GitHub en emulador, con conservación del diseño y modo oscuro.
 
 [Verificación de la versión 2.1.0](docs/verificacion-simetria-filtros-2026-10-02.md): 187 pruebas Android, 6 pruebas nativas y 10 suites Mac; compilación y firma verificadas en macOS. **No se ha ejecutado la suite en un equipo Windows**. Las capturas personales referidas en ese informe permanecen locales y no aparecen al clonar.
 
