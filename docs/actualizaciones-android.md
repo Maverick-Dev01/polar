@@ -39,7 +39,7 @@ En Mac puedes usar `python3`. El script conserva la llave existente y ejecuta `p
 gh release create android-v2.1.2 release-assets/Polar-2.1.2.apk release-assets/update.json release-assets/SHA256SUMS.txt --repo Maverick-Dev01/polar --target SHA_DEL_COMMIT --title "Polar Android 2.1.2" --notes-file notas-release.md --latest
 ```
 
-GitHub Releases aloja directamente el APK y mantiene el historial. No requiere GitHub Pages. No reemplaces el APK de un tag ya instalado por otra compilación: aumenta la versión y crea otra release. Reserva la release marcada **Latest** para Android, porque el enlace del cliente busca su `update.json`.
+GitHub Releases aloja directamente el APK y mantiene el historial. No requiere GitHub Pages. No reemplaces el APK de un tag ya instalado por otra compilación: aumenta la versión y crea otra release. Reserva la release marcada **Latest** para Android, porque el enlace del cliente busca su `update.json`. Puedes adjuntar también el ZIP Mac y añadir su SHA-256 a SHA256SUMS.txt; no publiques una release Latest sin el manifiesto Android.
 
 ## Google Play
 

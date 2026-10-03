@@ -96,6 +96,7 @@ fun EditorScreen(vm: EditorViewModel, container: AppContainer, notice: String?, 
         }
     }
     val savePdf = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { copyTo(it, "application/pdf") }
+    val saveJpg = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("image/jpeg")) { copyTo(it, "image/jpeg") }
     val savePng = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("image/png")) { copyTo(it, "image/png") }
 
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { vm.flushAsync() }
@@ -121,7 +122,11 @@ fun EditorScreen(vm: EditorViewModel, container: AppContainer, notice: String?, 
                             Log.w("Polar", "No se pudo abrir la impresión", ex)
                             showMessage(actionFailed)
                         }
-                        ExportAction.SAVE -> if (e.pdf) savePdf.launch(e.file.name) else savePng.launch(e.file.name)
+                        ExportAction.SAVE -> when (e.mime) {
+                            "application/pdf" -> savePdf.launch(e.file.name)
+                            "image/jpeg" -> saveJpg.launch(e.file.name)
+                            else -> savePng.launch(e.file.name)
+                        }
                         ExportAction.SHARE -> if (!Share.file(context, e.file, e.mime, e.file.name)) showMessage(shareUnavailable)
                     }
                 }
@@ -150,9 +155,13 @@ fun EditorScreen(vm: EditorViewModel, container: AppContainer, notice: String?, 
             onBack = { vm.setMode(EditorMode.EDIT) }
         )
         EditorMode.CROP -> CropScreen(state, vm, container)
-        EditorMode.FINISH -> FinishScreen(state, vm, container, snackbar) { action, pdf ->
+        EditorMode.FINISH -> FinishScreen(state, vm, container, snackbar) { action, format ->
             pendingAction = action
-            if (pdf) vm.exportPdf() else vm.exportPng()
+            when (format) {
+                ExportFormat.PDF, ExportFormat.PDF_LOSSLESS -> vm.exportPdf(format == ExportFormat.PDF)
+                ExportFormat.PNG -> vm.exportPng()
+                ExportFormat.JPEG -> vm.exportJpg()
+            }
         }
         else -> EditorLayout(state, vm, container, snackbar, onBack)
     }

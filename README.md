@@ -1,10 +1,14 @@
 # Polar · Fotos para imprimir
 
-Aplicaciones nativas para Android y Mac que convierten fotografías en hojas listas para imprimir: polaroids, boletos, tiras de película, calendarios, fotos con canción y moldes propios. Incluyen texto editable, encuadre, filtros no destructivos, autoguardado y exportación PDF/PNG.
+Aplicaciones nativas para Android y Mac que convierten fotografías en hojas listas para imprimir: polaroids, boletos, tiras de película, calendarios, fotos con canción y moldes propios. Incluyen texto editable, encuadre, filtros no destructivos, autoguardado y exportación PDF/JPG/PNG.
 
-Android: **2.1.1**, build **4**. Mac: **2.1.0**, build **3**. La rama de trabajo publicada es **`global`**.
+Android y Mac: **2.1.2**, build **5**. La rama de trabajo publicada es **`global`**.
 
-[Descargar Android release](https://github.com/Maverick-Dev01/polar/releases). Después de instalarla una vez, **Ajustes → Actualizaciones** busca y descarga nuevas versiones, con confirmación del instalador Android. [Preparar y publicar actualizaciones](docs/actualizaciones-android.md); la llave privada debe conservarse para poder publicar desde otro equipo.
+[Descargar Android](https://github.com/Maverick-Dev01/polar/releases/download/android-v2.1.2/Polar-2.1.2.apk) · [Descargar Mac](https://github.com/Maverick-Dev01/polar/releases/download/android-v2.1.2/Polar-Mac-2.1.2.zip). Después de instalarla una vez, **Ajustes → Actualizaciones** busca y descarga nuevas versiones, con confirmación del instalador Android. [Preparar y publicar actualizaciones](docs/actualizaciones-android.md); la llave privada debe conservarse para poder publicar desde otro equipo.
+
+PDF conserva texto, guías y marcos nítidos, con fotos recortadas al área visible a 300 ppp y JPEG de alta calidad (94). JPG exporta una hoja más ligera a 300 ppp. Para evitar compresión fotográfica adicional, elige **PDF sin compresión JPEG** o **PNG**; estos archivos pueden pesar más. Los originales y el proyecto editable se conservan. [Diagnóstico y verificación de exportaciones](docs/exportaciones-compactas.md).
+
+Mac se distribuye como ZIP de `Polar.app` para Apple Silicon/macOS 14+. Descomprímelo y sustituye la app anterior con Polar cerrada; la biblioteca permanece en Application Support. **Ayuda → Descargar última versión…** abre la publicación. La firma es local, sin notarización de Apple: macOS puede solicitar abrirla desde Privacidad y seguridad.
 
 ## Stack tecnológico
 
@@ -84,6 +88,8 @@ Las fotos personales, proyectos exportados con datos personales, capturas, bibli
 Para publicar en Play Store, sigue [docs/play-store.md](docs/play-store.md) y usa `bundlePlay`: esa build desactiva las actualizaciones externas. La firma de publicación es privada y obligatoria; no se usa una firma debug como alternativa. Python 3 y GitHub CLI sólo se requieren para el script que prepara/publica releases, no para desarrollar Android normalmente.
 
 ## Verificación y continuidad
+
+[Exportaciones compactas 2.1.2](docs/exportaciones-compactas.md): mediciones de cinco hojas × seis fotografías, comprobaciones de calidad/formatos y mecanismo de reducción.
 
 [Verificación de las actualizaciones Android 2.1.1](docs/verificacion-actualizaciones-android-2026-10-02.md): 195 pruebas unitarias, 6 pruebas nativas y actualización completa desde GitHub en emulador, con conservación del diseño y modo oscuro.
 

@@ -23,17 +23,24 @@ class AndroidExportService(
     private fun fileName(p: PolarProject, ext: String) =
         p.name.replace(Regex("[^\\p{L}\\p{N} _-]"), "").trim().ifBlank { "Polar" } + ".$ext"
 
-    override suspend fun pdf(project: PolarProject, template: Bitmap?): File = withContext(Dispatchers.IO) {
+    override suspend fun pdf(project: PolarProject, template: Bitmap?, optimizePhotos: Boolean): File = withContext(Dispatchers.IO) {
         val sizes=requiredPhotoPixels(project)
         File(dir(), fileName(project, "pdf")).also {
-            PolarExporter.exportPdf(project, it, { a -> bitmaps.load(a.path, sizes[a.id] ?: BitmapLoader.EXPORT_MAX) }, template, fonts)
+            PolarExporter.exportPdf(project, it, { a -> bitmaps.loadForPrint(a.path, sizes[a.id] ?: BitmapLoader.EXPORT_MAX) }, template, fonts, optimizePhotos)
         }
     }
 
     override suspend fun png(project: PolarProject, page: Int, template: Bitmap?): File = withContext(Dispatchers.IO) {
         val sizes=requiredPhotoPixels(project,page)
         File(dir(), fileName(project, "png").replace(".png", " · hoja ${page + 1}.png")).also {
-            PolarExporter.exportPng(project, page, it, 300, { a -> bitmaps.load(a.path, sizes[a.id] ?: BitmapLoader.EXPORT_MAX) }, template, fonts)
+            PolarExporter.exportPng(project, page, it, 300, { a -> bitmaps.loadForPrint(a.path, sizes[a.id] ?: BitmapLoader.EXPORT_MAX) }, template, fonts)
+        }
+    }
+
+    override suspend fun jpg(project: PolarProject, page: Int, template: Bitmap?): File = withContext(Dispatchers.IO) {
+        val sizes = requiredPhotoPixels(project, page)
+        File(dir(), fileName(project, "jpg").replace(".jpg", " · hoja ${page + 1}.jpg")).also {
+            PolarExporter.exportJpeg(project, page, it, 300, { a -> bitmaps.loadForPrint(a.path, sizes[a.id] ?: BitmapLoader.EXPORT_MAX) }, template, fonts)
         }
     }
 }

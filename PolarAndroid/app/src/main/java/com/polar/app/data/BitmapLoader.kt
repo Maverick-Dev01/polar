@@ -12,6 +12,7 @@ import java.io.File
 import java.io.InputStream
 import java.text.SimpleDateFormat
 import java.util.Locale
+import kotlin.math.roundToInt
 
 data class PhotoInfo(val width: Int, val height: Int, val takenAtEpochMs: Long?)
 
@@ -41,8 +42,12 @@ class BitmapLoader(private val context: Context) {
         1
     }
 
-    fun load(path: String, maxDim: Int): Bitmap? {
-        val key = "$path@$maxDim"
+    fun load(path: String, maxDim: Int): Bitmap? = load(path, maxDim, false)
+
+    fun loadForPrint(path: String, maxDim: Int): Bitmap? = load(path, maxDim, true)
+
+    private fun load(path: String, maxDim: Int, exactSize: Boolean): Bitmap? {
+        val key = "$path@$maxDim@$exactSize"
         cache.get(key)?.takeIf { !it.isRecycled }?.let { return it }
         return try {
             val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
@@ -50,13 +55,20 @@ class BitmapLoader(private val context: Context) {
             open(path)?.use { BitmapFactory.decodeStream(it, null, bounds); true } ?: return null
             if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
             val options = BitmapFactory.Options().apply {
-                inSampleSize = BitmapMath.sampleSize(bounds.outWidth, bounds.outHeight, maxDim)
+                // Para imprimir se decodifica por encima del objetivo y se reduce exactamente, nunca por debajo de 300 ppp.
+                inSampleSize = BitmapMath.sampleSize(bounds.outWidth, bounds.outHeight, if (exactSize) maxDim * 2 - 1 else maxDim)
                 inPreferredConfig = Bitmap.Config.ARGB_8888
             }
             val raw = open(path)?.use { BitmapFactory.decodeStream(it, null, options) } ?: return null
             val oriented = applyExifOrientation(raw, orientation(path))
-            cache.put(key, oriented)
-            oriented
+            val longSide = maxOf(oriented.width, oriented.height)
+            val result = if (exactSize && longSide > maxDim) {
+                val scale = maxDim.toDouble() / longSide
+                Bitmap.createScaledBitmap(oriented, (oriented.width * scale).roundToInt().coerceAtLeast(1),
+                    (oriented.height * scale).roundToInt().coerceAtLeast(1), true).also { if (it != oriented) oriented.recycle() }
+            } else oriented
+            cache.put(key, result)
+            result
         } catch (e: OutOfMemoryError) {
             Log.w(TAG, "Sin memoria al decodificar la foto: $path", e)
             cache.evictAll(); null

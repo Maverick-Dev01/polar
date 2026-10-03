@@ -271,9 +271,13 @@
     <string name="finish_ok">Textos y marcas de corte dentro de la hoja</string>
     <string name="finish_print">Imprimir</string>
     <string name="finish_save_pdf">Guardar PDF</string>
-    <string name="finish_save_pdf_hint">todas las hojas</string>
+    <string name="finish_save_pdf_hint">todas las hojas · fotos a 300 ppp · alta calidad</string>
+    <string name="finish_save_jpg">Guardar imagen JPG</string>
+    <string name="finish_save_jpg_hint">esta hoja · 300 ppp · archivo más ligero</string>
+    <string name="finish_save_pdf_lossless">Guardar PDF sin compresión JPEG</string>
+    <string name="finish_save_pdf_lossless_hint">todas las hojas · sin pérdida adicional · más peso</string>
     <string name="finish_save_png">Guardar imagen PNG</string>
-    <string name="finish_save_png_hint">esta hoja · 300 ppp</string>
+    <string name="finish_save_png_hint">esta hoja · 300 ppp · sin pérdida</string>
     <string name="finish_share">Compartir PDF</string>
     <string name="finish_share_hint">WhatsApp, correo, Drive</string>
     <string name="finish_tip">Al imprimir elige %1$s y «Tamaño real» o escala 100 %%. Así cada tarjeta sale de su medida.</string>

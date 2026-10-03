@@ -36,10 +36,14 @@ Para publicar, sigue `../docs/play-store.md`.
 
 - `model/`: proyecto `.polar` inmutable con las mismas claves que la Mac.
 - `core/`: texto por tarjeta (`TextResolver`), filtros (`LookResolver`), ediciones puras (`ProjectEdits`), deshacer (`UndoStack`).
-- `engine/`: un solo motor de dibujo para la vista previa, las miniaturas, el PDF, el PNG y la impresión.
+- `engine/`: un solo motor de dibujo para la vista previa, las miniaturas, el PDF, el PNG, el JPG y la impresión.
 - `data/`: biblioteca en disco con autoguardado, fotos copiadas al proyecto, fuentes incluidas y ajustes.
 - `ui/`: Compose + Material 3. Inicio, Catálogo, Editor (Fotos, Filtros, Diseño, Texto, Papel, Encuadrar y Terminar), Ajustes. Con ancho ≥ 840dp se usan paneles laterales.
 
 Stack y versiones: Kotlin 2.2.0, AGP 8.11.1, Compose BOM 2025.06.01, coroutines, kotlinx.serialization, DataStore, ExifInterface y ZXing. `minSdk=26`, `compileSdk=targetSdk=36`.
 
 Diseño completo: `../docs/superpowers/specs/2026-10-02-polar-android-rediseno-design.md`.
+
+## Exportación ligera
+
+En Terminar, PDF exporta todas las hojas con fotos visibles a 300 ppp y JPEG 94, conservando texto, guías y QR. JPG exporta la hoja seleccionada a 300 ppp con menos peso que PNG en fotografías. PDF sin compresión JPEG y PNG conservan los píxeles renderizados sin pérdidas adicionales de compresión; pueden pesar más. [Detalles y verificaciones](../docs/exportaciones-compactas.md).

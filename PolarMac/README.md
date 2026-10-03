@@ -1,6 +1,6 @@
 # Polar para Mac
 
-Abre **Polar.app** en la carpeta Polar. Versión **2.1.0**; macOS 14 o posterior, Mac con Apple Silicon. Si ya estaba abierta, ciérrala y vuelve a abrirla para cargar esta actualización. Al clonar desde GitHub, compila primero: los paquetes APP no se versionan.
+Abre **Polar.app** en la carpeta Polar. Versión **2.1.2**; macOS 14 o posterior, Mac con Apple Silicon. Si ya estaba abierta, ciérrala y vuelve a abrirla para cargar esta actualización. [Descarga el ZIP de la app](https://github.com/Maverick-Dev01/polar/releases/download/android-v2.1.2/Polar-Mac-2.1.2.zip) o compila al clonar. En Ayuda → Descargar última versión puedes abrir las publicaciones. La app tiene firma local, sin notarización de Apple; macOS puede pedir habilitar su apertura desde Privacidad y seguridad.
 
 En **Tus diseños** puedes buscar, ordenar, cambiar nombres, duplicar para otro pedido, compartir un .polar y borrar con **Deshacer**. Usa **Nuevo diseño** para empezar. La app guarda automáticamente aproximadamente un segundo después de editar y antes de cambiar de diseño o cerrar. **Guardando…**, **Guardado** y **Sin guardar** muestran el estado; si falla la escritura se mantiene abierto el editor.
 
@@ -11,7 +11,7 @@ En **Tus diseños** puedes buscar, ordenar, cambiar nombres, duplicar para otro 
 5. En **Diseño**, cambia color y distribución: 1, 2, 4, 6, 8, 9, 12 o 16 tarjetas por hoja, formato vertical, horizontal o cuadrado. Las tiras de película reúnen cinco fotos cada una. Los estilos para parejas, amigos, familia, mascotas, viajes y celebraciones cambian fuentes y colores conservando tus frases; **Usar frases sugeridas** las reemplaza explícitamente.
 6. **Rellenar todo** distribuye tu galería en tantas hojas como haga falta. Los espacios vacíos se ven al editar, pero no imprimen marco, texto ni marcas de corte.
 7. En **Papel**, elige Carta, Oficio (216 × 340 mm), Legal (8.5 × 14 pulgadas), A4, A3, foto 4 × 6, foto 5 × 7 o medidas personalizadas de 80 a 600 mm. La hoja puede ser vertical u horizontal.
-8. **Imprimir** abre **Terminar**, con resumen de hojas y fotos, espacios vacíos y avisos de resolución. Desde ahí imprime con el diálogo de macOS, comparte el PDF o guarda **PDF** con todas las hojas o **PNG** de la hoja actual a 300 ppp.
+8. **Imprimir** abre **Terminar**, con resumen de hojas y fotos, espacios vacíos y avisos de resolución. Desde ahí imprime con el diálogo de macOS, comparte el PDF o guarda **PDF** con todas las hojas o **JPG/PNG** de la hoja actual a 300 ppp. PDF y JPG usan JPEG94 para reducir peso; las fotos del PDF se guardan sólo con los píxeles visibles, conservando texto y guías vectoriales. Los menús ofrecen **PDF sin compresión JPEG** y **PNG** para evitar pérdidas adicionales de compresión, con más peso.
 
 **Ajustes** permite tema Sistema/Claro/Oscuro, milímetros/pulgadas, papel predeterminado para nuevos diseños y volver a ver la bienvenida. La hoja permanece blanca en todos los temas porque representa el papel.
 

@@ -37,7 +37,7 @@ import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FinishScreen(state: EditorUiState, vm: EditorViewModel, container: AppContainer, snackbar: SnackbarHostState, onAction: (ExportAction, Boolean) -> Unit) {
+fun FinishScreen(state: EditorUiState, vm: EditorViewModel, container: AppContainer, snackbar: SnackbarHostState, onAction: (ExportAction, ExportFormat) -> Unit) {
     val p = state.project
     val low = remember(p) { vm.lowResSlots() }
     val empty = remember(p) { vm.emptySlotsOnUsedPages() }
@@ -78,12 +78,14 @@ fun FinishScreen(state: EditorUiState, vm: EditorViewModel, container: AppContai
             }
         }
         val actions: @Composable ColumnScope.() -> Unit = {
-            Button(onClick = { onAction(ExportAction.PRINT, true) }, enabled = !state.busy, modifier = Modifier.fillMaxWidth().heightIn(min=56.dp)) {
+            Button(onClick = { onAction(ExportAction.PRINT, ExportFormat.PDF) }, enabled = !state.busy, modifier = Modifier.fillMaxWidth().heightIn(min=56.dp)) {
                 Icon(Icons.Outlined.Print, null); Spacer(Modifier.width(10.dp)); Text(stringResource(R.string.finish_print))
             }
-            ActionButton(Icons.Outlined.PictureAsPdf, stringResource(R.string.finish_save_pdf), stringResource(R.string.finish_save_pdf_hint), !state.busy) { onAction(ExportAction.SAVE, true) }
-            ActionButton(Icons.Outlined.Image, stringResource(R.string.finish_save_png), stringResource(R.string.finish_save_png_hint), !state.busy) { onAction(ExportAction.SAVE, false) }
-            ActionButton(Icons.Outlined.Share, stringResource(R.string.finish_share), stringResource(R.string.finish_share_hint), !state.busy) { onAction(ExportAction.SHARE, true) }
+            ActionButton(Icons.Outlined.PictureAsPdf, stringResource(R.string.finish_save_pdf), stringResource(R.string.finish_save_pdf_hint), !state.busy) { onAction(ExportAction.SAVE, ExportFormat.PDF) }
+            ActionButton(Icons.Outlined.Image, stringResource(R.string.finish_save_jpg), stringResource(R.string.finish_save_jpg_hint), !state.busy) { onAction(ExportAction.SAVE, ExportFormat.JPEG) }
+            ActionButton(Icons.Outlined.Image, stringResource(R.string.finish_save_png), stringResource(R.string.finish_save_png_hint), !state.busy) { onAction(ExportAction.SAVE, ExportFormat.PNG) }
+            ActionButton(Icons.Outlined.PictureAsPdf, stringResource(R.string.finish_save_pdf_lossless), stringResource(R.string.finish_save_pdf_lossless_hint), !state.busy) { onAction(ExportAction.SAVE, ExportFormat.PDF_LOSSLESS) }
+            ActionButton(Icons.Outlined.Share, stringResource(R.string.finish_share), stringResource(R.string.finish_share_hint), !state.busy) { onAction(ExportAction.SHARE, ExportFormat.PDF) }
             if (state.busy) Row(verticalAlignment = Alignment.CenterVertically) {
                 CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp); Spacer(Modifier.width(10.dp)); Text(stringResource(R.string.finish_preparing))
             }

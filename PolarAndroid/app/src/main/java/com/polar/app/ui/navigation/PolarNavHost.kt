@@ -85,7 +85,7 @@ fun PolarNavHost(container: AppContainer, startOnboarding: Boolean) {
                                     container.thumbnails.projectPng(p, { a -> container.bitmaps.load(a.path, BitmapLoader.PREVIEW_MAX) }, t)
                                 }
                             },
-                            loadTemplate = { path -> container.bitmaps.load(path, BitmapLoader.EXPORT_MAX) }
+                            loadTemplate = { path -> container.bitmaps.loadForPrint(path, BitmapLoader.EXPORT_MAX) }
                         )
                     )
                 }

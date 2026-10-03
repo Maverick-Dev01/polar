@@ -143,7 +143,8 @@ object PolarRenderer {
         scale: Float = 1f,
         bitmapProvider: (PhotoAsset) -> Bitmap? = { null },
         templateBitmap: Bitmap? = null,
-        fonts: FontProvider = SystemFontProvider
+        fonts: FontProvider = SystemFontProvider,
+        pdfPhoto: ((Bitmap) -> Unit)? = null
     ) {
         // Una transición puede medir temporalmente la hoja a cero: no rasterizar texto/emoji a escala infinita.
         if (!scale.isFinite() || scale <= 0f) return
@@ -155,7 +156,7 @@ object PolarRenderer {
         canvas.drawRect(paper.toAndroidRectF(scale), whitePaint)
 
         if (s.style == TemplateStyle.IMPORTED && s.importedTemplate != null) {
-            drawImported(canvas, project, page, isPreview, scale, bitmapProvider, templateBitmap, fonts)
+            drawImported(canvas, project, page, isPreview, scale, bitmapProvider, templateBitmap, fonts, pdfPhoto)
             return
         }
 
@@ -168,7 +169,7 @@ object PolarRenderer {
 
             if (!isPreview && !hasAssigned) continue
 
-            drawCard(canvas, card, project, firstSlot, cardIndex, isPreview, scale, bitmapProvider, fonts)
+            drawCard(canvas, card, project, firstSlot, cardIndex, isPreview, scale, bitmapProvider, fonts, pdfPhoto)
             if (s.cutGuides) {
                 drawGuides(canvas, card, s.cutStyle, paper, cards, scale)
             }
@@ -225,7 +226,8 @@ object PolarRenderer {
         isPreview: Boolean,
         scale: Float,
         bitmapProvider: (PhotoAsset) -> Bitmap?,
-        fonts: FontProvider
+        fonts: FontProvider,
+        pdfPhoto: ((Bitmap) -> Unit)? = null
     ) {
         val s = project.settings
         val style = s.style
@@ -307,7 +309,7 @@ object PolarRenderer {
                 canvas.clipRect(rect.toAndroidRectF(scale))
             }
 
-            drawPhoto(canvas, photo, placement, rect, accent, bgColor, isPreview, scale, bitmapProvider, LookResolver.resolve(project, slot), cardIndex, card)
+            drawPhoto(canvas, photo, placement, rect, accent, bgColor, isPreview, scale, bitmapProvider, LookResolver.resolve(project, slot), cardIndex, card, pdfPhoto = pdfPhoto)
             canvas.restore()
         }
 
@@ -408,7 +410,8 @@ object PolarRenderer {
         look: PhotoLook,
         cardIndex: Int,
         card: PolarRect,
-        clipPhoto: Boolean = true
+        clipPhoto: Boolean = true,
+        pdfPhoto: ((Bitmap) -> Unit)? = null
     ) {
         if (photo == null || placement == null) {
             if (isPreview) {
@@ -439,12 +442,15 @@ object PolarRenderer {
         }
         canvas.save()
         if(clipPhoto) canvas.clipRect(rect.toAndroidRectF(scale)) // También los moldes importados recortan exactamente su hueco.
-        if (clipPhoto && (PhotoFilters.grainStrength(look) > 0 || (!isPreview && scale <= 1.001f && !look.isNeutral))) {
+        if (clipPhoto && (pdfPhoto != null || PhotoFilters.grainStrength(look) > 0 || (!isPreview && scale <= 1.001f && !look.isNeutral))) {
             val rasterScale=if(!isPreview && scale<=1.001f) 300f/72f else scale
             val layer = Bitmap.createBitmap(ceil(rect.width*rasterScale).toInt().coerceAtLeast(1), ceil(rect.height*rasterScale).toInt().coerceAtLeast(1), Bitmap.Config.ARGB_8888)
             try {
-                draw(Canvas(layer), 0.0, 0.0,rasterScale)
+                val layerCanvas = Canvas(layer)
+                if (pdfPhoto != null) layerCanvas.scale((layer.width / (rect.width * rasterScale)).toFloat(), (layer.height / (rect.height * rasterScale)).toFloat())
+                draw(layerCanvas, 0.0, 0.0,rasterScale)
                 PhotoFilters.grain(layer, look, PhotoFilters.seed(photo.id, cardIndex), rect.left-card.left, rect.top-card.top, rect.width/layer.width, rect.height/layer.height)
+                pdfPhoto?.invoke(layer)
                 canvas.drawBitmap(layer,null,rect.toAndroidRectF(scale),Paint(Paint.FILTER_BITMAP_FLAG))
             } finally { layer.recycle() }
         } else draw(canvas, rect.left, rect.top)
@@ -750,7 +756,8 @@ object PolarRenderer {
         scale: Float,
         bitmapProvider: (PhotoAsset) -> Bitmap?,
         templateBitmap: Bitmap?,
-        @Suppress("UNUSED_PARAMETER") fonts: FontProvider
+        @Suppress("UNUSED_PARAMETER") fonts: FontProvider,
+        pdfPhoto: ((Bitmap) -> Unit)? = null
     ) {
         val s = project.settings
         val template = s.importedTemplate ?: return
@@ -763,7 +770,7 @@ object PolarRenderer {
                 val slot = page * s.capacity + idx
                 val placement = project.placements.getOrNull(slot)
                 if (isPreview || placement != null) {
-                    drawPhoto(canvas, project.asset(placement), placement, cards[idx], parseColor(s.accentHex), Color.WHITE, isPreview, scale, bitmapProvider, LookResolver.resolve(project, slot), page * project.cardsPerPage + idx, cards[idx])
+                    drawPhoto(canvas, project.asset(placement), placement, cards[idx], parseColor(s.accentHex), Color.WHITE, isPreview, scale, bitmapProvider, LookResolver.resolve(project, slot), page * project.cardsPerPage + idx, cards[idx], pdfPhoto = pdfPhoto)
                 }
             }
         }
@@ -779,7 +786,7 @@ object PolarRenderer {
                 val slot = page * s.capacity + idx
                 val placement = project.placements.getOrNull(slot)
                 if (isPreview || placement != null) {
-                    drawPhoto(canvas, project.asset(placement), placement, cards[idx], parseColor(s.accentHex), Color.WHITE, isPreview, scale, bitmapProvider, LookResolver.resolve(project, slot), page * project.cardsPerPage + idx, cards[idx])
+                    drawPhoto(canvas, project.asset(placement), placement, cards[idx], parseColor(s.accentHex), Color.WHITE, isPreview, scale, bitmapProvider, LookResolver.resolve(project, slot), page * project.cardsPerPage + idx, cards[idx], pdfPhoto = pdfPhoto)
                 }
             }
         }

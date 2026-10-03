@@ -478,17 +478,22 @@ class EditorViewModel(private val projectId: String, private val deps: EditorDep
 
     // ---------- exportar ----------
 
-    fun exportPdf() = export(pdf = true)
-    fun exportPng() = export(pdf = false)
+    fun exportPdf(optimizePhotos: Boolean = true) = export(if (optimizePhotos) ExportFormat.PDF else ExportFormat.PDF_LOSSLESS)
+    fun exportPng() = export(ExportFormat.PNG)
+    fun exportJpg() = export(ExportFormat.JPEG)
 
-    private fun export(pdf: Boolean) {
+    private fun export(format: ExportFormat) {
         if (locked || _state.value.busy) return
         _state.update { it.copy(busy = true) }
         viewModelScope.launch {
             try {
                 val s = _state.value
-                val file = if (pdf) deps.exports.pdf(s.project, templateBitmap) else deps.exports.png(s.project, s.page, templateBitmap)
-                _events.send(EditorEvent.Exported(file, if (pdf) "application/pdf" else "image/png", pdf))
+                val file = when (format) {
+                    ExportFormat.PDF, ExportFormat.PDF_LOSSLESS -> deps.exports.pdf(s.project, templateBitmap, format == ExportFormat.PDF)
+                    ExportFormat.PNG -> deps.exports.png(s.project, s.page, templateBitmap)
+                    ExportFormat.JPEG -> deps.exports.jpg(s.project, s.page, templateBitmap)
+                }
+                _events.send(EditorEvent.Exported(file, format.mime, format.pdf))
             } catch (e: CancellationException) {
                 throw e
             } catch (e: PolarException) {

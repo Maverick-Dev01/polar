@@ -32,6 +32,8 @@ class EditorViewModelTest {
 
     private lateinit var store: ProjectStore
     private lateinit var id: String
+    private var exportedPage: Int? = null
+    private var optimizedPdf: Boolean? = null
 
     private fun vm(thumbnail: suspend (PolarProject, Bitmap?) -> ByteArray? = { _, _ -> null }): EditorViewModel {
         store = ProjectStore(tmp.root)
@@ -42,8 +44,15 @@ class EditorViewModelTest {
             )
         }
         val exports = object : ExportService {
-            override suspend fun pdf(project: PolarProject, template: Bitmap?) = File(tmp.root, "a.pdf")
+            override suspend fun pdf(project: PolarProject, template: Bitmap?, optimizePhotos: Boolean): File {
+                optimizedPdf = optimizePhotos
+                return File(tmp.root, "a.pdf")
+            }
             override suspend fun png(project: PolarProject, page: Int, template: Bitmap?) = File(tmp.root, "a.png")
+            override suspend fun jpg(project: PolarProject, page: Int, template: Bitmap?): File {
+                exportedPage = page
+                return File(tmp.root, "a.jpg")
+            }
         }
         return EditorViewModel(id, EditorDeps(store, photos, exports, thumbnail, { null }, main.dispatcher, CoroutineScope(main.dispatcher)))
     }
@@ -346,13 +355,38 @@ class EditorViewModelTest {
     }
 
     @Test
+    fun jpegExportUsesImageMimeAndSelectedPage() = runTest(main.dispatcher) {
+        val v = vm(); advanceUntilIdle()
+        v.addPhotos((0..9).map { "photo-$it" }); advanceUntilIdle()
+        v.setPage(1)
+        v.exportJpg(); advanceUntilIdle()
+        assertEquals(1, exportedPage)
+        val exported = v.events.first { it is EditorEvent.Exported } as EditorEvent.Exported
+        assertEquals("image/jpeg", exported.mime)
+        assertEquals("a.jpg", exported.file.name)
+        assertFalse(exported.pdf)
+        assertFalse(v.state.value.busy)
+    }
+
+    @Test
+    fun losslessPdfDisablesPhotoJpegEncoding() = runTest(main.dispatcher) {
+        val v = vm(); advanceUntilIdle()
+        v.exportPdf(optimizePhotos = false); advanceUntilIdle()
+        val exported = v.events.first { it is EditorEvent.Exported } as EditorEvent.Exported
+        assertEquals(false, optimizedPdf)
+        assertEquals("application/pdf", exported.mime)
+        assertTrue(exported.pdf)
+    }
+
+    @Test
     fun exportFailureBecomesMessage() = runTest(main.dispatcher) {
         val v = vm(); advanceUntilIdle()
         val failing = EditorViewModel(id, EditorDeps(store, object : PhotoSource {
             override suspend fun import(projectId: String, uris: List<String>) = ImportResult(emptyList(), 0)
         }, object : ExportService {
-            override suspend fun pdf(project: PolarProject, template: Bitmap?): File = throw PolarException("Sin espacio")
+            override suspend fun pdf(project: PolarProject, template: Bitmap?, optimizePhotos: Boolean): File = throw PolarException("Sin espacio")
             override suspend fun png(project: PolarProject, page: Int, template: Bitmap?): File = throw IllegalStateException("x")
+            override suspend fun jpg(project: PolarProject, page: Int, template: Bitmap?): File = throw IllegalStateException("x")
         }, { _, _ -> null }, { null }, main.dispatcher, CoroutineScope(main.dispatcher)))
         advanceUntilIdle()
         failing.exportPdf(); advanceUntilIdle()
@@ -381,8 +415,9 @@ class EditorViewModelTest {
     }
 
     private fun vmWith(projectId: String, photos: PhotoSource) = EditorViewModel(projectId, EditorDeps(store, photos, object : ExportService {
-        override suspend fun pdf(project: PolarProject, template: Bitmap?) = File(tmp.root, "a.pdf")
+        override suspend fun pdf(project: PolarProject, template: Bitmap?, optimizePhotos: Boolean) = File(tmp.root, "a.pdf")
         override suspend fun png(project: PolarProject, page: Int, template: Bitmap?) = File(tmp.root, "a.png")
+        override suspend fun jpg(project: PolarProject, page: Int, template: Bitmap?) = File(tmp.root, "a.jpg")
     }, { _, _ -> null }, { null }, main.dispatcher, CoroutineScope(main.dispatcher)))
 
     @Test
@@ -464,8 +499,9 @@ class EditorViewModelTest {
         val v = EditorViewModel(id, EditorDeps(store, object : PhotoSource {
             override suspend fun import(projectId: String, uris: List<String>) = ImportResult(emptyList(), 0)
         }, object : ExportService {
-            override suspend fun pdf(project: PolarProject, template: Bitmap?) = File(tmp.root, "a.pdf")
+            override suspend fun pdf(project: PolarProject, template: Bitmap?, optimizePhotos: Boolean) = File(tmp.root, "a.pdf")
             override suspend fun png(project: PolarProject, page: Int, template: Bitmap?) = File(tmp.root, "a.png")
+            override suspend fun jpg(project: PolarProject, page: Int, template: Bitmap?) = File(tmp.root, "a.jpg")
         }, { _, _ -> null }, { throw java.io.IOException("sin archivo") }, main.dispatcher, CoroutineScope(main.dispatcher)))
         advanceUntilIdle()
         assertFalse(v.state.value.loadFailed)

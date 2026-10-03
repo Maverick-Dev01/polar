@@ -23,6 +23,7 @@ local.properties
 *.jks
 .polar-signing/
 release-assets/
+outputs/compact-exports*/
 
 # Sistema / IDE
 .DS_Store

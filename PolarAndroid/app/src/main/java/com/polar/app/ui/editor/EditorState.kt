@@ -17,6 +17,10 @@ enum class EditorMode { EDIT, CROP, FINISH, CHANGE_DESIGN }
 enum class LookScope { ALL, PAGE, PAGES, PHOTO }
 enum class TextScope { ALL, CARD }
 enum class ExportAction { PRINT, SAVE, SHARE }
+enum class ExportFormat(val mime: String, val pdf: Boolean) {
+    PDF("application/pdf", true), PDF_LOSSLESS("application/pdf", true),
+    PNG("image/png", false), JPEG("image/jpeg", false)
+}
 
 data class EditorUiState(
     val loading: Boolean = true,
@@ -56,8 +60,9 @@ sealed interface EditorEvent {
 }
 
 interface ExportService {
-    suspend fun pdf(project: PolarProject, template: Bitmap?): File
+    suspend fun pdf(project: PolarProject, template: Bitmap?, optimizePhotos: Boolean = true): File
     suspend fun png(project: PolarProject, page: Int, template: Bitmap?): File
+    suspend fun jpg(project: PolarProject, page: Int, template: Bitmap?): File
 }
 
 class EditorDeps(

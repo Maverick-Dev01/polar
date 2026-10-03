@@ -593,22 +593,28 @@ struct FontChoice: Identifiable {
         }
     }
 
-    func export(png: Bool) {
+    enum ExportFormat { case pdf, pdfLossless, png, jpeg }
+
+    func export(_ format: ExportFormat) {
         guard !busy, project.placedCount > 0 else { return }
+        let image = format == .png || format == .jpeg
         let panel = NSSavePanel()
-        panel.title = png ? "Guardar esta hoja como imagen" : "Guardar todas las hojas para imprimir"
-        panel.allowedContentTypes = [png ? .png : .pdf]
-        panel.nameFieldStringValue = png ? "Polar hoja \(page + 1).png" : "Polar para imprimir.pdf"
+        panel.title = image ? "Guardar esta hoja como imagen" : "Guardar todas las hojas para imprimir"
+        panel.allowedContentTypes = [image ? (format == .jpeg ? .jpeg : .png) : .pdf]
+        panel.nameFieldStringValue = image ? "Polar hoja \(page + 1).\(format == .jpeg ? "jpg" : "png")" : "Polar para imprimir.pdf"
         guard runPanel(panel) == .OK, let url = panel.url else { return }
         let snapshot = project, selectedPage = page
-        busy = true; status = "Preparando \(png ? "imagen" : "PDF")…"
+        busy = true; status = "Preparando \(image ? "imagen" : "PDF")…"
         DispatchQueue.global(qos: .userInitiated).async {
             do {
-                if png { try PolarRenderer.writePNG(project: snapshot, page: selectedPage, to: url) }
-                else { try PolarRenderer.writePDF(project: snapshot, to: url) }
+                switch format {
+                case .png: try PolarRenderer.writePNG(project: snapshot, page: selectedPage, to: url)
+                case .jpeg: try PolarRenderer.writeJPEG(project: snapshot, page: selectedPage, to: url)
+                case .pdf, .pdfLossless: try PolarRenderer.writePDF(project: snapshot, to: url, optimizePhotos: format == .pdf)
+                }
                 DispatchQueue.main.async {
                     self.busy = false; self.lastExport = url
-                    self.status = png ? "Imagen lista: \(snapshot.settings.paperSize.name) a 300 ppp." : "PDF listo: \(snapshot.pageCount) hojas \(snapshot.settings.paperSize.name). Imprime al 100 %."
+                    self.status = image ? "Imagen lista: \(snapshot.settings.paperSize.name) a 300 ppp." : "PDF listo: \(snapshot.pageCount) hojas \(snapshot.settings.paperSize.name). Imprime al 100 %."
                 }
             } catch {
                 DispatchQueue.main.async { self.busy = false; self.errorMessage = error.localizedDescription; self.status = "No se guardó la exportación." }

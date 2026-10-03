@@ -37,6 +37,14 @@ class BitmapLoaderTest {
     }
 
     @Test
+    fun printDecodeKeepsTheRequestedResolutionBetweenSamplingSteps() {
+        val bitmap = loader().loadForPrint(png().path, 150)
+        assertNotNull(bitmap)
+        assertEquals(150, bitmap!!.width)
+        assertEquals(75, bitmap.height)
+    }
+
+    @Test
     fun loadOfMissingFileIsNull() {
         assertNull(loader().load(File(folder.root, "no-existe.jpg").path, 100))
     }

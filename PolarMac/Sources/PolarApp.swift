@@ -65,14 +65,19 @@ private let cream = polarCream
             }
             CommandMenu("Imprimir") {
                 Button("Preparar impresión…") { studio.finish() }.keyboardShortcut("p")
-                Button("Exportar PDF…") { studio.export(png: false) }.keyboardShortcut("e")
-                Button("Exportar imagen de esta hoja…") { studio.export(png: true) }
+                Button("Exportar PDF…") { studio.export(.pdf) }.keyboardShortcut("e")
+                Button("Exportar JPG de esta hoja…") { studio.export(.jpeg) }
+                Button("Exportar PNG sin pérdida…") { studio.export(.png) }
+                Button("Exportar PDF sin compresión JPEG…") { studio.export(.pdfLossless) }
             }
             CommandGroup(replacing: .help) {
+                Button("Descargar última versión…") {
+                    NSWorkspace.shared.open(URL(string: "https://github.com/Maverick-Dev01/polar/releases/latest")!)
+                }
                 Button("Cómo usar Polar") {
                     let alert = NSAlert()
                     alert.messageText = "Fotos que se quedan"
-                    alert.informativeText = "1. Elige un diseño y agrega tus fotos.\n2. Selecciona una tarjeta para cambiar su foto o encuadre.\n3. En Texto, edita todas las tarjetas o sólo la seleccionada, con fuentes y fechas.\n4. Usa Imprimir para revisar resolución y hojas y guardar PDF o PNG.\n\nTu trabajo se guarda automáticamente en Tus diseños. Los originales se conservan; Polar guarda una copia para trabajar. Puedes exportar un .polar editable; para abrirlo en otro equipo necesitarás también sus fotos.\n\nElige el mismo papel y orientación en la impresora y usa Tamaño real / 100 %."
+                    alert.informativeText = "1. Elige un diseño y agrega tus fotos.\n2. Selecciona una tarjeta para cambiar su foto o encuadre.\n3. En Texto, edita todas las tarjetas o sólo la seleccionada, con fuentes y fechas.\n4. Usa Imprimir para revisar resolución y hojas y guardar PDF, JPG o PNG.\n\nTu trabajo se guarda automáticamente en Tus diseños. Los originales se conservan; Polar guarda una copia para trabajar. Puedes exportar un .polar editable; para abrirlo en otro equipo necesitarás también sus fotos.\n\nElige el mismo papel y orientación en la impresora y usa Tamaño real / 100 %."
                     alert.runModal()
                 }
             }
@@ -154,8 +159,10 @@ private let cream = polarCream
                 Button { studio.addPhotos() } label: { Label("Agregar fotos", systemImage: "plus") }
                 Spacer()
                 Menu {
-                    Button("PDF · todas las hojas") { studio.export(png: false) }
-                    Button("PNG · esta hoja") { studio.export(png: true) }
+                    Button("PDF · todas las hojas") { studio.export(.pdf) }
+                    Button("JPG · esta hoja · más ligero") { studio.export(.jpeg) }
+                    Button("PNG · esta hoja · sin pérdida") { studio.export(.png) }
+                    Button("PDF sin compresión JPEG · más peso") { studio.export(.pdfLossless) }
                 } label: { Label("Exportar", systemImage: "square.and.arrow.up") }
                     .menuStyle(.borderedButton).disabled(studio.busy || studio.project.placedCount == 0)
                 Button { studio.finish() } label: { Label("Imprimir", systemImage: "printer") }.buttonStyle(PolarButtonStyle(primary: true)).disabled(studio.busy || studio.project.placedCount == 0)
@@ -514,7 +521,7 @@ private let cream = polarCream
             section("Para imprimir")
             Text("Elige este mismo tamaño de papel en la impresora y usa Tamaño real o escala 100 %.")
                 .font(.system(size: 12)).foregroundStyle(.secondary).lineSpacing(3)
-            Text("PNG a 300 ppp; PDF con todas las hojas.").font(.system(size: 11)).foregroundStyle(.secondary)
+            Text("PDF y JPG con fotos a 300 ppp y compresión de alta calidad. PNG o PDF sin compresión JPEG conservan los píxeles renderizados y pesan más.").font(.system(size: 11)).foregroundStyle(.secondary)
         }.font(.system(size: 13)).textFieldStyle(.roundedBorder)
     }
 

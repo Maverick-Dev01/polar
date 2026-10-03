@@ -17,8 +17,8 @@ android {
         applicationId = "io.github.maverickdev01.polar"
         minSdk = 26
         targetSdk = 36
-        versionCode = providers.gradleProperty("POLAR_VERSION_CODE").getOrElse("4").toInt()
-        versionName = providers.gradleProperty("POLAR_VERSION_NAME").getOrElse("2.1.1")
+        versionCode = providers.gradleProperty("POLAR_VERSION_CODE").getOrElse("5").toInt()
+        versionName = providers.gradleProperty("POLAR_VERSION_NAME").getOrElse("2.1.2")
         buildConfigField("boolean", "GITHUB_UPDATES_ENABLED", "true")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }

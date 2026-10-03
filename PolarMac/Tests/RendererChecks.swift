@@ -265,6 +265,11 @@ struct RendererChecks {
         let detector = CIDetector(ofType: CIDetectorTypeQRCode, context: CIContext(), options: [CIDetectorAccuracy: CIDetectorAccuracyHigh])!
         let links = detector.features(in: CIImage(cgImage: qrImage)).compactMap { ($0 as? CIQRCodeFeature)?.messageString }
         check(links.contains("https://example.com/our-song"), "song QR encodes the real supplied URL")
+        let qrJPG = directory.appendingPathComponent("qr.jpg")
+        try PolarRenderer.writeJPEG(project: photoProject, page: 0, to: qrJPG)
+        let jpgImage = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(qrJPG as CFURL, nil)!, 0, nil)!
+        check(detector.features(in: CIImage(cgImage: jpgImage)).contains { ($0 as? CIQRCodeFeature)?.messageString == "https://example.com/our-song" },
+              "JPG retains a scannable song QR")
         var calendarProject = PolarProject()
         calendarProject.photos = [oriented]
         calendarProject.selectStyle(.calendar)
@@ -330,11 +335,28 @@ struct RendererChecks {
         check(compactData.count < 1_000_000, "one 300 dpi photo in a nine-card PDF stays under 1 MB (got \(compactData.count) bytes)")
         check(PDFDocument(url: compactURL)!.string!.contains("Nuestros momentos"), "compact PDF retains vector selectable text")
         let embedded = pdfImages(at: compactURL)
-        check(embedded.contains { ($0["filter"] as? String) == "DCTDecode" && (980...982).contains($0["width"] as? Int ?? 0)
-            && (735...737).contains($0["height"] as? Int ?? 0) }, "PDF embeds actual 300 dpi crop coverage as JPEG DCT")
+        let visible = PolarRenderer.photoRects(in: PolarRenderer.cardRects(settings: noisyProject.settings)[0], style: .polaroid, settings: noisyProject.settings)[0]
+        let density: CGFloat = 300 / 72
+        let visibleWidth = Int(ceil(visible.width * density)), visibleHeight = Int(ceil(visible.height * density))
+        check(embedded.contains { ($0["filter"] as? String) == "DCTDecode" && $0["width"] as? Int == visibleWidth
+            && $0["height"] as? Int == visibleHeight }, "PDF only embeds the visible 300 dpi photo, not unused cropped pixels")
+        let losslessURL = directory.appendingPathComponent("lossless.pdf")
+        try PolarRenderer.writePDF(project: noisyProject, to: losslessURL, optimizePhotos: false)
+        check(!pdfImages(at: losslessURL).contains { $0["filter"] as? String == "DCTDecode" }, "lossless PDF does not introduce JPEG encoding")
+        check(PDFDocument(url: losslessURL)!.string!.contains("Nuestros momentos"), "lossless PDF retains vector text")
+        let jpegURL = directory.appendingPathComponent("compact.jpg"), losslessPNG = directory.appendingPathComponent("lossless.png")
+        try PolarRenderer.writeJPEG(project: noisyProject, page: 0, to: jpegURL)
+        try PolarRenderer.writePNG(project: noisyProject, page: 0, to: losslessPNG)
+        let jpegProperties = CGImageSourceCopyPropertiesAtIndex(CGImageSourceCreateWithURL(jpegURL as CFURL, nil)!, 0, nil)! as NSDictionary
+        check(jpegProperties[kCGImagePropertyPixelWidth] as? Int == 2550 && jpegProperties[kCGImagePropertyPixelHeight] as? Int == 3300,
+              "letter JPG retains full 300 dpi sheet dimensions")
+        check(jpegProperties[kCGImagePropertyDPIWidth] as? Int == 300 && jpegProperties[kCGImagePropertyDPIHeight] as? Int == 300,
+              "JPG includes physical 300 dpi metadata")
+        let jpegBytes = try Data(contentsOf: jpegURL).count, pngBytes = try Data(contentsOf: losslessPNG).count
+        check(jpegBytes < pngBytes, "JPG is lighter than PNG for noisy photos")
         noisyProject.placements[0]?.zoom = 4
         try PolarRenderer.writePDF(project: noisyProject, to: compactURL)
-        check(pdfImages(at: compactURL).contains { $0["width"] as? Int == 2000 && $0["height"] as? Int == 1500 }, "zoom preserves available source detail")
+        check(pdfImages(at: compactURL).contains { $0["width"] as? Int == visibleWidth && $0["height"] as? Int == visibleHeight }, "zoom retains 300 dpi visible coverage without embedding the entire source")
         var alphaBytes = [UInt8](repeating: 0, count: 80 * 120 * 4)
         for y in 0..<120 { for x in 40..<80 {
             alphaBytes[(y * 80 + x) * 4] = 255
@@ -380,7 +402,7 @@ struct RendererChecks {
         check(templateProtected, "export cannot replace active imported template")
         let preservedTemplateData = try Data(contentsOf: alphaURL)
         check(preservedTemplateData == originalTemplateData, "imported template original is unchanged")
-        print("Noisy fixture PDF: \(compactData.count) bytes; conservative estimate for 44 photos: \(compactData.count * 44) bytes.")
+        print("Noisy fixture PDF: \(compactData.count) bytes; JPG: \(jpegBytes), PNG: \(pngBytes).")
         print("Renderer checks passed: 20 layouts, 8 papers × 2 orientations, empty cards omitted, typography, mixed template, PDF/PNG300, EXIF, QR, calendar, original protection and atomic output.")
     }
 }

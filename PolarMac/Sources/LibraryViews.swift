@@ -117,7 +117,7 @@ extension TemplateStyle {
     @ObservedObject var studio: Studio
     @NativeState<Int> private var step = 0
     private let titles = ["Elige un diseño", "Hazlo tuyo", "Imprime tus recuerdos"]
-    private let descriptions = ["Marcos, películas, canciones y plantillas para cada ocasión.", "Agrega tus fotos. Edita las frases de todas las tarjetas o sólo de una.", "Tu trabajo se guarda automáticamente. Exporta PDF o PNG e imprime al 100 %."]
+    private let descriptions = ["Marcos, películas, canciones y plantillas para cada ocasión.", "Agrega tus fotos. Edita las frases de todas las tarjetas o sólo de una.", "Tu trabajo se guarda automáticamente. Exporta PDF, JPG o PNG e imprime al 100 %."]
     private let icons = ["photo.on.rectangle.angled", "slider.horizontal.3", "printer"]
     var body: some View {
         VStack(spacing: 24) {
@@ -173,14 +173,20 @@ extension TemplateStyle {
                 HStack(spacing: Spacing.m) { finishActions }
                 VStack(spacing: Spacing.m) { finishActions }
             }
-            Text("Tamaño real / 100 %. El PNG se exporta a 300 ppp; el PDF contiene todas las hojas.").font(.callout).foregroundStyle(.secondary)
+            Text("Imprime al 100 %. PDF: todas las hojas, fotos a 300 ppp y texto nítido. JPG: una hoja más ligera a 300 ppp. PNG: sin pérdida, más peso.").font(.callout).foregroundStyle(.secondary)
             Spacer(minLength: 0)
         }.padding(Spacing.l).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading).background(polarCream).tint(polarInk)
     }
     @ViewBuilder private var finishActions: some View {
         ActionTile(title: "Imprimir", icon: "printer") { studio.printDesign() }.disabled(studio.printPDF == nil || studio.busy)
-        ActionTile(title: "Guardar PDF", icon: "doc") { studio.export(png: false) }.disabled(studio.busy)
-        ActionTile(title: "Guardar PNG", icon: "photo") { studio.export(png: true) }.disabled(studio.busy)
+        Menu {
+            Button("PDF · alta calidad · más ligero") { studio.export(.pdf) }
+            Button("PDF sin compresión JPEG · más peso") { studio.export(.pdfLossless) }
+        } label: { Label("Guardar PDF", systemImage: "doc").padding(Spacing.m) }.disabled(studio.busy)
+        Menu {
+            Button("JPG · alta calidad · más ligero") { studio.export(.jpeg) }
+            Button("PNG · sin pérdida · más peso") { studio.export(.png) }
+        } label: { Label("Guardar imagen", systemImage: "photo").padding(Spacing.m) }.disabled(studio.busy)
         ActionTile(title: "Compartir PDF", icon: "square.and.arrow.up") { if let url = studio.printPDF { studio.share(url) } }.disabled(studio.printPDF == nil || studio.busy)
     }
 }
