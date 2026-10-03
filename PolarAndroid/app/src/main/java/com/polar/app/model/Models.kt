@@ -161,7 +161,9 @@ data class PhotoAsset(
     val path: String,
     val pixelWidth: Int,
     val pixelHeight: Int,
-    val takenAtEpochMs: Long? = null
+    val takenAtEpochMs: Long? = null,
+    val maskPath: String? = null,
+    val isBackground: Boolean = false
 ) {
     val name: String get() = path.substringAfterLast('/').substringBeforeLast('.')
 }
@@ -187,13 +189,26 @@ data class PhotoLook(
 }
 
 @Serializable
+data class PhotoBackground(
+    val colorHex: String? = null,
+    val imageID: String? = null,
+    val feather: Double = 0.2,
+    val shadow: Double = 0.15
+)
+
+/** Sólo cambia el aspecto; conserva cuadrícula, fotos y posiciones. */
+@Serializable
+data class PageDesign(val style: TemplateStyle, val format: CardFormat = CardFormat.ORIGINAL)
+
+@Serializable
 data class PhotoPlacement(
     val assetID: String,
     val zoom: Double = 1.0,
     val offsetX: Double = 0.0,
     val offsetY: Double = 0.0,
     val quarterTurns: Int = 0,
-    val photoLook: PhotoLook? = null
+    val photoLook: PhotoLook? = null,
+    val background: PhotoBackground? = null
 )
 
 data class SizeF(val width: Double, val height: Double)
@@ -309,9 +324,11 @@ data class CardOverride(
     val styles: Map<String, TextAppearance> = emptyMap(),
     val dateSource: DateSource? = null,
     val chosenDate: Double? = null,
-    val photoLook: PhotoLook? = null
+    val photoLook: PhotoLook? = null,
+    val designStyle: TemplateStyle? = null,
+    val designFormat: CardFormat? = null
 ) {
-    val isEmpty: Boolean get() = texts.isEmpty() && styles.isEmpty() && dateSource == null && chosenDate == null && photoLook == null
+    val isEmpty: Boolean get() = texts.isEmpty() && styles.isEmpty() && dateSource == null && chosenDate == null && photoLook == null && designStyle == null && designFormat == null
 }
 
 class PolarException(message: String) : Exception(message)
@@ -325,7 +342,8 @@ data class PolarProject(
     // Campos sólo de Android: la Mac los ignora.
     val name: String = "",
     val updatedAtEpochMs: Long = 0,
-    val cardOverrides: Map<String, CardOverride> = emptyMap()
+    val cardOverrides: Map<String, CardOverride> = emptyMap(),
+    val pageDesigns: Map<String, PageDesign> = emptyMap()
 ) {
     val pageCount: Int
         get() {
@@ -343,6 +361,16 @@ data class PolarProject(
     fun cardOfSlot(slot: Int): Int = slot / settings.style.photosPerCard
     fun firstSlotOfCard(card: Int): Int = card * settings.style.photosPerCard
     fun override(card: Int): CardOverride? = cardOverrides[card.toString()]
+
+    fun compatibleStyle(style: TemplateStyle): Boolean = style != TemplateStyle.IMPORTED && settings.style != TemplateStyle.IMPORTED && style.photosPerCard == settings.style.photosPerCard
+    fun settingsForPage(page: Int): PrintSettings = pageDesigns[page.toString()]?.let {
+        settings.copy(style = it.style, cardFormat = it.format)
+    } ?: settings
+    fun settingsForCard(card: Int): PrintSettings {
+        val s = settingsForPage(card / cardsPerPage)
+        val o = override(card)
+        return s.copy(style = o?.designStyle ?: s.style, cardFormat = o?.designFormat ?: s.cardFormat)
+    }
 
     fun asset(forPlacement: PhotoPlacement?): PhotoAsset? {
         if (forPlacement == null) return null
@@ -362,6 +390,12 @@ data class PolarProject(
     }
 
     fun validated() {
+        for ((page, design) in pageDesigns) {
+            if (page.toIntOrNull()?.let { it in 0 until pageCount && page == it.toString() } != true || !compatibleStyle(design.style))
+                throw PolarException("El diseño de una hoja no es compatible con sus posiciones.")
+        }
+        if (cardOverrides.values.any { it.designStyle?.let { style -> !compatibleStyle(style) } == true })
+            throw PolarException("Este diseño requiere otra cantidad de fotos por tarjeta.")
         settings.photoLook?.validated()
         placements.filterNotNull().forEach { it.photoLook?.validated() }
         cardOverrides.values.forEach { it.photoLook?.validated() }
@@ -399,7 +433,7 @@ data class PolarProject(
             checkAppearance(a)
         }
         for ((card, o) in cardOverrides) {
-            if (card.toIntOrNull()?.let { it >= 0 } != true) throw PolarException("Una tarjeta no es válida.")
+            if (card.toIntOrNull()?.let { it >= 0 && card == it.toString() } != true) throw PolarException("Una tarjeta no es válida.")
             for ((role, value) in o.texts) {
                 if (TextRole.fromKey(role) == null) throw PolarException("Hay un texto desconocido: $role")
                 if (value.length > 500) throw PolarException("Un texto es demasiado largo.")
@@ -431,6 +465,12 @@ data class PolarProject(
             throw PolarException("La lista de fotos no es válida.")
         }
         for (slot in placements.filterNotNull()) {
+            slot.background?.let { b ->
+                if ((b.colorHex != null && !hex.matches(b.colorHex)) || (b.imageID != null && b.imageID !in ids) ||
+                    !b.feather.isFinite() || b.feather !in 0.0..1.0 || !b.shadow.isFinite() || b.shadow !in 0.0..1.0 ||
+                    photos.firstOrNull { it.id == slot.assetID }?.maskPath.isNullOrBlank())
+                    throw PolarException("El fondo de una foto no es válido.")
+            }
             if (slot.assetID !in ids) throw PolarException("Falta una foto que usa el diseño.")
             if (!slot.zoom.isFinite() || (slot.zoom <= 0.0 || slot.zoom > 4.0) ||
                 !slot.offsetX.isFinite() || slot.offsetX !in -1.0..1.0 ||

@@ -103,6 +103,26 @@ object PolarRenderer {
         return output
     }
 
+    fun cardRects(project: PolarProject, page: Int): List<PolarRect> {
+        val pageSettings = project.settingsForPage(page)
+        if (pageSettings.style == TemplateStyle.IMPORTED) return calculateCardRects(pageSettings)
+        val cells = calculateCardRects(pageSettings.copy(cardFormat = CardFormat.FILL))
+        return cells.mapIndexed { index, cell ->
+            val aspect = project.settingsForCard(page * project.cardsPerPage + index).cardAspect
+            val w = aspect?.let { min(cell.width, cell.height * it) } ?: cell.width
+            val h = aspect?.let { w / it } ?: cell.height
+            PolarRect(cell.midX-w/2, cell.midY-h/2, cell.midX+w/2, cell.midY+h/2)
+        }
+    }
+    fun photoRects(project: PolarProject, page: Int): List<PolarRect> {
+        val cards = cardRects(project, page)
+        if (project.settings.style == TemplateStyle.IMPORTED) return cards
+        return cards.flatMapIndexed { index, rect ->
+            val s = project.settingsForCard(page * project.cardsPerPage + index)
+            calculatePhotoRects(rect, s.style, s)
+        }
+    }
+
     fun calculatePhotoRects(card: PolarRect, style: TemplateStyle, settings: PrintSettings): List<PolarRect> {
         fun r(x: Double, y: Double, w: Double, h: Double): PolarRect =
             PolarRect(
@@ -148,7 +168,7 @@ object PolarRenderer {
     ) {
         // Una transición puede medir temporalmente la hoja a cero: no rasterizar texto/emoji a escala infinita.
         if (!scale.isFinite() || scale <= 0f) return
-        val s = project.settings
+        val s = project.settingsForPage(page)
         val paper = paperRect(s)
 
         // Draw paper background
@@ -160,7 +180,7 @@ object PolarRenderer {
             return
         }
 
-        val cards = calculateCardRects(s)
+        val cards = cardRects(project, page)
         for ((index, card) in cards.withIndex()) {
             val firstSlot = page * s.capacity + index * s.style.photosPerCard
             val cardIndex = page * project.cardsPerPage + index
@@ -183,7 +203,7 @@ object PolarRenderer {
     }
 
     fun cardPreview(project: PolarProject, slot: Int, maxSide: Int, bitmapProvider: (PhotoAsset) -> Bitmap?, template: Bitmap? = null, fonts: FontProvider = SystemFontProvider): Bitmap {
-        val card = calculateCardRects(project.settings)[(slot % project.settings.capacity) / project.settings.style.photosPerCard]
+        val card = cardRects(project, slot / project.settings.capacity)[(slot % project.settings.capacity) / project.settings.style.photosPerCard]
         val scale = (maxSide / max(card.width, card.height)).toFloat()
         val result = Bitmap.createBitmap(ceil(card.width*scale).toInt().coerceAtLeast(1), ceil(card.height*scale).toInt().coerceAtLeast(1), Bitmap.Config.ARGB_8888)
         val canvas = Canvas(result)
@@ -193,8 +213,7 @@ object PolarRenderer {
     }
 
     fun photoPreview(project: PolarProject, slot: Int, maxSide: Int, bitmapProvider: (PhotoAsset) -> Bitmap?, template: Bitmap? = null, fonts: FontProvider = SystemFontProvider): Bitmap {
-        val card = calculateCardRects(project.settings)[(slot % project.settings.capacity) / project.settings.style.photosPerCard]
-        val photo = calculatePhotoRects(card, project.settings.style, project.settings)[slot % project.settings.style.photosPerCard]
+        val photo = photoRects(project, slot / project.settings.capacity)[slot % project.settings.capacity]
         val scale = (maxSide / max(photo.width, photo.height)).toFloat()
         val result = Bitmap.createBitmap(ceil(photo.width*scale).toInt().coerceAtLeast(1), ceil(photo.height*scale).toInt().coerceAtLeast(1), Bitmap.Config.ARGB_8888)
         val canvas = Canvas(result)
@@ -205,8 +224,8 @@ object PolarRenderer {
 
     /** Foto fuera del hueco para el encuadre: comparte transformación y matriz con la impresión. */
     fun cropOverflow(project: PolarProject, slot: Int, maxSide: Int, provider: (PhotoAsset)->Bitmap?): Bitmap {
-        val s=project.settings
-        val card=calculateCardRects(s)[slot%s.capacity/s.style.photosPerCard]
+        val s=project.settingsForCard(project.cardOfSlot(slot))
+        val card=cardRects(project, slot / project.settings.capacity)[slot%s.capacity/s.style.photosPerCard]
         val rect=calculatePhotoRects(card,s.style,s)[slot%s.style.photosPerCard]
         val scale=(maxSide/max(card.width,card.height)).toFloat()
         val result=Bitmap.createBitmap(ceil(card.width*1.36*scale).toInt().coerceAtLeast(1),ceil(card.height*1.16*scale).toInt().coerceAtLeast(1),Bitmap.Config.ARGB_8888)
@@ -229,7 +248,7 @@ object PolarRenderer {
         fonts: FontProvider,
         pdfPhoto: ((Bitmap) -> Unit)? = null
     ) {
-        val s = project.settings
+        val s = project.settingsForCard(cardIndex)
         val style = s.style
         val accent = parseColor(s.accentHex)
 
@@ -309,7 +328,7 @@ object PolarRenderer {
                 canvas.clipRect(rect.toAndroidRectF(scale))
             }
 
-            drawPhoto(canvas, photo, placement, rect, accent, bgColor, isPreview, scale, bitmapProvider, LookResolver.resolve(project, slot), cardIndex, card, pdfPhoto = pdfPhoto)
+            drawPhoto(canvas, photo, placement, rect, accent, bgColor, isPreview, scale, bitmapProvider, LookResolver.resolve(project, slot), cardIndex, card, pdfPhoto = pdfPhoto, backgroundPhoto = placement?.background?.imageID?.let { id -> project.photos.firstOrNull { it.id == id } })
             canvas.restore()
         }
 
@@ -411,7 +430,8 @@ object PolarRenderer {
         cardIndex: Int,
         card: PolarRect,
         clipPhoto: Boolean = true,
-        pdfPhoto: ((Bitmap) -> Unit)? = null
+        pdfPhoto: ((Bitmap) -> Unit)? = null,
+        backgroundPhoto: PhotoAsset? = null
     ) {
         if (photo == null || placement == null) {
             if (isPreview) {
@@ -433,7 +453,15 @@ object PolarRenderer {
         val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG).apply {
             colorFilter = ColorMatrixColorFilter(ColorMatrix(PhotoFilters.matrix(look).map { it.toFloat() }.toFloatArray()))
         }
+        val options = placement.background
+        val mask = options?.let { photo.maskPath?.let { path -> bitmapProvider(photo.copy(path = path)) } }
+        if (options != null && mask == null && !isPreview) throw java.io.IOException("No se pudo leer la máscara del fondo. Vuelve a quitar el fondo de esta foto.")
+        val background = backgroundPhoto?.let(bitmapProvider)
         fun draw(target: Canvas, originX: Double, originY: Double, drawScale: Float = scale) {
+            if (options != null && mask != null) {
+                PhotoCompositor.draw(target, RectF((originX*drawScale).toFloat(), (originY*drawScale).toFloat(), ((originX+rect.width)*drawScale).toFloat(), ((originY+rect.height)*drawScale).toFloat()), bitmap, mask, background, options, fit, drawScale, paint)
+                return
+            }
             target.save()
             target.translate(((originX + fit.centerX) * drawScale).toFloat(), ((originY + fit.centerY) * drawScale).toFloat())
             target.rotate(fit.degrees)
@@ -442,7 +470,7 @@ object PolarRenderer {
         }
         canvas.save()
         if(clipPhoto) canvas.clipRect(rect.toAndroidRectF(scale)) // También los moldes importados recortan exactamente su hueco.
-        if (clipPhoto && (pdfPhoto != null || PhotoFilters.grainStrength(look) > 0 || (!isPreview && scale <= 1.001f && !look.isNeutral))) {
+        if (clipPhoto && (options != null || pdfPhoto != null || PhotoFilters.grainStrength(look) > 0 || (!isPreview && scale <= 1.001f && !look.isNeutral))) {
             val rasterScale=if(!isPreview && scale<=1.001f) 300f/72f else scale
             val layer = Bitmap.createBitmap(ceil(rect.width*rasterScale).toInt().coerceAtLeast(1), ceil(rect.height*rasterScale).toInt().coerceAtLeast(1), Bitmap.Config.ARGB_8888)
             try {
@@ -770,7 +798,7 @@ object PolarRenderer {
                 val slot = page * s.capacity + idx
                 val placement = project.placements.getOrNull(slot)
                 if (isPreview || placement != null) {
-                    drawPhoto(canvas, project.asset(placement), placement, cards[idx], parseColor(s.accentHex), Color.WHITE, isPreview, scale, bitmapProvider, LookResolver.resolve(project, slot), page * project.cardsPerPage + idx, cards[idx], pdfPhoto = pdfPhoto)
+                    drawPhoto(canvas, project.asset(placement), placement, cards[idx], parseColor(s.accentHex), Color.WHITE, isPreview, scale, bitmapProvider, LookResolver.resolve(project, slot), page * project.cardsPerPage + idx, cards[idx], pdfPhoto = pdfPhoto, backgroundPhoto = placement?.background?.imageID?.let { id -> project.photos.firstOrNull { it.id == id } })
                 }
             }
         }
@@ -786,7 +814,7 @@ object PolarRenderer {
                 val slot = page * s.capacity + idx
                 val placement = project.placements.getOrNull(slot)
                 if (isPreview || placement != null) {
-                    drawPhoto(canvas, project.asset(placement), placement, cards[idx], parseColor(s.accentHex), Color.WHITE, isPreview, scale, bitmapProvider, LookResolver.resolve(project, slot), page * project.cardsPerPage + idx, cards[idx], pdfPhoto = pdfPhoto)
+                    drawPhoto(canvas, project.asset(placement), placement, cards[idx], parseColor(s.accentHex), Color.WHITE, isPreview, scale, bitmapProvider, LookResolver.resolve(project, slot), page * project.cardsPerPage + idx, cards[idx], pdfPhoto = pdfPhoto, backgroundPhoto = placement?.background?.imageID?.let { id -> project.photos.firstOrNull { it.id == id } })
                 }
             }
         }

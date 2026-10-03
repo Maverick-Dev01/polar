@@ -38,6 +38,25 @@ enum PolarRenderer {
         }
     }
 
+    static func cardRects(project: PolarProject, page: Int) -> [CGRect] {
+        var pageSettings = project.settingsForPage(page)
+        if pageSettings.style == .imported { return cardRects(settings: pageSettings) }
+        pageSettings.cardFormat = .fill
+        return cardRects(settings: pageSettings).enumerated().map { index, cell in
+            guard let aspect = project.settingsForCard(page * project.cardsPerPage + index).cardAspect else { return cell }
+            let w = min(cell.width, cell.height * aspect), h = w / aspect
+            return CGRect(x: cell.midX-w/2, y: cell.midY-h/2, width: w, height: h)
+        }
+    }
+    static func photoRects(project: PolarProject, page: Int) -> [CGRect] {
+        let cards = cardRects(project: project, page: page)
+        if project.settings.style == .imported { return cards }
+        return cards.enumerated().flatMap { index, card in
+            let s = project.settingsForCard(page * project.cardsPerPage + index)
+            return photoRects(in: card, style: s.style, settings: s)
+        }
+    }
+
     static func photoRects(in card: CGRect, style: TemplateStyle, settings: PrintSettings) -> [CGRect] {
         func r(_ x: CGFloat, _ y: CGFloat, _ w: CGFloat, _ h: CGFloat) -> CGRect {
             CGRect(x: card.minX + x * card.width, y: card.minY + y * card.height,
@@ -79,9 +98,9 @@ enum PolarRenderer {
 
     static func cropGeometry(project: PolarProject, slot: Int) -> (card: CGRect, photo: CGRect)? {
         let per = project.settings.style.photosPerCard, local = slot % project.settings.capacity
-        let cards = cardRects(settings: project.settings)
+        let cards = cardRects(project: project, page: slot / project.settings.capacity)
         guard cards.indices.contains(local / per) else { return nil }
-        let card = cards[local / per], areas = photoRects(in: card, style: project.settings.style, settings: project.settings)
+        let card = cards[local / per], areas = photoRects(in: card, style: project.settingsForCard(slot/per).style, settings: project.settingsForCard(slot/per))
         guard areas.indices.contains(local % per) else { return nil }
         return (card, areas[local % per])
     }
@@ -228,7 +247,7 @@ enum PolarRenderer {
             try drawImported(project: project, page: page, context: context, isPreview: isPreview, isPDF: isPDF, optimizePhotos: optimizePhotos)
             return
         }
-        let cards = cardRects(settings: project.settings)
+        let cards = cardRects(project: project, page: page)
         for (index, card) in cards.enumerated() {
             context.saveGState()
             defer { context.restoreGState() }
@@ -240,7 +259,7 @@ enum PolarRenderer {
     }
 
     private static func drawCard(_ card: CGRect, project: PolarProject, firstSlot: Int, context: CGContext, isPreview: Bool, isPDF: Bool, optimizePhotos: Bool = true) throws {
-        let s = project.settings, style = s.style, accent = color(s.accentHex)
+        let s = project.settingsForCard(firstSlot / project.settings.style.photosPerCard), style = s.style, accent = color(s.accentHex)
         func r(_ x: CGFloat, _ y: CGFloat, _ w: CGFloat, _ h: CGFloat) -> CGRect {
             CGRect(x: card.minX + x * card.width, y: card.minY + y * card.height, width: w * card.width, height: h * card.height)
         }
@@ -274,7 +293,7 @@ enum PolarRenderer {
             if style == .heart { context.addPath(heartPath(in: rect)); context.clip() }
             try drawPhoto(photo, placement: placement, in: rect, radius: rounded ? min(rect.width, rect.height) * 0.045 : 0,
                           accent: accent, background: background, context: context, isPreview: isPreview, isPDF: isPDF, optimizePhotos: optimizePhotos,
-                          look: LookResolver.resolve(project: project, slot: slot), card: card, cardIndex: firstSlot / style.photosPerCard)
+                          look: LookResolver.resolve(project: project, slot: slot), card: card, cardIndex: firstSlot / style.photosPerCard, backgroundPhoto: placement?.background?.imageID.flatMap { id in project.photos.first { $0.id == id } })
         }
         func userText(_ role: TextRole, in rect: CGRect, size: CGFloat, color: NSColor = .black,
                       weight: NSFont.Weight = .regular, alignment: NSTextAlignment = .center) {
@@ -426,7 +445,7 @@ enum PolarRenderer {
             if !isPreview && placement == nil { return }
             try drawPhoto(project.asset(for: placement), placement: placement, in: cards[index], radius: 0,
                           accent: color(project.settings.accentHex), background: .white, context: context, isPreview: isPreview, isPDF: isPDF, optimizePhotos: optimizePhotos,
-                          look: LookResolver.resolve(project: project, slot: slot), card: cards[index], cardIndex: slot)
+                          look: LookResolver.resolve(project: project, slot: slot), card: cards[index], cardIndex: slot, backgroundPhoto: placement?.background?.imageID.flatMap { id in project.photos.first { $0.id == id } })
         }
         for index in template.regions.indices where template.regions[index].isTransparent { try photo(index) }
         let maximum = max(1, Int((max(frame.width, frame.height) * (isPreview ? 2 : 300 / 72)).rounded(.up)))
@@ -449,7 +468,7 @@ enum PolarRenderer {
 
     private static func drawPhoto(_ photo: PhotoAsset?, placement: PhotoPlacement?, in rect: CGRect, radius: CGFloat,
                                   accent: NSColor, background: NSColor, context: CGContext, isPreview: Bool, isPDF: Bool, optimizePhotos: Bool = true,
-                                  look: PhotoLook, card: CGRect, cardIndex: Int, clipPhoto: Bool = true) throws {
+                                  look: PhotoLook, card: CGRect, cardIndex: Int, clipPhoto: Bool = true, backgroundPhoto: PhotoAsset? = nil) throws {
         context.saveGState()
         defer { context.restoreGState() }
         guard context.boundingBoxOfClipPath.intersects(rect) else { return }
@@ -488,7 +507,7 @@ enum PolarRenderer {
         }
         let width = CGFloat(image.width), height = CGFloat(image.height)
         let fit = PhotoFit.compute(box: rect.size, source: CGSize(width: width, height: height), placement: placement)
-        if !look.isNeutral || isPDF {
+        if !look.isNeutral || isPDF || placement.background != nil {
             // Render in card coordinates before adding grain, so zoom and output resolution never change its seed/grid.
             let density: CGFloat = isPreview ? 2 : 300 / 72
             let w = max(1, Int(ceil(rect.width * density))), h = max(1, Int(ceil(rect.height * density)))
@@ -498,7 +517,18 @@ enum PolarRenderer {
             filtered.rotate(by: CGFloat(placement.quarterTurns) * .pi / 2)
             filtered.scaleBy(x: fit.scale, y: -fit.scale)
             filtered.draw(image, in: CGRect(x: -width / 2, y: -height / 2, width: width, height: height))
-            guard let cropped = filtered.makeImage() else { throw PolarError.exportFailed }
+            guard var cropped = filtered.makeImage() else { throw PolarError.exportFailed }
+            if let options = placement.background {
+                guard let path = photo.maskPath, let maskSource = CGImageSourceCreateWithURL(URL(fileURLWithPath: path) as CFURL, nil),
+                      let maskImage = CGImageSourceCreateImageAtIndex(maskSource, 0, nil), let maskContext = bitmap(width: w, height: h)
+                else { throw PolarError.invalidProject("No se pudo leer la máscara de fondo. Vuelve a quitar el fondo de esta foto.") }
+                maskContext.translateBy(x: 0, y: CGFloat(h)); maskContext.scaleBy(x: CGFloat(w)/rect.width, y: -CGFloat(h)/rect.height)
+                maskContext.translateBy(x: fit.center.x, y: fit.center.y); maskContext.rotate(by: CGFloat(placement.quarterTurns) * .pi / 2)
+                maskContext.scaleBy(x: fit.scale, y: -fit.scale)
+                maskContext.draw(maskImage, in: CGRect(x:-width/2, y:-height/2, width:width, height:height))
+                guard let visibleMask = maskContext.makeImage() else { throw PolarError.exportFailed }
+                cropped = try BackgroundRemover.composite(subject: cropped, mask: visibleMask, options: options, background: backgroundPhoto)
+            }
             image = try PhotoFilters.apply(cropped, look: look, seed: PhotoFilters.seed(assetID: photo.id.uuidString, card: cardIndex),
                                            origin: CGPoint(x: rect.minX - card.minX, y: rect.minY - card.minY), pointsPerPixel: CGSize(width: rect.width / CGFloat(w), height: rect.height / CGFloat(h)))
             if isPDF && optimizePhotos { image = try jpegForPDF(image, background: background) }
@@ -653,7 +683,7 @@ enum PolarRenderer {
         }
     }
 
-    private static func color(_ hex: String) -> NSColor {
+    static func color(_ hex: String) -> NSColor {
         let value = UInt32(hex, radix: 16) ?? 0x92394A
         return NSColor(red: CGFloat((value >> 16) & 255) / 255, green: CGFloat((value >> 8) & 255) / 255, blue: CGFloat(value & 255) / 255, alpha: 1)
     }

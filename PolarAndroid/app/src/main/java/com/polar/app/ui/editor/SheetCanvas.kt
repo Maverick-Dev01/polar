@@ -100,7 +100,7 @@ private fun SheetPage(state: EditorUiState, page: Int, vm: EditorViewModel, cont
     val primary = MaterialTheme.colorScheme.primary
     val onPrimary = MaterialTheme.colorScheme.onPrimary
     val warning = PolarColors.onWarningContainer
-    val rects = remember(settings) { SheetGeometry.slotRects(settings) }
+    val rects = remember(project, page) { SheetGeometry.slotRects(project, page) }
     val lowRes = remember(project) { vm.lowResSlots().toSet() }
     val cap = settings.capacity
     val currentSettings by rememberUpdatedState(settings)
@@ -133,7 +133,7 @@ private fun SheetPage(state: EditorUiState, page: Int, vm: EditorViewModel, cont
                         onTap = { pos ->
                             val xPt = (pos.x / ptToPx).toDouble()
                             val yPt = (pos.y / ptToPx).toDouble()
-                            val hit = SheetGeometry.slotAt(rects, xPt, yPt) ?: SheetGeometry.cardSlotAt(settings, xPt, yPt)
+                            val hit = SheetGeometry.slotAt(rects, xPt, yPt) ?: SheetGeometry.cardSlotAt(project, page, xPt, yPt)
                             if (hit != null) vm.selectSlot(page * cap + hit) else vm.clearSelection()
                         }
                     )

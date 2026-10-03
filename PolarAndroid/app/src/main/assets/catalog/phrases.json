@@ -1,0 +1,722 @@
+[
+  {
+    "id": "1",
+    "category": "Pareja",
+    "text": "Contigo, los días sencillos también se vuelven recuerdos.",
+    "tags": "amor romance orgullo y prejuicio"
+  },
+  {
+    "id": "2",
+    "category": "Pareja",
+    "text": "Nuestro lugar favorito siempre termina siendo juntos.",
+    "tags": "amor romance orgullo y prejuicio"
+  },
+  {
+    "id": "3",
+    "category": "Pareja",
+    "text": "Que nunca nos falten las ganas de volver a elegirnos.",
+    "tags": "amor romance orgullo y prejuicio"
+  },
+  {
+    "id": "4",
+    "category": "Pareja",
+    "text": "En esta foto cabe un instante; en nosotros, toda una historia.",
+    "tags": "amor romance orgullo y prejuicio"
+  },
+  {
+    "id": "5",
+    "category": "Pareja",
+    "text": "Tu risa hace que quiera guardar el día completo.",
+    "tags": "amor romance orgullo y prejuicio"
+  },
+  {
+    "id": "6",
+    "category": "Pareja",
+    "text": "Hay abrazos que se quedan incluso cuando acaba la tarde.",
+    "tags": "amor romance orgullo y prejuicio"
+  },
+  {
+    "id": "7",
+    "category": "Pareja",
+    "text": "No sé el destino, pero me gusta caminar contigo.",
+    "tags": "amor romance orgullo y prejuicio"
+  },
+  {
+    "id": "8",
+    "category": "Pareja",
+    "text": "Lo bonito de este viaje es quién va a mi lado.",
+    "tags": "amor romance orgullo y prejuicio"
+  },
+  {
+    "id": "9",
+    "category": "Pareja",
+    "text": "A veces, para decirlo todo, basta una mirada.",
+    "tags": "amor romance orgullo y prejuicio"
+  },
+  {
+    "id": "10",
+    "category": "Pareja",
+    "text": "Entre tantos caminos, seguimos encontrándonos.",
+    "tags": "amor romance orgullo y prejuicio"
+  },
+  {
+    "id": "11",
+    "category": "Pareja",
+    "text": "Nos queda mucho por vivir y mucho por imprimir.",
+    "tags": "amor romance orgullo y prejuicio"
+  },
+  {
+    "id": "12",
+    "category": "Pareja",
+    "text": "Amar también es cuidarnos en los días sin fotografía.",
+    "tags": "amor romance orgullo y prejuicio"
+  },
+  {
+    "id": "13",
+    "category": "Amistad",
+    "text": "La mejor parte del plan fue tenerlos cerca.",
+    "tags": "amigos amistad equipo"
+  },
+  {
+    "id": "14",
+    "category": "Amistad",
+    "text": "Años distintos, la misma complicidad.",
+    "tags": "amigos amistad equipo"
+  },
+  {
+    "id": "15",
+    "category": "Amistad",
+    "text": "Los buenos amigos hacen hogar en cualquier sitio.",
+    "tags": "amigos amistad equipo"
+  },
+  {
+    "id": "16",
+    "category": "Amistad",
+    "text": "Guardar esta foto es guardar nuestras risas.",
+    "tags": "amigos amistad equipo"
+  },
+  {
+    "id": "17",
+    "category": "Amistad",
+    "text": "Que la vida nos siga reuniendo sin necesidad de una excusa.",
+    "tags": "amigos amistad equipo"
+  },
+  {
+    "id": "18",
+    "category": "Amistad",
+    "text": "Este grupo sabe convertir lo cotidiano en aventura.",
+    "tags": "amigos amistad equipo"
+  },
+  {
+    "id": "19",
+    "category": "Amistad",
+    "text": "Hay amistades que no necesitan ponerse al día.",
+    "tags": "amigos amistad equipo"
+  },
+  {
+    "id": "20",
+    "category": "Amistad",
+    "text": "Gracias por estar también fuera del encuadre.",
+    "tags": "amigos amistad equipo"
+  },
+  {
+    "id": "21",
+    "category": "Amistad",
+    "text": "La distancia cambia el mapa, no nuestra amistad.",
+    "tags": "amigos amistad equipo"
+  },
+  {
+    "id": "22",
+    "category": "Amistad",
+    "text": "Compartir el camino hace más ligera la mochila.",
+    "tags": "amigos amistad equipo"
+  },
+  {
+    "id": "23",
+    "category": "Amistad",
+    "text": "De todas las casualidades, ustedes son mis favoritas.",
+    "tags": "amigos amistad equipo"
+  },
+  {
+    "id": "24",
+    "category": "Amistad",
+    "text": "Todavía nos quedan historias para contar mal y reír mucho.",
+    "tags": "amigos amistad equipo"
+  },
+  {
+    "id": "25",
+    "category": "Familia",
+    "text": "Aquí aprendí que el cariño también se hereda.",
+    "tags": "familia hogar padres hijos"
+  },
+  {
+    "id": "26",
+    "category": "Familia",
+    "text": "Nuestra historia se cuenta mejor cuando estamos juntos.",
+    "tags": "familia hogar padres hijos"
+  },
+  {
+    "id": "27",
+    "category": "Familia",
+    "text": "Un hogar puede caber en un abrazo.",
+    "tags": "familia hogar padres hijos"
+  },
+  {
+    "id": "28",
+    "category": "Familia",
+    "text": "La mesa cambia, las ganas de reunirnos permanecen.",
+    "tags": "familia hogar padres hijos"
+  },
+  {
+    "id": "29",
+    "category": "Familia",
+    "text": "Las pequeñas tradiciones construyen grandes recuerdos.",
+    "tags": "familia hogar padres hijos"
+  },
+  {
+    "id": "30",
+    "category": "Familia",
+    "text": "Gracias por enseñarme a encontrar mi lugar.",
+    "tags": "familia hogar padres hijos"
+  },
+  {
+    "id": "31",
+    "category": "Familia",
+    "text": "Somos distintos y aun así sabemos volver a casa.",
+    "tags": "familia hogar padres hijos"
+  },
+  {
+    "id": "32",
+    "category": "Familia",
+    "text": "Cada generación le agrega una página a esta historia.",
+    "tags": "familia hogar padres hijos"
+  },
+  {
+    "id": "33",
+    "category": "Familia",
+    "text": "Este recuerdo tiene el calor de los nuestros.",
+    "tags": "familia hogar padres hijos"
+  },
+  {
+    "id": "34",
+    "category": "Familia",
+    "text": "El amor se nota en quienes se quedan a cuidar.",
+    "tags": "familia hogar padres hijos"
+  },
+  {
+    "id": "35",
+    "category": "Familia",
+    "text": "Nada como una tarde sin prisa en familia.",
+    "tags": "familia hogar padres hijos"
+  },
+  {
+    "id": "36",
+    "category": "Familia",
+    "text": "Lo que somos también vive en estas fotografías.",
+    "tags": "familia hogar padres hijos"
+  },
+  {
+    "id": "37",
+    "category": "Mascotas",
+    "text": "Cuatro patas y mil maneras de alegrarnos el día.",
+    "tags": "animales perros gatos mascotas"
+  },
+  {
+    "id": "38",
+    "category": "Mascotas",
+    "text": "Mi compañero favorito no necesita palabras.",
+    "tags": "animales perros gatos mascotas"
+  },
+  {
+    "id": "39",
+    "category": "Mascotas",
+    "text": "En esta casa también se ama dejando huellas.",
+    "tags": "animales perros gatos mascotas"
+  },
+  {
+    "id": "40",
+    "category": "Mascotas",
+    "text": "Tu lugar en el sofá ya estaba reservado en mi corazón.",
+    "tags": "animales perros gatos mascotas"
+  },
+  {
+    "id": "41",
+    "category": "Mascotas",
+    "text": "Pequeñas patas, recuerdos enormes.",
+    "tags": "animales perros gatos mascotas"
+  },
+  {
+    "id": "42",
+    "category": "Mascotas",
+    "text": "Cada paseo contigo es una buena excusa para sonreír.",
+    "tags": "animales perros gatos mascotas"
+  },
+  {
+    "id": "43",
+    "category": "Mascotas",
+    "text": "No elegimos la misma especie, pero sí la misma familia.",
+    "tags": "animales perros gatos mascotas"
+  },
+  {
+    "id": "44",
+    "category": "Mascotas",
+    "text": "Entre siestas y juegos, nos enseñaste a estar presentes.",
+    "tags": "animales perros gatos mascotas"
+  },
+  {
+    "id": "45",
+    "category": "Mascotas",
+    "text": "El cariño también mueve la cola.",
+    "tags": "animales perros gatos mascotas"
+  },
+  {
+    "id": "46",
+    "category": "Mascotas",
+    "text": "Guardamos tu mirada para los días en que haga falta calma.",
+    "tags": "animales perros gatos mascotas"
+  },
+  {
+    "id": "47",
+    "category": "Mascotas",
+    "text": "La rutina se vuelve aventura cuando vienes conmigo.",
+    "tags": "animales perros gatos mascotas"
+  },
+  {
+    "id": "48",
+    "category": "Mascotas",
+    "text": "Este recuerdo tiene pelos, patas y mucho amor.",
+    "tags": "animales perros gatos mascotas"
+  },
+  {
+    "id": "49",
+    "category": "Viajes",
+    "text": "El mapa termina donde empieza este recuerdo.",
+    "tags": "viaje naturaleza aventura paisaje"
+  },
+  {
+    "id": "50",
+    "category": "Viajes",
+    "text": "Nos fuimos lejos y encontramos algo muy nuestro.",
+    "tags": "viaje naturaleza aventura paisaje"
+  },
+  {
+    "id": "51",
+    "category": "Viajes",
+    "text": "Una parada más para guardar la vida.",
+    "tags": "viaje naturaleza aventura paisaje"
+  },
+  {
+    "id": "52",
+    "category": "Viajes",
+    "text": "Cada lugar se ve distinto con buena compañía.",
+    "tags": "viaje naturaleza aventura paisaje"
+  },
+  {
+    "id": "53",
+    "category": "Viajes",
+    "text": "Hay caminos que se quedan dentro de uno.",
+    "tags": "viaje naturaleza aventura paisaje"
+  },
+  {
+    "id": "54",
+    "category": "Viajes",
+    "text": "Esta vista merecía detener el reloj un momento.",
+    "tags": "viaje naturaleza aventura paisaje"
+  },
+  {
+    "id": "55",
+    "category": "Viajes",
+    "text": "Salimos a conocer el mundo y volvimos con historias.",
+    "tags": "viaje naturaleza aventura paisaje"
+  },
+  {
+    "id": "56",
+    "category": "Viajes",
+    "text": "Que nunca falten ganas de asomarnos a otro paisaje.",
+    "tags": "viaje naturaleza aventura paisaje"
+  },
+  {
+    "id": "57",
+    "category": "Viajes",
+    "text": "La mejor maleta es la que regresa llena de recuerdos.",
+    "tags": "viaje naturaleza aventura paisaje"
+  },
+  {
+    "id": "58",
+    "category": "Viajes",
+    "text": "Un pequeño viaje también puede abrir un gran capítulo.",
+    "tags": "viaje naturaleza aventura paisaje"
+  },
+  {
+    "id": "59",
+    "category": "Viajes",
+    "text": "Aquí respiramos despacio y miramos de verdad.",
+    "tags": "viaje naturaleza aventura paisaje"
+  },
+  {
+    "id": "60",
+    "category": "Viajes",
+    "text": "El horizonte nos prestó un lugar para esta foto.",
+    "tags": "viaje naturaleza aventura paisaje"
+  },
+  {
+    "id": "61",
+    "category": "Celebraciones",
+    "text": "Brindamos por lo vivido y por lo que todavía no imaginamos.",
+    "tags": "cumpleaños aniversario boda fiesta"
+  },
+  {
+    "id": "62",
+    "category": "Celebraciones",
+    "text": "Un día que merecía guardarse con todas sus sonrisas.",
+    "tags": "cumpleaños aniversario boda fiesta"
+  },
+  {
+    "id": "63",
+    "category": "Celebraciones",
+    "text": "La alegría se multiplica cuando se comparte.",
+    "tags": "cumpleaños aniversario boda fiesta"
+  },
+  {
+    "id": "64",
+    "category": "Celebraciones",
+    "text": "Otra vuelta al sol y muchas ganas de seguir.",
+    "tags": "cumpleaños aniversario boda fiesta"
+  },
+  {
+    "id": "65",
+    "category": "Celebraciones",
+    "text": "Hoy celebramos algo más que una fecha.",
+    "tags": "cumpleaños aniversario boda fiesta"
+  },
+  {
+    "id": "66",
+    "category": "Celebraciones",
+    "text": "Que este abrazo dure más que la fiesta.",
+    "tags": "cumpleaños aniversario boda fiesta"
+  },
+  {
+    "id": "67",
+    "category": "Celebraciones",
+    "text": "Esta foto guarda el instante antes del próximo deseo.",
+    "tags": "cumpleaños aniversario boda fiesta"
+  },
+  {
+    "id": "68",
+    "category": "Celebraciones",
+    "text": "Hicimos espacio para la alegría y vinieron todos.",
+    "tags": "cumpleaños aniversario boda fiesta"
+  },
+  {
+    "id": "69",
+    "category": "Celebraciones",
+    "text": "Los mejores regalos a veces aparecen en la fotografía.",
+    "tags": "cumpleaños aniversario boda fiesta"
+  },
+  {
+    "id": "70",
+    "category": "Celebraciones",
+    "text": "Una fecha especial, una historia que sigue creciendo.",
+    "tags": "cumpleaños aniversario boda fiesta"
+  },
+  {
+    "id": "71",
+    "category": "Celebraciones",
+    "text": "Que no se acaben las razones para reunirnos.",
+    "tags": "cumpleaños aniversario boda fiesta"
+  },
+  {
+    "id": "72",
+    "category": "Celebraciones",
+    "text": "Este capítulo comenzó con una sonrisa.",
+    "tags": "cumpleaños aniversario boda fiesta"
+  },
+  {
+    "id": "73",
+    "category": "Calma",
+    "text": "No todos los días necesitan correr.",
+    "tags": "paz luz bienestar inspiración"
+  },
+  {
+    "id": "74",
+    "category": "Calma",
+    "text": "La luz de esta tarde fue suficiente.",
+    "tags": "paz luz bienestar inspiración"
+  },
+  {
+    "id": "75",
+    "category": "Calma",
+    "text": "Respirar, mirar y quedarnos aquí un momento.",
+    "tags": "paz luz bienestar inspiración"
+  },
+  {
+    "id": "76",
+    "category": "Calma",
+    "text": "Lo sencillo también merece una fotografía.",
+    "tags": "paz luz bienestar inspiración"
+  },
+  {
+    "id": "77",
+    "category": "Calma",
+    "text": "Hay belleza en las cosas que no hacen ruido.",
+    "tags": "paz luz bienestar inspiración"
+  },
+  {
+    "id": "78",
+    "category": "Calma",
+    "text": "Este instante no pidió nada, sólo presencia.",
+    "tags": "paz luz bienestar inspiración"
+  },
+  {
+    "id": "79",
+    "category": "Calma",
+    "text": "Que podamos volver a esta calma cuando haga falta.",
+    "tags": "paz luz bienestar inspiración"
+  },
+  {
+    "id": "80",
+    "category": "Calma",
+    "text": "Aprendimos a disfrutar incluso los días sin plan.",
+    "tags": "paz luz bienestar inspiración"
+  },
+  {
+    "id": "81",
+    "category": "Calma",
+    "text": "Una pausa también puede ser parte del camino.",
+    "tags": "paz luz bienestar inspiración"
+  },
+  {
+    "id": "82",
+    "category": "Calma",
+    "text": "Hoy la vida se sintió un poco más ligera.",
+    "tags": "paz luz bienestar inspiración"
+  },
+  {
+    "id": "83",
+    "category": "Calma",
+    "text": "Guardemos la luz antes de seguir andando.",
+    "tags": "paz luz bienestar inspiración"
+  },
+  {
+    "id": "84",
+    "category": "Calma",
+    "text": "Estar aquí ya era una buena noticia.",
+    "tags": "paz luz bienestar inspiración"
+  },
+  {
+    "id": "85",
+    "category": "Cine y series",
+    "text": "Nuestro próximo capítulo aún no tiene final escrito.",
+    "tags": "cine película series orgullo y prejuicio endgame ciencia ficción fantasía"
+  },
+  {
+    "id": "86",
+    "category": "Cine y series",
+    "text": "Hay encuentros que merecen su propia escena.",
+    "tags": "cine película series orgullo y prejuicio endgame ciencia ficción fantasía"
+  },
+  {
+    "id": "87",
+    "category": "Cine y series",
+    "text": "Si la vida fuera una película, volvería a esta toma.",
+    "tags": "cine película series orgullo y prejuicio endgame ciencia ficción fantasía"
+  },
+  {
+    "id": "88",
+    "category": "Cine y series",
+    "text": "Los mejores giros de la historia llegaron contigo.",
+    "tags": "cine película series orgullo y prejuicio endgame ciencia ficción fantasía"
+  },
+  {
+    "id": "89",
+    "category": "Cine y series",
+    "text": "No necesitamos créditos para saber quién estuvo ahí.",
+    "tags": "cine película series orgullo y prejuicio endgame ciencia ficción fantasía"
+  },
+  {
+    "id": "90",
+    "category": "Cine y series",
+    "text": "Todo gran equipo comienza con alguien que decide quedarse.",
+    "tags": "cine película series orgullo y prejuicio endgame ciencia ficción fantasía"
+  },
+  {
+    "id": "91",
+    "category": "Cine y series",
+    "text": "A veces la valentía es volver a intentarlo juntos.",
+    "tags": "cine película series orgullo y prejuicio endgame ciencia ficción fantasía"
+  },
+  {
+    "id": "92",
+    "category": "Cine y series",
+    "text": "La aventura empieza cuando dejamos espacio a lo inesperado.",
+    "tags": "cine película series orgullo y prejuicio endgame ciencia ficción fantasía"
+  },
+  {
+    "id": "93",
+    "category": "Cine y series",
+    "text": "Nuestra historia tiene más risas que ensayos.",
+    "tags": "cine película series orgullo y prejuicio endgame ciencia ficción fantasía"
+  },
+  {
+    "id": "94",
+    "category": "Cine y series",
+    "text": "Esta escena tenía el reparto perfecto.",
+    "tags": "cine película series orgullo y prejuicio endgame ciencia ficción fantasía"
+  },
+  {
+    "id": "95",
+    "category": "Cine y series",
+    "text": "Entre mundos posibles, elegimos este instante.",
+    "tags": "cine película series orgullo y prejuicio endgame ciencia ficción fantasía"
+  },
+  {
+    "id": "96",
+    "category": "Cine y series",
+    "text": "El final de un día también puede abrir otra historia.",
+    "tags": "cine película series orgullo y prejuicio endgame ciencia ficción fantasía"
+  },
+  {
+    "id": "97",
+    "category": "Anime y fantasía",
+    "text": "Un pequeño paso también cuenta en una gran aventura.",
+    "tags": "anime manga héroes sueños aventura"
+  },
+  {
+    "id": "98",
+    "category": "Anime y fantasía",
+    "text": "No hace falta ser invencible para seguir adelante.",
+    "tags": "anime manga héroes sueños aventura"
+  },
+  {
+    "id": "99",
+    "category": "Anime y fantasía",
+    "text": "El equipo se reconoce cuando el camino se vuelve difícil.",
+    "tags": "anime manga héroes sueños aventura"
+  },
+  {
+    "id": "100",
+    "category": "Anime y fantasía",
+    "text": "Guardamos este momento antes de la siguiente misión.",
+    "tags": "anime manga héroes sueños aventura"
+  },
+  {
+    "id": "101",
+    "category": "Anime y fantasía",
+    "text": "Nuestros sueños merecen más de un intento.",
+    "tags": "anime manga héroes sueños aventura"
+  },
+  {
+    "id": "102",
+    "category": "Anime y fantasía",
+    "text": "La fuerza también está en pedir una mano.",
+    "tags": "anime manga héroes sueños aventura"
+  },
+  {
+    "id": "103",
+    "category": "Anime y fantasía",
+    "text": "Cada encuentro agregó una luz a nuestro mundo.",
+    "tags": "anime manga héroes sueños aventura"
+  },
+  {
+    "id": "104",
+    "category": "Anime y fantasía",
+    "text": "Aun en los días grises, seguimos buscando el horizonte.",
+    "tags": "anime manga héroes sueños aventura"
+  },
+  {
+    "id": "105",
+    "category": "Anime y fantasía",
+    "text": "La próxima aventura empieza con los que están aquí.",
+    "tags": "anime manga héroes sueños aventura"
+  },
+  {
+    "id": "106",
+    "category": "Anime y fantasía",
+    "text": "Nuestra mejor habilidad es no soltar a los nuestros.",
+    "tags": "anime manga héroes sueños aventura"
+  },
+  {
+    "id": "107",
+    "category": "Anime y fantasía",
+    "text": "Hay promesas que se cuidan con acciones pequeñas.",
+    "tags": "anime manga héroes sueños aventura"
+  },
+  {
+    "id": "108",
+    "category": "Anime y fantasía",
+    "text": "Elegimos seguir creciendo sin olvidar de dónde venimos.",
+    "tags": "anime manga héroes sueños aventura"
+  },
+  {
+    "id": "109",
+    "category": "Música y libros",
+    "text": "Esta foto suena a uno de nuestros días favoritos.",
+    "tags": "música canción poesía libros lectura orgullo y prejuicio"
+  },
+  {
+    "id": "110",
+    "category": "Música y libros",
+    "text": "Hay recuerdos que vuelven cuando empieza una canción.",
+    "tags": "música canción poesía libros lectura orgullo y prejuicio"
+  },
+  {
+    "id": "111",
+    "category": "Música y libros",
+    "text": "Fuimos escribiendo esta historia sin saber cuántas páginas tendría.",
+    "tags": "música canción poesía libros lectura orgullo y prejuicio"
+  },
+  {
+    "id": "112",
+    "category": "Música y libros",
+    "text": "Algunas personas se quedan como un buen verso.",
+    "tags": "música canción poesía libros lectura orgullo y prejuicio"
+  },
+  {
+    "id": "113",
+    "category": "Música y libros",
+    "text": "Entre tantas palabras, tu nombre encontró su sitio.",
+    "tags": "música canción poesía libros lectura orgullo y prejuicio"
+  },
+  {
+    "id": "114",
+    "category": "Música y libros",
+    "text": "Guardamos la melodía de una tarde cualquiera.",
+    "tags": "música canción poesía libros lectura orgullo y prejuicio"
+  },
+  {
+    "id": "115",
+    "category": "Música y libros",
+    "text": "Nos conocimos en un capítulo que todavía me gusta releer.",
+    "tags": "música canción poesía libros lectura orgullo y prejuicio"
+  },
+  {
+    "id": "116",
+    "category": "Música y libros",
+    "text": "La vida puso el ritmo; nosotros, las ganas de bailar.",
+    "tags": "música canción poesía libros lectura orgullo y prejuicio"
+  },
+  {
+    "id": "117",
+    "category": "Música y libros",
+    "text": "Esta página tiene una luz que no quiero olvidar.",
+    "tags": "música canción poesía libros lectura orgullo y prejuicio"
+  },
+  {
+    "id": "118",
+    "category": "Música y libros",
+    "text": "Hay silencios que también cuentan una historia.",
+    "tags": "música canción poesía libros lectura orgullo y prejuicio"
+  },
+  {
+    "id": "119",
+    "category": "Música y libros",
+    "text": "Cada recuerdo encontró su propia banda sonora.",
+    "tags": "música canción poesía libros lectura orgullo y prejuicio"
+  },
+  {
+    "id": "120",
+    "category": "Música y libros",
+    "text": "Seguimos escribiendo, incluso en los márgenes.",
+    "tags": "música canción poesía libros lectura orgullo y prejuicio"
+  }
+]

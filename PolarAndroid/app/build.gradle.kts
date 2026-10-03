@@ -17,8 +17,8 @@ android {
         applicationId = "io.github.maverickdev01.polar"
         minSdk = 26
         targetSdk = 36
-        versionCode = providers.gradleProperty("POLAR_VERSION_CODE").getOrElse("5").toInt()
-        versionName = providers.gradleProperty("POLAR_VERSION_NAME").getOrElse("2.1.2")
+        versionCode = providers.gradleProperty("POLAR_VERSION_CODE").getOrElse("6").toInt()
+        versionName = providers.gradleProperty("POLAR_VERSION_NAME").getOrElse("2.2.0")
         buildConfigField("boolean", "GITHUB_UPDATES_ENABLED", "true")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
@@ -123,6 +123,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.zxing.core)
+    implementation("com.google.android.gms:play-services-mlkit-subject-segmentation:16.0.0-beta1")
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

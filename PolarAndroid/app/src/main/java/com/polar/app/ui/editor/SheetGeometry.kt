@@ -2,11 +2,16 @@ package com.polar.app.ui.editor
 
 import com.polar.app.engine.PolarRect
 import com.polar.app.engine.PolarRenderer
+import com.polar.app.model.PolarProject
 import com.polar.app.model.PrintSettings
 import com.polar.app.model.TemplateStyle
 
 /** Rectángulos (en puntos) de cada espacio de una hoja, en el mismo orden que usa el motor. */
 object SheetGeometry {
+    fun slotRects(project: PolarProject, page: Int) = PolarRenderer.photoRects(project, page)
+    fun cardSlotAt(project: PolarProject, page: Int, xPt: Double, yPt: Double): Int? =
+        slotAt(PolarRenderer.cardRects(project, page), xPt, yPt)?.times(project.settings.style.photosPerCard)
+
     fun slotRects(settings: PrintSettings): List<PolarRect> {
         val cards = PolarRenderer.calculateCardRects(settings)
         if (settings.style == TemplateStyle.IMPORTED) return cards

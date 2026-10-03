@@ -18,12 +18,14 @@ import com.polar.app.core.edit.ProjectEdits
 import com.polar.app.model.*
 import com.polar.app.ui.PickerDates
 import com.polar.app.ui.components.*
+import com.polar.app.ui.editor.DesignScope
 import com.polar.app.ui.editor.EditorUiState
 import java.text.DateFormat
 import java.util.Date
 
 class DesignCallbacks(
     val onChangeDesign: () -> Unit,
+    val onScope: (DesignScope) -> Unit = {},
     val onAccent: (String) -> Unit,
     val onLayout: (Int) -> Unit,
     val onMood: (MoodPreset) -> Unit,
@@ -51,13 +53,21 @@ private val DESIGN_PALETTE = listOf(
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun DesignPanel(state: EditorUiState, cb: DesignCallbacks) {
-    val s = state.project.settings
+    val s = if (state.designScope == DesignScope.CARD && state.selectedCard != null) state.project.settingsForCard(state.selectedCard!!) else if (state.designScope == DesignScope.PAGE) state.project.settingsForPage(state.page) else state.project.settings
     val imported = s.style == TemplateStyle.IMPORTED
     var more by rememberSaveable { mutableStateOf(false) }
     var otherColor by remember { mutableStateOf(false) }
     var pickDate by remember { mutableStateOf(false) }
 
     PanelColumn {
+        SectionLabel("Aplicar diseño a")
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf(DesignScope.ALL to "Colección", DesignScope.PAGE to "Hoja ${state.page + 1}", DesignScope.CARD to "Tarjeta seleccionada").forEach { (scope, label) ->
+                PolarChip(state.designScope == scope, { cb.onScope(scope) }, { Text(label) })
+            }
+        }
+        Text("Los diseños compatibles conservan las posiciones. La distribución de fotos por hoja se aplica a la colección.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+
         Surface(color = MaterialTheme.colorScheme.surfaceContainer, shape = MaterialTheme.shapes.medium) {
             Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
@@ -91,7 +101,7 @@ fun DesignPanel(state: EditorUiState, cb: DesignCallbacks) {
             }
         }
         Text(stringResource(R.string.design_moods_help), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        TextButton(onClick = cb.onSuggested) { Text(stringResource(R.string.design_suggested)) }
+        TextButton(onClick = cb.onSuggested, enabled = s.style.textRoles.isNotEmpty()) { Text(stringResource(R.string.design_suggested)) }
 
         if (s.style == TemplateStyle.CALENDAR) {
             SectionLabel(stringResource(R.string.design_calendar))

@@ -15,6 +15,7 @@ import java.io.File
 enum class Tool { PHOTOS, FILTERS, DESIGN, TEXT, PAPER }
 enum class EditorMode { EDIT, CROP, FINISH, CHANGE_DESIGN }
 enum class LookScope { ALL, PAGE, PAGES, PHOTO }
+enum class DesignScope { ALL, PAGE, CARD }
 enum class TextScope { ALL, CARD }
 enum class ExportAction { PRINT, SAVE, SHARE }
 enum class ExportFormat(val mime: String, val pdf: Boolean) {
@@ -27,6 +28,9 @@ data class EditorUiState(
     val project: PolarProject = PolarProject().normalized(),
     val page: Int = 0,
     val selectedSlot: Int? = null,
+    val multiSelecting: Boolean = false,
+    val selectedSlots: Set<Int> = emptySet(),
+    val designScope: DesignScope = DesignScope.ALL,
     val tool: Tool? = null,
     val trayExpanded: Boolean = false,
     val lookScope: LookScope = LookScope.ALL,
@@ -44,6 +48,7 @@ data class EditorUiState(
     val editingRegions: Boolean = false,
     val templateVersion: Int = 0,
     val busy: Boolean = false,
+    val backgroundError: String? = null,
     val lastMood: MoodPreset = MoodPreset.COUPLE,
     val loadFailed: Boolean = false
 ) {
@@ -73,5 +78,6 @@ class EditorDeps(
     val loadTemplate: (String) -> Bitmap?,
     val io: CoroutineDispatcher = Dispatchers.IO,
     val appScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
-    val autosaveDelayMs: Long = 800
+    val autosaveDelayMs: Long = 800,
+    val removeBackground: (suspend (PhotoAsset, File) -> String)? = null
 )

@@ -46,9 +46,10 @@ import java.util.Locale
 fun CropScreen(state: EditorUiState,vm: EditorViewModel,container: AppContainer) {
     val slot=state.selectedSlot; val placement=state.selectedPlacement; val asset=state.project.asset(placement)
     if(slot==null || placement==null || asset==null) { LaunchedEffect(Unit) { vm.setMode(EditorMode.EDIT) };return }
-    val settings=state.project.settings
-    val card=remember(settings,slot) { PolarRenderer.calculateCardRects(settings)[slot%settings.capacity/settings.style.photosPerCard] }
-    val rect=remember(settings,slot) { SheetGeometry.slotRects(settings)[slot%settings.capacity] }
+    val project=state.project
+    val settings=project.settings
+    val card=remember(project,slot) { PolarRenderer.cardRects(project, slot/settings.capacity)[slot%settings.capacity/settings.style.photosPerCard] }
+    val rect=remember(project,slot) { SheetGeometry.slotRects(project, slot/settings.capacity)[slot%settings.capacity] }
     val minimumZoom=PhotoFit.fitZoom(rect.width,rect.height,asset.pixelWidth,asset.pixelHeight,placement.quarterTurns)
     val latest by rememberUpdatedState(state.selectedPlacement!!)
     var gesturing by remember(slot) { mutableStateOf(false) }
@@ -130,6 +131,7 @@ fun CropScreen(state: EditorUiState,vm: EditorViewModel,container: AppContainer)
                 Surface(color=if(low) PolarColors.warningContainer else PolarColors.successContainer,shape=MaterialTheme.shapes.medium,modifier=Modifier.fillMaxWidth()) {
                     Text(stringResource(if(low) R.string.crop_quality_low else R.string.crop_quality_ok),color=if(low) PolarColors.onWarningContainer else PolarColors.onSuccessContainer,modifier=Modifier.padding(12.dp),style=MaterialTheme.typography.labelLarge)
                 }
+                com.polar.app.ui.editor.panels.BackgroundControls(state, vm, container)
                 LensRing(stringResource(R.string.crop_zoom),placement.zoom,minimumZoom..4.0,String.format(Locale.ROOT,"%.1f×",placement.zoom),.1,{ v->vm.editSelectedPlacement { it.copy(zoom=v) } },vm::beginGesture,vm::endGesture)
                 val actions=listOf(stringResource(R.string.crop_rotate) to vm::rotateSelected,stringResource(R.string.crop_fill) to ::fill,stringResource(R.string.crop_fit) to ::fit,stringResource(R.string.crop_center) to {vm.editSelectedPlacement {it.copy(offsetX=0.0,offsetY=0.0)}},stringResource(R.string.crop_reset) to vm::resetSelectedPlacement)
                 LazyRow(horizontalArrangement=Arrangement.spacedBy(12.dp)) { items(actions.size) { i->val (label,action)=actions[i];OutlinedButton(onClick=action,modifier=Modifier.width(104.dp).heightIn(min=56.dp),contentPadding=PaddingValues(8.dp),shape=MaterialTheme.shapes.medium){Text(label,maxLines=2,textAlign=androidx.compose.ui.text.style.TextAlign.Center)} } }

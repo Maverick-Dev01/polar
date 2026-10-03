@@ -168,6 +168,12 @@ extension TemplateStyle {
             }
             let empty = studio.project.pageCount * studio.project.settings.capacity - studio.project.placedCount
             if empty > 0 { Label("\(empty) espacios vacíos. Sus marcos y textos no se imprimen.", systemImage: "rectangle.dashed").font(.callout).foregroundStyle(.secondary) }
+            Toggle("Guías para recortar fotografía y texto", isOn: Binding(get: { studio.project.settings.cutGuides }, set: { value in studio.change { $0.settings.cutGuides = value }; studio.finish() })).disabled(studio.busy)
+            if studio.project.settings.cutGuides {
+                Picker("Guías", selection: Binding(get: { studio.project.settings.cutStyle }, set: { value in studio.change { $0.settings.cutStyle = value }; studio.finish() })) {
+                    Text("Esquinas").tag(CutStyle.corners); Text("Líneas completas").tag(CutStyle.lines)
+                }.disabled(studio.busy)
+            }
             if studio.busy { ProgressView("Preparando archivo…") }
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: Spacing.m) { finishActions }

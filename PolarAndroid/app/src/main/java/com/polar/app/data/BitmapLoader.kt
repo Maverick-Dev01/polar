@@ -3,11 +3,15 @@ package com.polar.app.data
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.ColorSpace
+import android.graphics.ImageDecoder
 import android.graphics.Matrix
 import android.net.Uri
+import android.os.Build
 import android.util.Log
 import android.util.LruCache
 import androidx.exifinterface.media.ExifInterface
+import com.polar.app.model.PolarException
 import java.io.File
 import java.io.InputStream
 import java.text.SimpleDateFormat
@@ -44,19 +48,39 @@ class BitmapLoader(private val context: Context) {
 
     fun load(path: String, maxDim: Int): Bitmap? = load(path, maxDim, false)
 
-    fun loadForPrint(path: String, maxDim: Int): Bitmap? = load(path, maxDim, true)
+    fun loadForPrint(path: String, maxDim: Int): Bitmap = load(path, maxDim, true)
+        ?: throw PolarException("No se pudo leer una foto del diseño. Revisa que el original esté disponible.")
 
     private fun load(path: String, maxDim: Int, exactSize: Boolean): Bitmap? {
+        require(maxDim > 0)
         val key = "$path@$maxDim@$exactSize"
         cache.get(key)?.takeIf { !it.isRecycled }?.let { return it }
         return try {
+            if (exactSize && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                // Decode to the print size directly: no full 48 MP bitmap plus resized copy in memory.
+                val source = when {
+                    path.startsWith("content:") -> ImageDecoder.createSource(context.contentResolver, Uri.parse(path))
+                    path.startsWith("file:") -> ImageDecoder.createSource(File(Uri.parse(path).path ?: return null))
+                    else -> ImageDecoder.createSource(File(path))
+                }
+                val result = ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
+                    decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+                    decoder.setTargetColorSpace(ColorSpace.get(ColorSpace.Named.SRGB))
+                    val scale = minOf(1.0, maxDim.toDouble() / maxOf(info.size.width, info.size.height))
+                    decoder.setTargetSize((info.size.width * scale).roundToInt().coerceAtLeast(1),
+                        (info.size.height * scale).roundToInt().coerceAtLeast(1))
+                }
+                cache.put(key, result)
+                return result // ImageDecoder applies EXIF orientation itself.
+            }
             val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
             // Con inJustDecodeBounds decodeStream devuelve null por contrato: sólo importa que el archivo abra.
             open(path)?.use { BitmapFactory.decodeStream(it, null, bounds); true } ?: return null
             if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
             val options = BitmapFactory.Options().apply {
                 // Para imprimir se decodifica por encima del objetivo y se reduce exactamente, nunca por debajo de 300 ppp.
-                inSampleSize = BitmapMath.sampleSize(bounds.outWidth, bounds.outHeight, if (exactSize) maxDim * 2 - 1 else maxDim)
+                val samplingTarget = if (exactSize) (maxDim.toLong() * 2 - 1).coerceAtMost(Int.MAX_VALUE.toLong()).toInt() else maxDim
+                inSampleSize = BitmapMath.sampleSize(bounds.outWidth, bounds.outHeight, samplingTarget)
                 inPreferredConfig = Bitmap.Config.ARGB_8888
             }
             val raw = open(path)?.use { BitmapFactory.decodeStream(it, null, options) } ?: return null
@@ -71,7 +95,9 @@ class BitmapLoader(private val context: Context) {
             result
         } catch (e: OutOfMemoryError) {
             Log.w(TAG, "Sin memoria al decodificar la foto: $path", e)
-            cache.evictAll(); null
+            cache.evictAll()
+            if (exactSize) throw PolarException("No hay memoria suficiente para imprimir esta foto con su resolución original. Intenta exportar una hoja a la vez.")
+            null
         } catch (e: Exception) {
             Log.w(TAG, "No se pudo decodificar la foto: $path", e)
             null

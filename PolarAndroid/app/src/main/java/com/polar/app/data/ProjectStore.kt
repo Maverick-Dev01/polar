@@ -50,7 +50,7 @@ class ProjectStore(private val root: File, private val clock: () -> Long = Syste
     fun load(id: String): LoadedProject {
         val dir = projectDir(id)
         val stored = PolarJson.decode(File(dir, "project.polar").readText())
-        val photos = stored.photos.map { it.copy(path = absolute(dir, it.path)) }
+        val photos = stored.photos.map { it.copy(path = absolute(dir, it.path), maskPath = it.maskPath?.let { path -> absolute(dir, path) }) }
         val template = stored.settings.importedTemplate?.let { it.copy(path = absolute(dir, it.path)) }
         val project = stored.copy(photos = photos, settings = stored.settings.copy(importedTemplate = template))
         val missing = photos.count { !it.path.startsWith("content:") && !File(it.path).exists() }
@@ -64,7 +64,7 @@ class ProjectStore(private val root: File, private val clock: () -> Long = Syste
         val now = clock()
         val stored = project.copy(
             updatedAtEpochMs = now,
-            photos = project.photos.map { it.copy(path = relative(dir, it.path)) },
+            photos = project.photos.map { it.copy(path = relative(dir, it.path), maskPath = it.maskPath?.let { path -> relative(dir, path) }) },
             settings = project.settings.copy(importedTemplate = project.settings.importedTemplate?.let { it.copy(path = relative(dir, it.path)) })
         )
         writeAtomic(File(dir, "project.polar"), PolarJson.encode(stored).toByteArray())

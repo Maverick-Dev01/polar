@@ -2,9 +2,9 @@
 
 Aplicaciones nativas para Android y Mac que convierten fotografías en hojas listas para imprimir: polaroids, boletos, tiras de película, calendarios, fotos con canción y moldes propios. Incluyen texto editable, encuadre, filtros no destructivos, autoguardado y exportación PDF/JPG/PNG.
 
-Android y Mac: **2.1.2**, build **5**. La rama de trabajo publicada es **`global`**.
+Android y Mac: **2.2.0**, build **6**. La rama de trabajo publicada es **`global`**.
 
-[Descargar Android](https://github.com/Maverick-Dev01/polar/releases/download/android-v2.1.2/Polar-2.1.2.apk) · [Descargar Mac](https://github.com/Maverick-Dev01/polar/releases/download/android-v2.1.2/Polar-Mac-2.1.2.zip). Después de instalarla una vez, **Ajustes → Actualizaciones** busca y descarga nuevas versiones, con confirmación del instalador Android. [Preparar y publicar actualizaciones](docs/actualizaciones-android.md); la llave privada debe conservarse para poder publicar desde otro equipo.
+[Descargar Android](https://github.com/Maverick-Dev01/polar/releases/download/android-v2.2.0/Polar-2.2.0.apk) · [Descargar Mac](https://github.com/Maverick-Dev01/polar/releases/download/android-v2.2.0/Polar-Mac-2.2.0.zip). Después de instalarla una vez, **Ajustes → Actualizaciones** busca y descarga nuevas versiones, con confirmación del instalador Android. [Preparar y publicar actualizaciones](docs/actualizaciones-android.md); la llave privada debe conservarse para poder publicar desde otro equipo.
 
 PDF conserva texto, guías y marcos nítidos, con fotos recortadas al área visible a 300 ppp y JPEG de alta calidad (94). JPG exporta una hoja más ligera a 300 ppp. Para evitar compresión fotográfica adicional, elige **PDF sin compresión JPEG** o **PNG**; estos archivos pueden pesar más. Los originales y el proyecto editable se conservan. [Diagnóstico y verificación de exportaciones](docs/exportaciones-compactas.md).
 
@@ -16,12 +16,12 @@ Mac se distribuye como ZIP de `Polar.app` para Apple Silicon/macOS 14+. Descompr
 | --- | --- |
 | Android | Kotlin **2.2.0**, Jetpack Compose (BOM **2025.06.01**), Material 3, AndroidX/ViewModel, coroutines **1.10.2**, kotlinx.serialization **1.9.0** y DataStore. |
 | Compilación Android | Android Gradle Plugin **8.11.1**, Gradle Wrapper **8.14.3**, bytecode Java/Kotlin **17**. `compileSdk`/`targetSdk` **36**, `minSdk` **26** (Android 8.0). |
-| Fotos, PDF y QR | Canvas/Bitmap, ColorMatrix, PdfDocument/PdfRenderer, AndroidX ExifInterface y ZXing **3.5.3**. Un motor compartido dentro de cada app genera la vista previa y la exportación. |
-| Mac | **Swift**, **SwiftUI**, **AppKit**, Core Graphics, ImageIO y Core Image. Compilación con `swiftc`/Command Line Tools, macOS **14+**, **Apple Silicon**. |
+| Fotos, PDF y QR | Canvas/Bitmap, ColorMatrix, PdfDocument/PdfRenderer, AndroidX ExifInterface, ZXing **3.5.3** y ML Kit Subject Segmentation **16.0.0-beta1** mediante Servicios de Google Play. Un motor compartido dentro de cada app genera la vista previa y la exportación. |
+| Mac | **Swift**, **SwiftUI**, **AppKit**, Core Graphics, ImageIO y Core Image y Vision para separar sujetos del fondo. Compilación con `swiftc`/Command Line Tools, macOS **14+**, **Apple Silicon**. |
 | Pruebas | JUnit 4, Robolectric, Compose UI/instrumentación Android y ejecutables de pruebas Swift. |
 | Datos | Proyectos `.polar` en JSON compatibles entre las dos apps; biblioteca y copias de fotos guardadas localmente. |
 
-Son dos aplicaciones nativas, con código de interfaz separado y el mismo contrato de proyecto/filtros. No requieren servidor, base de datos externa, Node.js, Flutter, API keys ni cuenta para usar la aplicación. Internet se necesita para clonar y descargar herramientas/dependencias la primera vez, y para buscar/descargar actualizaciones Android desde GitHub. Diseñar e imprimir sigue funcionando sin conexión.
+Son dos aplicaciones nativas, con código de interfaz separado y el mismo contrato de proyecto/filtros. No requieren servidor, base de datos externa, Node.js, Flutter, API keys ni cuenta para usar la aplicación. Internet se necesita para clonar y descargar herramientas/dependencias la primera vez, y para buscar/descargar actualizaciones Android desde GitHub. Diseñar e imprimir sigue funcionando sin conexión. Quitar fondo en Android requiere Servicios de Google Play y descargar su modelo la primera vez; las fotos se procesan localmente. Mac usa Vision del sistema. El catálogo de 120 frases originales es local y no requiere una API.
 
 ## Continuar Android en Windows
 
@@ -88,6 +88,8 @@ Las fotos personales, proyectos exportados con datos personales, capturas, bibli
 Para publicar en Play Store, sigue [docs/play-store.md](docs/play-store.md) y usa `bundlePlay`: esa build desactiva las actualizaciones externas. La firma de publicación es privada y obligatoria; no se usa una firma debug como alternativa. Python 3 y GitHub CLI sólo se requieren para el script que prepara/publica releases, no para desarrollar Android normalmente.
 
 ## Verificación y continuidad
+
+[Edición y calidad 2.2.0](docs/edicion-y-calidad-2.2.0.md): fondos editables, frases con selección de fragmentos, ampliación de tarjeta, selección múltiple y diseños por hoja/tarjeta. Incluye los límites y las comprobaciones realizadas.
 
 [Exportaciones compactas 2.1.2](docs/exportaciones-compactas.md): mediciones de cinco hojas × seis fotografías, comprobaciones de calidad/formatos y mecanismo de reducción.
 

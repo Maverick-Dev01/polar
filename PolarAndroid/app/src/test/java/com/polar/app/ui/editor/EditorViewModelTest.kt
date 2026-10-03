@@ -35,7 +35,10 @@ class EditorViewModelTest {
     private var exportedPage: Int? = null
     private var optimizedPdf: Boolean? = null
 
-    private fun vm(thumbnail: suspend (PolarProject, Bitmap?) -> ByteArray? = { _, _ -> null }): EditorViewModel {
+    private fun vm(
+        removeBackground: (suspend (PhotoAsset, File) -> String)? = null,
+        thumbnail: suspend (PolarProject, Bitmap?) -> ByteArray? = { _, _ -> null }
+    ): EditorViewModel {
         store = ProjectStore(tmp.root)
         id = store.create(PolarProject().normalized(), "Boda")
         val photos = object : PhotoSource {
@@ -54,7 +57,53 @@ class EditorViewModelTest {
                 return File(tmp.root, "a.jpg")
             }
         }
-        return EditorViewModel(id, EditorDeps(store, photos, exports, thumbnail, { null }, main.dispatcher, CoroutineScope(main.dispatcher)))
+        return EditorViewModel(id, EditorDeps(store, photos, exports, thumbnail, { null }, main.dispatcher,
+            CoroutineScope(main.dispatcher), removeBackground = removeBackground))
+    }
+
+    @Test
+    fun missingMaskRetriesWithoutChangingOriginalOnFailureOrAReplacementOnLateSuccess() = runTest(main.dispatcher) {
+        val requested = mutableListOf<String>()
+        val entered = CompletableDeferred<Unit>()
+        val result = CompletableDeferred<String>()
+        val v = vm(removeBackground = { photo, _ ->
+            requested += photo.id
+            if (requested.size == 1) throw java.io.IOException("Fallo simulado del motor")
+            entered.complete(Unit)
+            result.await()
+        })
+        advanceUntilIdle()
+        val missingMask = File(tmp.root, "mascara-perdida.png")
+        val original = store.importPhoto(id, "original".byteInputStream(), "jpg", PhotoInfo(800, 600, null))
+            .copy(maskPath = missingMask.path)
+        val replacement = store.importPhoto(id, "otra foto".byteInputStream(), "jpg", PhotoInfo(800, 600, null))
+        v.addPhotosForTest(listOf(original, replacement)); advanceUntilIdle()
+        v.selectSlot(0)
+        val before = v.state.value.project
+        assertFalse(missingMask.exists())
+
+        v.removeBackground(); advanceUntilIdle()
+        assertEquals(listOf(original.id), requested)
+        assertEquals(before, v.state.value.project)
+        assertEquals("original", File(original.path).readText())
+        assertTrue(v.state.value.backgroundError?.contains("Fallo simulado del motor") == true)
+        assertFalse(v.state.value.busy)
+
+        v.dismissBackgroundError()
+        v.removeBackground(); runCurrent()
+        assertTrue(entered.isCompleted)
+        assertTrue(v.state.value.busy)
+        v.placePhoto(replacement.id)
+        val afterReplacement = v.state.value.project
+        assertEquals(replacement.id, afterReplacement.placements[0]?.assetID)
+        result.complete(File(tmp.root, "resultado-tardio.png").path)
+        advanceUntilIdle()
+        assertEquals(listOf(original.id, original.id), requested)
+        assertEquals(afterReplacement, v.state.value.project)
+        assertNull(v.state.value.project.placements[0]?.background)
+        assertNull(v.state.value.project.asset(v.state.value.project.placements[0])?.maskPath)
+        assertNull(v.state.value.backgroundError)
+        assertFalse(v.state.value.busy)
     }
 
     @Test fun filterScopesUndoAndComparisonNeverChangeStoredOriginals() = runTest(main.dispatcher) {

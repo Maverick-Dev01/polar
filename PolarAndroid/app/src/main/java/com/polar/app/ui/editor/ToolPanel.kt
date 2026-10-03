@@ -16,7 +16,7 @@ import androidx.compose.material3.*
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -34,6 +34,10 @@ import com.polar.app.R
 
 @Composable
 fun ToolPanel(tool: Tool, state: EditorUiState, vm: EditorViewModel, container: AppContainer, compact: Boolean, onClose: () -> Unit, modifier: Modifier = Modifier) {
+    var choosePhrase by remember { mutableStateOf(false) }
+    if (choosePhrase) PhraseDialog(vm::setText) { choosePhrase = false; vm.setTool(Tool.TEXT); vm.setTrayExpanded(true) }
+    var expandedText by remember { mutableStateOf(false) }
+    if (expandedText) TextEditDialog(state, container, vm::setText) { vm.endGesture(); expandedText = false }
     val photoPicker=rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia()) { uris->vm.addPhotos(uris.map { it.toString() }) }
     val addPhotos={ photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
     val title = when (tool) {
@@ -72,18 +76,18 @@ fun ToolPanel(tool: Tool, state: EditorUiState, vm: EditorViewModel, container: 
                         val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia()) { uris ->
                             vm.addPhotos(uris.map { it.toString() })
                         }
-                        PhotosPanel(
-                            photos = state.project.photos, used = state.usedAssetIds, lowRes = lowResIds,
+                        if (state.multiSelecting) BatchPhotosPanel(state, vm, container) else PhotosPanel(
+                            photos = state.project.photos.filter { !it.isBackground }, used = state.usedAssetIds, lowRes = lowResIds,
                             missingPhotos = state.missingPhotos,
                             thumbnail = { a -> withContext(Dispatchers.IO) { container.bitmaps.load(a.path, 256)?.asImageBitmap() } },
                             onAdd = { picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
-                            onFill = vm::fillAll, onPlace = vm::placePhoto
+                            onFill = vm::fillAll, onPlace = vm::placePhoto, onSelect = { vm.setMultiSelecting(true) }
                         )
                     }
                     Tool.FILTERS -> FiltersPanel(state,vm,container)
                     Tool.DESIGN -> DesignPanel(state, DesignCallbacks(
-                        onChangeDesign = { vm.setMode(EditorMode.CHANGE_DESIGN) }, onAccent = vm::setAccent, onLayout = vm::applyLayout,
-                        onMood = vm::applyMood, onSuggested = vm::applySuggestedPhrases, onFormat = vm::setCardFormat,
+                        onScope = vm::setDesignScope, onChangeDesign = { vm.setMode(EditorMode.CHANGE_DESIGN) }, onAccent = vm::setAccent, onLayout = vm::applyLayout,
+                        onMood = vm::applyMood, onSuggested = { val roles = state.project.settingsForPage(state.page).style.textRoles; vm.setTextRole(roles.firstOrNull { it == TextRole.CAPTION } ?: roles.firstOrNull { it == TextRole.SUBTITLE } ?: roles.firstOrNull() ?: TextRole.TITLE); choosePhrase = true }, onFormat = vm::setCardFormat,
                         onGrid = vm::setGrid, onGap = { vm.setGap(it.toDouble()) }, onRounded = vm::setRounded,
                         onYear = vm::setCalendarYear, onHighlight = vm::setHighlightDate, onSpecialDate = vm::setSpecialDate,
                         onEditRegions = vm::setEditingRegions,
@@ -93,7 +97,7 @@ fun ToolPanel(tool: Tool, state: EditorUiState, vm: EditorViewModel, container: 
                         onGestureStart = vm::beginGesture, onGestureEnd = vm::endGesture
                     ))
                     Tool.TEXT -> TextPanel(textPanelState(state), TextCallbacks(
-                        onRole = vm::setTextRole, onScope = vm::setTextScope, onText = vm::setText,
+                        onExpand = { vm.beginGesture(); expandedText = true }, onRole = vm::setTextRole, onScope = vm::setTextScope, onText = vm::setText,
                         onFocus = { focused -> if (focused) vm.beginGesture() else vm.endGesture() },
                         onRevert = vm::clearOwnText, onApplyAll = vm::applyTextToAll, onAppearance = vm::editAppearance,
                         onReset = vm::resetAppearance, onDateSource = vm::setDateSource, onChosenDate = vm::setChosenDate,
@@ -117,7 +121,7 @@ fun ToolPanel(tool: Tool, state: EditorUiState, vm: EditorViewModel, container: 
 @Composable
 private fun CompactTools(tool: Tool,state: EditorUiState,vm: EditorViewModel,onAdd: ()->Unit) {
     val entries: List<Pair<String,()->Unit>> = when(tool) {
-        Tool.PHOTOS -> listOf(stringResource(R.string.editor_add_photos) to onAdd,stringResource(R.string.photos_fill) to vm::fillAll)
+        Tool.PHOTOS -> listOf(stringResource(R.string.editor_add_photos) to onAdd,stringResource(R.string.photos_fill) to vm::fillAll, "Seleccionar" to { vm.setMultiSelecting(true) })
         Tool.DESIGN -> listOf(1,2,4,9).map { stringResource(R.string.editor_layout_per_sheet,it) to { vm.applyLayout(it) } } + (stringResource(R.string.catalog_change) to { vm.setMode(EditorMode.CHANGE_DESIGN) })
         Tool.TEXT -> state.project.settings.style.textRoles.map { it.displayName to { vm.setTextRole(it); vm.setTrayExpanded(true) } }
         Tool.PAPER -> PaperSize.entries.map { it.displayName to { vm.setPaper(it) } }

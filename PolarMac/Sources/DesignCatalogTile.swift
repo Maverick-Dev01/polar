@@ -25,7 +25,7 @@ extension TemplateStyle {
 @MainActor struct DesignCatalogTile: View {
     @ObservedObject var studio: Studio
     let style: TemplateStyle
-    private var selected: Bool { studio.project.settings.style == style }
+    private var selected: Bool { studio.designSettings.style == style }
     var body: some View {
         Button { studio.chooseStyle(style); studio.inspectorTab = 0 } label: {
             VStack(alignment: .leading, spacing: Spacing.s) {

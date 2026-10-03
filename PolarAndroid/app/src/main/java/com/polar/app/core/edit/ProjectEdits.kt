@@ -96,7 +96,7 @@ object ProjectEdits {
                 placement?.copy(photoLook = com.polar.app.core.look.LookResolver.resolve(p, slot))
             })
         } else p
-        val next = base.withStyle(style)
+        val next = base.withStyle(style).copy(pageDesigns = emptyMap(), cardOverrides = base.cardOverrides.mapValues { it.value.copy(designStyle = null, designFormat = null) })
         val newPer = style.photosPerCard
         if (oldPer == newPer || p.cardOverrides.isEmpty()) return next
         val remapped = LinkedHashMap<String, CardOverride>()
@@ -105,15 +105,55 @@ object ProjectEdits {
             .forEach { (key, value) ->
                 val target = ((key.toInt() * oldPer) / newPer).toString()
                 val existing = remapped[target]
-                remapped[target] = if (existing == null) value else existing.mergedWith(value)
+                remapped[target] = (if (existing == null) value else existing.mergedWith(value)).copy(designStyle = null, designFormat = null)
             }
         return next.copy(cardOverrides = remapped)
+    }
+
+    fun setPageDesign(p: PolarProject, page: Int, style: TemplateStyle, format: CardFormat = p.settingsForPage(page).cardFormat): PolarProject {
+        if (page !in 0 until p.pageCount || !p.compatibleStyle(style)) return p
+        return p.copy(pageDesigns = p.pageDesigns + (page.toString() to PageDesign(style, format)),
+            cardOverrides = p.cardOverrides.mapValues { (key, value) ->
+                if (key.toInt() / p.cardsPerPage == page) value.copy(designStyle = null, designFormat = null) else value
+            }.filterValues { !it.isEmpty })
+    }
+    fun setCardDesign(p: PolarProject, card: Int, style: TemplateStyle): PolarProject =
+        if (!p.compatibleStyle(style)) p else p.updateOverride(card) { it.copy(designStyle = style) }
+
+    fun setCardFormat(p: PolarProject, card: Int, format: CardFormat): PolarProject = p.updateOverride(card) { it.copy(designFormat = format) }
+
+    /** Sólo vacía posiciones, nunca borra archivos originales. */
+    fun clearSlots(p: PolarProject, slots: Set<Int>): PolarProject =
+        p.copy(placements = p.placements.mapIndexed { i, value -> if (i in slots) null else value })
+
+    fun copySlotsToNewPage(p: PolarProject, slots: Set<Int>): PolarProject {
+        val expanded = if (p.settings.style.photosPerCard > 1) slots.flatMap { slot ->
+            val first = p.firstSlotOfCard(p.cardOfSlot(slot)); (first until first + p.settings.style.photosPerCard).toList()
+        }.toSet() else slots
+        val selected = expanded.sorted().filter { it in p.placements.indices && (p.settings.style.photosPerCard > 1 || p.placements[it] != null) }
+        if (selected.isEmpty() || p.normalized().placements.size + selected.size > MAX_PHOTOS + p.settings.capacity - 1 || p.placedCount + selected.count { p.placements[it] != null } > MAX_PHOTOS) return p
+        val base = p.normalized()
+        val first = base.placements.size
+        val cap = p.settings.capacity
+        val copies = selected.map { p.placements[it] }
+        val padding = (cap - copies.size % cap) % cap
+        var next = base.copy(placements = base.placements + copies + List(padding) { null })
+        // Cada grupo conserva sus textos/filtros; en película se copia la tarjeta completa desde la UI.
+        selected.forEachIndexed { i, slot ->
+            val source = p.settingsForCard(p.cardOfSlot(slot))
+            val own = (p.override(p.cardOfSlot(slot)) ?: CardOverride()).let {
+                if (p.compatibleStyle(source.style)) it.copy(designStyle = source.style, designFormat = source.cardFormat) else it
+            }
+            if (!own.isEmpty) next = next.copy(cardOverrides = next.cardOverrides + (next.cardOfSlot(first + i).toString() to own))
+        }
+        return next
     }
 
     fun setGrid(p: PolarProject, columns: Int, rows: Int): PolarProject {
         if (p.settings.style == TemplateStyle.IMPORTED || columns !in 1..4 || rows !in 1..6) return p
         return p.copy(
             settings = p.settings.copy(columns = columns, rows = rows),
+            pageDesigns = emptyMap(),
             placements = p.placements.dropLastWhile { it == null }
         ).normalized()
     }
@@ -166,7 +206,9 @@ object ProjectEdits {
 
     fun fillAll(p: PolarProject): PolarProject =
         if (p.photos.isEmpty()) p
-        else p.copy(placements = p.photos.map { PhotoPlacement(assetID = it.id) }).normalized()
+        else p.copy(placements = p.photos.filter { !it.isBackground }.map { PhotoPlacement(assetID = it.id) }).normalized().let { next ->
+            next.copy(pageDesigns = next.pageDesigns.filterKeys { key -> key.toInt() < next.pageCount })
+        }
 
     fun assign(p: PolarProject, slot: Int, assetId: String): PolarProject {
         if (slot < 0 || p.photos.none { it.id == assetId }) return p
@@ -228,7 +270,11 @@ object ProjectEdits {
                 else -> (card - perPage).toString() to value
             }
         }.toMap()
-        return base.copy(placements = list, cardOverrides = shifted).normalized()
+        val designs = base.pageDesigns.mapNotNull { (key, value) ->
+            val n = key.toInt()
+            when { n == page -> null; n > page -> (n - 1).toString() to value; else -> key to value }
+        }.toMap()
+        return base.copy(placements = list, cardOverrides = shifted, pageDesigns = designs).normalized()
     }
 
     // ---------- Plantilla importada ----------

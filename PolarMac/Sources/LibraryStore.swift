@@ -53,6 +53,7 @@ struct LibraryItem: Identifiable {
         try project.validated()
         for index in project.photos.indices {
             project.photos[index].path = absolute(project.photos[index].path, beside: source)
+            if let mask = project.photos[index].maskPath { project.photos[index].maskPath = absolute(mask, beside: source) }
         }
         if let template = project.settings.importedTemplate {
             project.settings.importedTemplate?.path = absolute(template.path, beside: source)
@@ -71,6 +72,12 @@ struct LibraryItem: Identifiable {
         var saved = project
         for index in saved.photos.indices {
             let photo = saved.photos[index]
+            if let mask = photo.maskPath, fm.fileExists(atPath: mask) {
+                let source = URL(fileURLWithPath: mask)
+                let destination = dir.appendingPathComponent("photos/\(photo.id.uuidString)/\(source.lastPathComponent)")
+                try copy(source, to: destination)
+                saved.photos[index].maskPath = destination.path
+            }
             let destination = dir.appendingPathComponent("photos/\(photo.id.uuidString)/\(photo.url.lastPathComponent)")
             if fm.fileExists(atPath: photo.path) || fm.fileExists(atPath: destination.path) {
                 try copy(photo.url, to: destination)

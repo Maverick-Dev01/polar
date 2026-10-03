@@ -88,6 +88,8 @@ private let cream = polarCream
 
 @MainActor struct StudioView: View {
     @ObservedObject var studio: Studio
+    @NativeState<Bool> private var phrases = false
+    @NativeState<Bool> private var expandedText = false
     @FocusState private var textFocused: Bool
     private let grid = [GridItem(.flexible()), GridItem(.flexible())]
 
@@ -128,6 +130,8 @@ private let cream = polarCream
         .onChange(of: textFocused) { _, focused in if focused { studio.beginEditing() } else { studio.endEditing() } }
         .onChange(of: studio.selectedTextRole) { _, _ in studio.endEditing() }
         .onChange(of: studio.textCardScope) { _, _ in studio.endEditing() }
+        .sheet(isPresented: $phrases) { PhrasePicker(onPick: studio.setTextValue) { phrases = false } }
+        .sheet(isPresented: $expandedText) { TextPreviewEditor(studio: studio) { studio.endEditing(); expandedText = false } }
         .onChange(of: studio.selectedSlot) { _, _ in
             if !studio.editingTemplate, studio.project.placements.indices.contains(studio.selectedSlot), studio.project.placements[studio.selectedSlot] != nil { studio.inspectorTab = 3 }
         }
@@ -179,6 +183,12 @@ private let cream = polarCream
                 Text("Elige un diseño").font(.system(size: 16, weight: .semibold))
                 Text("Un molde para cada recuerdo.")
                     .font(.system(size: 11)).foregroundStyle(.secondary)
+                Picker("Aplicar diseño a", selection: $studio.designScope) {
+                    Text("Colección").tag(0)
+                    Text("Esta hoja").tag(1)
+                    Text("Esta tarjeta").tag(2)
+                }.disabled(studio.project.settings.style == .imported)
+                Text("La cuadrícula es común. Puedes combinar estilos con la misma cantidad de fotos por tarjeta.").font(.caption).foregroundStyle(.secondary)
                 TextField("Buscar diseño", text: $studio.designSearch).textFieldStyle(.roundedBorder).font(.system(size: 12))
                 Picker("Categoría", selection: $studio.designCategory) {
                     ForEach(["Todos", "Clásicos", "Música", "Cine", "Fechas", "Ocasiones", "Libre"], id: \.self) { Text($0).tag($0) }
@@ -198,7 +208,7 @@ private let cream = polarCream
 
     private var pageBar: some View {
         HStack(spacing: Spacing.s) {
-            Text(studio.project.settings.style.name).font(.system(size: 13, weight: .semibold))
+            Text(studio.project.settingsForPage(studio.page).style.name).font(.system(size: 13, weight: .semibold))
             Text("\(studio.project.settings.capacity) \(studio.project.settings.capacity == 1 ? "foto" : "fotos") por hoja").font(.system(size: 11)).foregroundStyle(.secondary)
             Spacer()
             Button { studio.navigate(studio.page - 1) } label: { Image(systemName: "chevron.left") }
@@ -226,19 +236,20 @@ private let cream = polarCream
                 if let image = studio.previewImage {
                     Image(nsImage: image).resizable().interpolation(.high).frame(width: paper.width * scale, height: paper.height * scale)
                 }
-                let cards = PolarRenderer.cardRects(settings: studio.project.settings)
+                let cards = PolarRenderer.cardRects(project: studio.project, page: studio.page)
                 ForEach(Array(cards.enumerated()), id: \.offset) { cardIndex, card in
-                    let areas = PolarRenderer.photoRects(in: card, style: studio.project.settings.style, settings: studio.project.settings)
+                    let cardSettings = studio.project.settingsForCard(studio.page * studio.project.cardsPerPage + cardIndex)
+                    let areas = PolarRenderer.photoRects(in: card, style: cardSettings.style, settings: cardSettings)
                     ForEach(Array(areas.enumerated()), id: \.offset) { areaIndex, area in
                         let index = studio.page * studio.project.settings.capacity + cardIndex * studio.project.settings.style.photosPerCard + areaIndex
                         Button {
-                            studio.selectedSlot = index; studio.inspectorTab = studio.editingTemplate ? 0 : 3
+                            studio.selectPhotoSlot(index)
                         } label: {
                             ZStack(alignment: .topLeading) {
                                 RoundedRectangle(cornerRadius: PolarRadius.small)
                                     .fill(Color.clear)
                                     .contentShape(Rectangle())
-                                    .overlay(RoundedRectangle(cornerRadius: PolarRadius.small).stroke(studio.selectedSlot == index ? ink : Color.clear, lineWidth: 2.5))
+                                    .overlay(RoundedRectangle(cornerRadius: PolarRadius.small).stroke((studio.batchSelecting ? studio.selectedSlots.contains(index) : studio.selectedSlot == index) ? ink : Color.clear, lineWidth: 2.5))
                                 if studio.selectedSlot == index {
                                     Text("\(index + 1)").font(.system(size: 9, weight: .semibold))
                                         .padding(.horizontal, 5).padding(.vertical, 2)
@@ -279,6 +290,19 @@ private let cream = polarCream
                 Button("Rellenar todo") { studio.fillAll() }
                     .disabled(studio.project.photos.isEmpty).buttonStyle(.borderless)
             }.font(.system(size: 11)).frame(minHeight: 48)
+            VStack(alignment: .leading, spacing: Spacing.s) {
+                HStack {
+                Toggle("Seleccionar varias", isOn: $studio.batchSelecting).toggleStyle(.checkbox)
+                    if studio.batchSelecting { Text("\(studio.selectedSlots.count) seleccionadas").font(.caption) }
+                }
+                if studio.batchSelecting {
+                    HStack(spacing: Spacing.s) {
+                    Button("Todas en esta hoja") { studio.selectAllOnPage() }
+                    Button("Quitar") { studio.removeSelectedPhotos() }.disabled(studio.selectedSlots.isEmpty)
+                    Button("Copiar a hoja nueva") { studio.copySelectedPhotos() }.disabled(studio.selectedSlots.isEmpty)
+                    }
+                }
+            }.frame(minHeight: 48)
             if studio.project.photos.isEmpty {
                 HStack(spacing: Spacing.m) {
                     Image(systemName: "photo.badge.plus").font(.system(size: 28)).foregroundStyle(ink)
@@ -291,7 +315,7 @@ private let cream = polarCream
             } else {
                 ScrollView(.horizontal) {
                     LazyHStack(spacing: Spacing.s) {
-                        ForEach(studio.project.photos) { photo in
+                        ForEach(studio.project.photos.filter { $0.isBackground != true }) { photo in
                             Button { studio.put(photo) } label: {
                                 VStack(spacing: Spacing.xs) {
                                     ZStack(alignment: .bottomTrailing) {
@@ -389,7 +413,7 @@ private let cream = polarCream
                 }
                 Text("En los diseños de película, cada tira reúne cinco fotos.")
                     .font(.system(size: 11)).foregroundStyle(.secondary)
-                Picker("Formato", selection: setting(\.cardFormat)) {
+                Picker("Formato", selection: Binding(get: { studio.designSettings.cardFormat }, set: { studio.setDesignFormat($0) })) {
                     ForEach(CardFormat.allCases) { value in Text(value.name).tag(value) }
                 }
                 VStack(spacing: Spacing.s) {
@@ -439,6 +463,10 @@ private let cream = polarCream
                     Text("La fecha de la foto usa sus datos de captura; si no existen, no se imprime.").font(.caption).foregroundStyle(.secondary)
                 } else {
                     TextField(studio.selectedTextRole.name, text: textValue, axis: .vertical).lineLimit(2...4).focused($textFocused)
+                    HStack(spacing: Spacing.s) {
+                        Button("Editar y ver") { studio.beginEditing(); expandedText = true }
+                        Button("Frases sugeridas") { phrases = true }
+                    }.frame(minHeight: 48)
                 }
                 if studio.textCardScope { Button("Volver al texto general") { studio.returnToGeneralText() }.font(.system(size: 12)) }
                 else if !studio.project.cardOverrides.isEmpty { Button("Aplicar texto y estilo general a todas") { studio.applyGeneralTextToAll() }.font(.system(size: 12)) }
@@ -550,8 +578,8 @@ private let cream = polarCream
     }
 
     @ViewBuilder private var suggestedTextActions: some View {
-        ActionTile(title: "Frases sugeridas", icon: "quote.bubble") { studio.applySuggestedPhrases() }
-        ActionTile(title: "Editar texto", icon: "textformat") { studio.inspectorTab = 1 }
+        ActionTile(title: "Frases sugeridas", icon: "quote.bubble") { phrases = true; studio.inspectorTab = 1 }.disabled(studio.textRoles.isEmpty)
+        ActionTile(title: "Editar texto", icon: "textformat") { studio.inspectorTab = 1 }.disabled(studio.textRoles.isEmpty)
     }
     @ViewBuilder private func templateActions(_ template: ImportedTemplate) -> some View {
         Button("Añadir hueco") { studio.addTemplateRegion() }.frame(maxWidth: .infinity, minHeight: 48).disabled(template.regions.count >= 64)

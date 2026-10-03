@@ -16,6 +16,7 @@ class AppContainer(context: Context) {
     val bitmaps = BitmapLoader(context)
     val fonts = AndroidFontProvider(context)
     val exports = AndroidExportService(context, bitmaps, fonts)
+    val backgrounds = com.polar.app.data.BackgroundRemover(context.applicationContext, bitmaps)
     val photos = PhotoImporter(context, store, bitmaps)
     val settings = SettingsRepository(context)
     val updates by lazy { UpdateRepository(context.applicationContext) }

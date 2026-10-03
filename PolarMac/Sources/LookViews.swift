@@ -312,7 +312,7 @@ private let presetImageCache: NSCache<NSString, NSImage> = { let cache = NSCache
         return PhotoFit.fitZoom(box: geometry.photo.size, source: CGSize(width: asset.pixelWidth, height: asset.pixelHeight), quarterTurns: placement.quarterTurns)
     }
     var body: some View {
-        VStack(spacing: Spacing.m) {
+        ScrollView { VStack(spacing: Spacing.m) {
             HStack {
                 Button("Volver al editor") { studio.endEditing(); studio.showingCrop = false }.frame(minHeight: 48)
                 Spacer()
@@ -320,7 +320,7 @@ private let presetImageCache: NSCache<NSString, NSImage> = { let cache = NSCache
                 Spacer()
                 Button("Listo") { studio.endEditing(); studio.showingCrop = false }.buttonStyle(PolarButtonStyle(primary: true)).frame(minHeight: 56)
             }
-            GeometryReader { proxy in frameArea(proxy.size) }.frame(maxHeight: .infinity)
+            GeometryReader { proxy in frameArea(proxy.size) }.frame(height: 330)
             HStack {
                 Button { studio.nextPhoto(-1) } label: { Label("Anterior", systemImage: "chevron.left") }.disabled(slots.first == studio.selectedSlot)
                 Spacer()
@@ -339,6 +339,7 @@ private let presetImageCache: NSCache<NSString, NSImage> = { let cache = NSCache
                 ActionTile(title: "Centrar", icon: "scope") { action { $0.offsetX = 0; $0.offsetY = 0 } }
                 ActionTile(title: "Restablecer", icon: "arrow.counterclockwise") { action { $0.zoom = 1; $0.offsetX = 0; $0.offsetY = 0; $0.quarterTurns = 0 } }
             }.frame(maxWidth: 800)
+            BackgroundControls(studio: studio)
             DisclosureGroup("Ajuste fino", isExpanded: $fine) {
                 HStack(spacing: Spacing.m) {
                     ForEach([( "←", -0.01, 0.0), ("↑", 0.0, -0.01), ("↓", 0.0, 0.01), ("→", 0.01, 0.0)], id: \.0) { item in
@@ -352,7 +353,7 @@ private let presetImageCache: NSCache<NSString, NSImage> = { let cache = NSCache
                 Label(dpi < 150 ? "Poca resolución para este tamaño" : "Resolución suficiente · \(Int(dpi)) ppp", systemImage: dpi < 150 ? "exclamationmark.triangle" : "checkmark.circle")
                     .foregroundStyle(dpi < 150 ? polarInk : .secondary)
             }
-        }.padding(Spacing.l).background(polarCream).tint(polarInk).buttonStyle(PolarButtonStyle())
+        }.padding(Spacing.l) }.background(polarCream).tint(polarInk).buttonStyle(PolarButtonStyle())
             .background(PhotoKeys(compare: studio.setComparing, zoom: zoom, nudge: nudge, begin: studio.beginEditing, end: studio.endEditing).frame(width: 0, height: 0))
             .onDisappear { studio.endEditing(); studio.setComparing(false) }
     }

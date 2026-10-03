@@ -42,6 +42,7 @@ class TextCallbacks(
     val onScope: (TextScope) -> Unit,
     val onText: (String) -> Unit,
     val onFocus: (Boolean) -> Unit,
+    val onExpand: () -> Unit = {},
     val onRevert: () -> Unit,
     val onApplyAll: () -> Unit,
     val onAppearance: ((TextAppearance) -> TextAppearance) -> Unit,
@@ -73,6 +74,7 @@ fun FontChoice.family(assets: AssetManager): FontFamily = when {
 fun TextPanel(s: TextPanelState, cb: TextCallbacks) {
     var more by rememberSaveable { mutableStateOf(false) }
     var otherColor by remember { mutableStateOf(false) }
+    var phrases by remember { mutableStateOf(false) }
     var pickDate by remember { mutableStateOf(false) }
     val a = s.appearance
     val font = FontCatalog.find(a.fontName)
@@ -99,9 +101,13 @@ fun TextPanel(s: TextPanelState, cb: TextCallbacks) {
         }
 
         if (s.role != TextRole.DATE) {
+            SymmetricActions {
+                OutlinedButton(cb.onExpand, Modifier.weight(1f).heightIn(min = 48.dp)) { Text("Editar y ver") }
+                OutlinedButton({ phrases = true }, Modifier.weight(1f).heightIn(min = 48.dp)) { Text("Frases sugeridas") }
+            }
             DisposableEffect(Unit) { onDispose { cb.onFocus(false) } }
             OutlinedTextField(
-                value = s.text, onValueChange = cb.onText,
+                value = s.text, onValueChange = cb.onText, maxLines = 4,
                 label = {
                     Text(if (s.cardScope) stringResource(R.string.text_for_card, s.role.displayName, s.cardNumber ?: 1)
                     else stringResource(R.string.text_for_all, s.role.displayName))
@@ -208,6 +214,7 @@ fun TextPanel(s: TextPanelState, cb: TextCallbacks) {
         }
     }
 
+    if (phrases) PhraseDialog(cb.onText) { phrases = false }
     if (otherColor) ColorChoiceDialog(a.hex.ifEmpty { s.accentHex }, { hex -> cb.onAppearance { it.copy(hex = hex) } }) { otherColor = false }
     if (pickDate) {
         val picker = rememberDatePickerState()

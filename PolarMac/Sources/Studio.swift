@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import ImageIO
 import UniformTypeIdentifiers
 import ImageIO
 import PDFKit
@@ -68,6 +69,9 @@ struct FontChoice: Identifiable {
     let fontChoices: [FontChoice]
     @Published var dropTarget = false
     @Published var page = 0
+    @Published var designScope = 0
+    @Published var batchSelecting = false
+    @Published var selectedSlots: Set<Int> = []
     @Published var selectedSlot = 0
     @Published var previewImage: NSImage?
     @Published var status = "Elige un diseño y agrega tus fotos."
@@ -138,11 +142,13 @@ struct FontChoice: Identifiable {
         let previous = project
         var next = previous
         edit(&next)
+        if next.settings.columns != previous.settings.columns || next.settings.rows != previous.settings.rows { next.pageDesigns = [:] }
         next.normalized()
         guard previous != next else { return }
         do { try next.validated() }
         catch { errorMessage = error.localizedDescription; return }
         project = next
+        selectedSlots = selectedSlots.filter { next.placements.indices.contains($0) }
         if remember { redoHistory.removeAll() }
         if remember && transactionBase == nil {
             undoHistory.append(previous)
@@ -194,11 +200,71 @@ struct FontChoice: Identifiable {
 
     func chooseStyle(_ style: TemplateStyle) {
         endEditing()
+        if designScope != 0 && !project.compatibleStyle(style) {
+            errorMessage = "Este diseño agrupa otra cantidad de fotos. Elige Colección para reorganizar todas las hojas; tus fotos se conservarán."
+            return
+        }
         if style == .imported, project.settings.importedTemplate == nil { importTemplate(); return }
-        change { $0.selectStyle(style) }
-        page = 0; selectedSlot = 0; refresh()
-        status = "\(style.name): \(project.settings.capacity) \(project.settings.capacity == 1 ? "foto" : "fotos") por hoja."
-        suggestedLook = style.suggestedLook
+        change { p in
+            if designScope == 0 { p.selectStyle(style) }
+            else if designScope == 1 { p.setPageDesign(style, page: page) }
+            else { p.setCardDesign(style, card: selectedCard) }
+        }
+        refresh(); status = "Diseño: \(style.name)"; suggestedLook = style.suggestedLook
+    }
+    var designSettings: PrintSettings { designScope == 0 ? project.settings : designScope == 1 ? project.settingsForPage(page) : project.settingsForCard(selectedCard) }
+    func setDesignFormat(_ format: CardFormat) {
+        change { p in
+            if designScope == 0 { p.settings.cardFormat = format }
+            else if designScope == 1 { p.setPageDesign(p.settingsForPage(page).style, page: page, format: format) }
+            else { var own = p.cardOverrides[String(selectedCard)] ?? CardOverride(); own.designFormat = format; p.cardOverrides[String(selectedCard)] = own }
+        }
+    }
+    func selectPhotoSlot(_ slot: Int) {
+        if batchSelecting { if selectedSlots.contains(slot) { selectedSlots.remove(slot) } else { selectedSlots.insert(slot) } }
+        else { selectedSlot = slot; inspectorTab = editingTemplate ? 0 : 3 }
+    }
+    func selectAllOnPage() { selectedSlots = Set(project.placements.indices.filter { $0 / project.settings.capacity == page && project.placements[$0] != nil }) }
+    func removeSelectedPhotos() { endEditing(); change { $0.clearSlots(selectedSlots) }; selectedSlots = []; status = "Fotos quitadas de la hoja. Puedes deshacer desde la barra." }
+    func copySelectedPhotos() {
+        endEditing(); let first = project.pageCount
+        change { $0.copySlotsToNewPage(selectedSlots) }
+        if project.pageCount == first { errorMessage = "No se pudieron copiar más fotos. El límite es 2000."; return }
+        selectedSlots = []; batchSelecting = false; navigate(first)
+    }
+    func removeBackground() {
+        guard !busy, project.placements.indices.contains(selectedSlot), let photo = project.asset(for: project.placements[selectedSlot]) else { return }
+        if let path = photo.maskPath, let source = CGImageSourceCreateWithURL(URL(fileURLWithPath: path) as CFURL, nil), CGImageSourceCreateImageAtIndex(source, 0, nil) != nil {
+            editBackground { _ in PhotoBackground(colorHex: "FFFFFF") }; return
+        }
+        endEditing(); let slot = selectedSlot, id = projectID
+        let directory = library.directory(id).appendingPathComponent("photos")
+        busy = true
+        DispatchQueue.global(qos: .userInitiated).async {
+            do {
+                let path = try BackgroundRemover.mask(photo: photo, directory: directory)
+                DispatchQueue.main.async {
+                    guard self.projectID == id else { return }
+                    self.busy = false
+                    self.change { p in
+                        guard p.placements.indices.contains(slot), p.placements[slot]?.assetID == photo.id, let index = p.photos.firstIndex(where: { $0.id == photo.id }) else { return }
+                        p.photos[index].maskPath = path; p.placements[slot]?.background = PhotoBackground(colorHex: "FFFFFF")
+                    }
+                }
+            } catch { DispatchQueue.main.async { if self.projectID == id { self.busy = false; self.errorMessage = "No se pudo quitar el fondo. Se conserva tu original. " + error.localizedDescription } } }
+        }
+    }
+    func editBackground(_ edit: (PhotoBackground?) -> PhotoBackground?) { editPlacement { $0.background = edit($0.background) } }
+    func addBackgroundPhoto() {
+        guard !busy else { return }
+        let panel = NSOpenPanel(); panel.allowedContentTypes = [.image]; panel.canChooseDirectories = false
+        guard runPanel(panel) == .OK, let url = panel.url else { return }
+        let result = PhotoImporter.read(urls: [url])
+        guard let photo = result.photos.first, project.photos.count < 2000 else { errorMessage = "No se pudo leer el fondo o alcanzaste el límite de fotos."; return }
+        change { p in
+            guard p.placements.indices.contains(selectedSlot), p.placements[selectedSlot]?.background != nil else { return }
+            var backdrop = photo; backdrop.isBackground = true; p.photos.append(backdrop); p.placements[selectedSlot]?.background?.imageID = photo.id
+        }
     }
 
     func setGrid(columns: Int, rows: Int) {
@@ -230,14 +296,14 @@ struct FontChoice: Identifiable {
 
     var textRoles: [TextRole] {
         let base: [TextRole]
-        switch project.settings.style {
+        switch project.settingsForCard(selectedCard).style {
         case .filmVertical, .filmHorizontal, .calendar, .borderless, .imported: base = []
         case .spotify, .playerRed, .playerGray: base = [.song, .artist]
         case .instagram: base = [.title, .caption]
         case .postcard, .editorial, .celebration: base = [.title, .subtitle, .caption]
         default: base = [.title, .subtitle]
         }
-        return project.settings.style.supportsDate ? base + [.date] : base
+        return project.settingsForCard(selectedCard).style.supportsDate ? base + [.date] : base
     }
 
     var selectedCard: Int { selectedSlot / project.settings.style.photosPerCard }
@@ -423,7 +489,8 @@ struct FontChoice: Identifiable {
 
     func fillAll() {
         guard !project.photos.isEmpty else { return }
-        change { $0.placements = $0.photos.map { PhotoPlacement(assetID: $0.id) } }
+        change { p in p.placements = p.photos.filter { $0.isBackground != true }.map { PhotoPlacement(assetID: $0.id) }
+            p.pageDesigns = p.pageDesigns.filter { (Int($0.key) ?? 0) < p.pageCount } }
         page = 0; selectedSlot = 0; refresh()
         status = "\(project.placedCount) \(project.placedCount == 1 ? "foto distribuida" : "fotos distribuidas") en \(project.pageCount) \(project.pageCount == 1 ? "hoja" : "hojas")."
     }
@@ -448,6 +515,9 @@ struct FontChoice: Identifiable {
         guard project.pageCount > 1 else { clearPage(); return }
         let count = project.settings.capacity / project.settings.style.photosPerCard, first = page * count
         change { project in
+            project.pageDesigns = Dictionary(uniqueKeysWithValues: project.pageDesigns.compactMap { key, value in
+                guard let n = Int(key), n != page else { return nil }; return (String(n > page ? n-1 : n), value)
+            })
             project.placements.removeSubrange(page * project.settings.capacity..<(page + 1) * project.settings.capacity)
             project.cardOverrides = Dictionary(uniqueKeysWithValues: project.cardOverrides.compactMap { key, value in
                 guard let index = Int(key), index < first || index >= first + count else { return nil }
@@ -557,6 +627,7 @@ struct FontChoice: Identifiable {
             if loaded.name.isEmpty { loaded.name = url.deletingPathExtension().lastPathComponent }
             projectID = UUID()
             project = loaded; page = 0; selectedSlot = 0; projectURL = url; isDirty = true
+            designScope = 0; batchSelecting = false; selectedSlots = []
             undoHistory.removeAll(); redoHistory.removeAll(); thumbnails.removeAll(); editingTemplate = false
             textCardScope = false; showingLibrary = false; showingCrop = false; showingFinish = false; comparing = false; suggestedLook = nil; lookPages.removeAll(); flush()
             selectedTextRole = textRoles.first ?? .title; refresh()
@@ -573,6 +644,7 @@ struct FontChoice: Identifiable {
         project.name = "Nuevo diseño"; project.settings.paperSize = preferences.defaultPaper
         projectID = UUID()
         page = 0; selectedSlot = 0; projectURL = nil; isDirty = true
+        designScope = 0; batchSelecting = false; selectedSlots = []
         undoHistory.removeAll(); redoHistory.removeAll(); editingTemplate = false; selectedTextRole = .title; refresh()
         textCardScope = false; showingLibrary = false; showingCrop = false; showingFinish = false; comparing = false; suggestedLook = nil; lookPages.removeAll(); flush()
         status = "Nuevo diseño. Elige un molde y coloca tus fotos."
@@ -668,6 +740,7 @@ struct FontChoice: Identifiable {
         guard !busy, confirmDiscard() else { return }
         do {
             project = try library.load(id); projectID = id
+            designScope = 0; batchSelecting = false; selectedSlots = []
             page = 0; selectedSlot = 0; projectURL = nil; isDirty = false
             undoHistory.removeAll(); redoHistory.removeAll(); transactionBase = nil
             thumbnails.removeAll(); editingTemplate = false; textCardScope = false
@@ -752,12 +825,9 @@ struct FontChoice: Identifiable {
                       size.width / unit.pointsPerUnit, size.height / unit.pointsPerUnit, unit.abbreviation, project.settings.orientation.name)
     }
     var lowQualitySlots: [Int] {
-        let cards = PolarRenderer.cardRects(settings: project.settings), per = project.settings.style.photosPerCard
-        return project.placements.indices.filter { slot in
-            let local = slot % project.settings.capacity
-            guard cards.indices.contains(local / per) else { return false }
-            let areas = PolarRenderer.photoRects(in: cards[local / per], style: project.settings.style, settings: project.settings)
-            return project.effectiveDPI(slot: slot, rect: areas[local % per]).map { $0 < 150 } == true
+        project.placements.indices.filter { slot in
+            guard let geometry = PolarRenderer.cropGeometry(project: project, slot: slot) else { return false }
+            return project.effectiveDPI(slot: slot, rect: geometry.photo).map { $0 < 150 } == true
         }
     }
     var currentLook: PhotoLook { LookResolver.resolve(project: project, slot: selectedSlot) }
@@ -770,6 +840,7 @@ struct FontChoice: Identifiable {
             else { project.setPhotoLook(look, slot: selectedSlot) }
         }
         lookUndoNotice = true
+        DispatchQueue.main.asyncAfter(deadline: .now()+1) { self.lookUndoNotice = false }
     }
     func adjustLook(_ look: PhotoLook) {
         change { project in

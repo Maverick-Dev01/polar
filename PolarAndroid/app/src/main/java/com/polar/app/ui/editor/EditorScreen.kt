@@ -47,6 +47,7 @@ import com.polar.app.ui.Share
 import com.polar.app.ui.catalog.CatalogContent
 import com.polar.app.ui.theme.PolarColors
 import com.polar.app.model.suggestedPhotoPreset
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -55,6 +56,11 @@ import kotlinx.coroutines.withContext
 @Composable
 fun EditorScreen(vm: EditorViewModel, container: AppContainer, notice: String?, onBack: () -> Unit) {
     val state by vm.state.collectAsStateWithLifecycle()
+    val focus = androidx.compose.ui.platform.LocalFocusManager.current
+    val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+    LaunchedEffect(state.tool, state.mode, state.multiSelecting) {
+        focus.clearFocus(); keyboard?.hide()
+    }
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -106,10 +112,12 @@ fun EditorScreen(vm: EditorViewModel, container: AppContainer, notice: String?, 
             when (e) {
                 is EditorEvent.Message -> scope.launch {
                     snackbar.currentSnackbarData?.dismiss()
+                    val timeout = launch { delay(1000); snackbar.currentSnackbarData?.dismiss() }
                     val r = snackbar.showSnackbar(
                         e.text.resolve(context), if (e.undoable) undoLabel else null,
-                        duration = if (e.undoable) SnackbarDuration.Long else SnackbarDuration.Short
+                        duration = SnackbarDuration.Indefinite
                     )
+                    timeout.cancel()
                     if (r == SnackbarResult.ActionPerformed) vm.undo()
                 }
                 is EditorEvent.Exported -> {
@@ -147,9 +155,12 @@ fun EditorScreen(vm: EditorViewModel, container: AppContainer, notice: String?, 
         return
     }
 
+    state.backgroundError?.let { error ->
+        AlertDialog(onDismissRequest = vm::dismissBackgroundError, title = { Text("No se pudo cambiar el fondo") }, text = { Text(error) }, confirmButton = { TextButton(vm::dismissBackgroundError) { Text("Aceptar") } })
+    }
     when (state.mode) {
         EditorMode.CHANGE_DESIGN -> CatalogContent(
-            title = stringResource(R.string.catalog_change), current = state.project.settings.style,
+            title = stringResource(R.string.catalog_change), current = state.selectedCard?.let { state.project.settingsForCard(it).style } ?: state.project.settingsForPage(state.page).style,
             thumbnails = container.thumbnails, showImport = false,
             onPick = vm::selectStyle, onImportTemplate = {}, onOpenPolar = {},
             onBack = { vm.setMode(EditorMode.EDIT) }
@@ -194,6 +205,7 @@ private fun EditorLayout(state: EditorUiState, vm: EditorViewModel, container: A
     val selectedHasPhoto = state.selectedPlacement != null
 
     Scaffold(
+        modifier = Modifier.imePadding(),
         // Compacto: la NavigationBar ya aplica el margen inferior del sistema; aquí sólo los laterales.
         contentWindowInsets = if (expanded) ScaffoldDefaults.contentWindowInsets
             else WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal),
@@ -224,7 +236,7 @@ private fun EditorLayout(state: EditorUiState, vm: EditorViewModel, container: A
             var lastTool by remember { mutableStateOf(state.tool ?: Tool.PHOTOS) }
             LaunchedEffect(state.tool) { state.tool?.let { lastTool=it } }
             BoxWithConstraints(Modifier.padding(padding).fillMaxSize()) {
-                val trayHeight by animateDpAsState(if(state.trayExpanded) maxHeight*.5f else 180.dp,tween(if(reduceMotion) 0 else 240,easing=FastOutSlowInEasing),label="bandeja")
+                val trayHeight by animateDpAsState(if(state.trayExpanded) maxHeight*(if (WindowInsets.ime.getBottom(density) > 0) .80f else .55f) else minOf(180.dp, maxHeight*.6f),tween(if(reduceMotion) 0 else 240,easing=FastOutSlowInEasing),label="bandeja")
                 Column(Modifier.fillMaxSize()) {
                     SheetArea(state, vm, container, Modifier.weight(1f))
                     FilmSuggestion(state,vm)
@@ -291,6 +303,7 @@ private fun EditorTopBar(state: EditorUiState, vm: EditorViewModel, onBack: () -
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                     DropdownMenuItem({ Text(stringResource(R.string.action_redo)) }, { menu = false; vm.redo() }, enabled = state.canRedo,
                         leadingIcon = { Icon(Icons.AutoMirrored.Filled.Redo, null) })
+                    DropdownMenuItem({ Text("Seleccionar varias fotos") }, { menu = false; vm.setMultiSelecting(true) })
                     DropdownMenuItem({ Text(stringResource(R.string.editor_add_page)) }, { menu = false; vm.addPage() })
                     DropdownMenuItem({ Text(stringResource(R.string.editor_clear_page)) }, { menu = false; vm.clearPage() })
                     DropdownMenuItem({ Text(stringResource(R.string.editor_remove_page)) }, { menu = false; vm.removePage() })

@@ -329,8 +329,21 @@ struct PhotoAsset: Codable, Equatable, Identifiable, Sendable {
     var pixelWidth: Int
     var pixelHeight: Int
     var takenAtEpochMs: Int64?
+    var maskPath: String?
+    var isBackground: Bool?
     var url: URL { URL(fileURLWithPath: path) }
     var name: String { url.deletingPathExtension().lastPathComponent }
+}
+
+struct PhotoBackground: Codable, Equatable, Sendable {
+    var colorHex: String? = nil
+    var imageID: UUID?
+    var feather: Double = 0.2
+    var shadow: Double = 0.15
+}
+struct PageDesign: Codable, Equatable, Sendable {
+    var style: TemplateStyle
+    var format: CardFormat = .original
 }
 
 struct PhotoPlacement: Codable, Equatable, Sendable {
@@ -340,15 +353,16 @@ struct PhotoPlacement: Codable, Equatable, Sendable {
     var offsetY: Double = 0
     var quarterTurns: Int = 0
     var photoLook: PhotoLook?
-    enum CodingKeys: String, CodingKey { case assetID, zoom, offsetX, offsetY, quarterTurns, photoLook }
-    init(assetID: UUID, zoom: Double = 1, offsetX: Double = 0, offsetY: Double = 0, quarterTurns: Int = 0, photoLook: PhotoLook? = nil) {
-        self.assetID = assetID; self.zoom = zoom; self.offsetX = offsetX; self.offsetY = offsetY; self.quarterTurns = quarterTurns; self.photoLook = photoLook
+    var background: PhotoBackground?
+    enum CodingKeys: String, CodingKey { case assetID, zoom, offsetX, offsetY, quarterTurns, photoLook, background }
+    init(assetID: UUID, zoom: Double = 1, offsetX: Double = 0, offsetY: Double = 0, quarterTurns: Int = 0, photoLook: PhotoLook? = nil, background: PhotoBackground? = nil) {
+        self.assetID = assetID; self.zoom = zoom; self.offsetX = offsetX; self.offsetY = offsetY; self.quarterTurns = quarterTurns; self.photoLook = photoLook; self.background = background
     }
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         self.init(assetID: try c.decode(UUID.self, forKey: .assetID), zoom: try c.decodeIfPresent(Double.self, forKey: .zoom) ?? 1,
                   offsetX: try c.decodeIfPresent(Double.self, forKey: .offsetX) ?? 0, offsetY: try c.decodeIfPresent(Double.self, forKey: .offsetY) ?? 0,
-                  quarterTurns: try c.decodeIfPresent(Int.self, forKey: .quarterTurns) ?? 0, photoLook: try c.decodeIfPresent(PhotoLook.self, forKey: .photoLook))
+                  quarterTurns: try c.decodeIfPresent(Int.self, forKey: .quarterTurns) ?? 0, photoLook: try c.decodeIfPresent(PhotoLook.self, forKey: .photoLook), background: try c.decodeIfPresent(PhotoBackground.self, forKey: .background))
     }
 }
 
@@ -358,8 +372,10 @@ struct CardOverride: Codable, Equatable, Sendable {
     var dateSource: DateSource?
     var chosenDate: Date?
     var photoLook: PhotoLook?
-    var isEmpty: Bool { texts.isEmpty && styles.isEmpty && dateSource == nil && chosenDate == nil && photoLook == nil }
-    enum CodingKeys: String, CodingKey { case texts, styles, dateSource, chosenDate, photoLook }
+    var designStyle: TemplateStyle?
+    var designFormat: CardFormat?
+    var isEmpty: Bool { texts.isEmpty && styles.isEmpty && dateSource == nil && chosenDate == nil && photoLook == nil && designStyle == nil && designFormat == nil }
+    enum CodingKeys: String, CodingKey { case texts, styles, dateSource, chosenDate, photoLook, designStyle, designFormat }
 }
 
 extension CardOverride {
@@ -371,6 +387,8 @@ extension CardOverride {
         dateSource = try c.decodeIfPresent(DateSource.self, forKey: .dateSource)
         chosenDate = try c.decodeIfPresent(Date.self, forKey: .chosenDate)
         photoLook = try c.decodeIfPresent(PhotoLook.self, forKey: .photoLook)
+        designStyle = try c.decodeIfPresent(TemplateStyle.self, forKey: .designStyle)
+        designFormat = try c.decodeIfPresent(CardFormat.self, forKey: .designFormat)
     }
 }
 
@@ -393,9 +411,50 @@ struct PolarProject: Codable, Equatable, Sendable {
     var name = ""
     var updatedAtEpochMs: Int64 = 0
     var cardOverrides: [String: CardOverride] = [:]
-    enum CodingKeys: String, CodingKey { case version, settings, photos, placements, name, updatedAtEpochMs, cardOverrides }
+    var pageDesigns: [String: PageDesign] = [:]
+    enum CodingKeys: String, CodingKey { case version, settings, photos, placements, name, updatedAtEpochMs, cardOverrides, pageDesigns }
     var pageCount: Int { max(1, (placements.count + settings.capacity - 1) / settings.capacity) }
     var placedCount: Int { placements.compactMap { $0 }.count }
+    var cardsPerPage: Int { settings.capacity / settings.style.photosPerCard }
+    func compatibleStyle(_ style: TemplateStyle) -> Bool { style != .imported && settings.style != .imported && style.photosPerCard == settings.style.photosPerCard }
+    func settingsForPage(_ page: Int) -> PrintSettings {
+        var s = settings
+        if let design = pageDesigns[String(page)] { s.style = design.style; s.cardFormat = design.format }
+        return s
+    }
+    func settingsForCard(_ card: Int) -> PrintSettings {
+        var s = settingsForPage(card / cardsPerPage)
+        if let own = cardOverrides[String(card)] { s.style = own.designStyle ?? s.style; s.cardFormat = own.designFormat ?? s.cardFormat }
+        return s
+    }
+    mutating func setPageDesign(_ style: TemplateStyle, page: Int, format: CardFormat? = nil) {
+        guard (0..<pageCount).contains(page), compatibleStyle(style) else { return }
+        pageDesigns[String(page)] = PageDesign(style: style, format: format ?? settingsForPage(page).cardFormat)
+        for key in cardOverrides.keys where (Int(key) ?? -1) / cardsPerPage == page {
+            cardOverrides[key]?.designStyle = nil; cardOverrides[key]?.designFormat = nil
+        }
+        cardOverrides = cardOverrides.filter { !$0.value.isEmpty }
+    }
+    mutating func setCardDesign(_ style: TemplateStyle, card: Int) {
+        guard compatibleStyle(style), card >= 0 else { return }
+        var own = cardOverrides[String(card)] ?? CardOverride(); own.designStyle = style; cardOverrides[String(card)] = own
+    }
+    mutating func clearSlots(_ slots: Set<Int>) { for slot in slots where placements.indices.contains(slot) { placements[slot] = nil } }
+    mutating func copySlotsToNewPage(_ slots: Set<Int>) {
+        let per = settings.style.photosPerCard
+        let expanded = per == 1 ? slots : Set(slots.flatMap { Array(($0 / per * per)..<($0 / per * per + per)) })
+        let selected = expanded.sorted().filter { placements.indices.contains($0) && (per > 1 || placements[$0] != nil) }
+        guard !selected.isEmpty, placedCount + selected.filter({ placements[$0] != nil }).count <= 2000 else { return }
+        normalized(); let first = placements.count
+        guard first + selected.count <= 2000 + settings.capacity - 1 else { return }
+        let copies = selected.map { placements[$0] }
+        placements += copies
+        for (i, slot) in selected.enumerated() { let source = settingsForCard(slot / per)
+            var own = cardOverrides[String(slot / per)] ?? CardOverride()
+            if compatibleStyle(source.style) { own.designStyle = source.style; own.designFormat = source.cardFormat }
+            if !own.isEmpty { cardOverrides[String((first+i)/per)] = own } }
+        normalized()
+    }
     func asset(for placement: PhotoPlacement?) -> PhotoAsset? {
         guard let placement else { return nil }
         return photos.first { $0.id == placement.assetID }
@@ -423,12 +482,18 @@ struct PolarProject: Codable, Equatable, Sendable {
             }
             cardOverrides = remapped
         }
+        pageDesigns = [:]
+        for key in cardOverrides.keys { cardOverrides[key]?.designStyle = nil; cardOverrides[key]?.designFormat = nil }
         settings.style = style
         (settings.columns, settings.rows) = style.grid
         while placements.last.map({ $0 == nil }) == true { placements.removeLast() }
         normalized()
     }
     func validated() throws {
+        for (key, value) in pageDesigns {
+            guard let page = Int(key), (0..<pageCount).contains(page), key == String(page), compatibleStyle(value.style) else { throw PolarError.invalidProject("El diseño de una hoja no es compatible.") }
+        }
+        guard cardOverrides.values.allSatisfy({ $0.designStyle.map(compatibleStyle) ?? true }) else { throw PolarError.invalidProject("El diseño de una tarjeta requiere otra cantidad de fotos.") }
         try settings.photoLook?.validated()
         guard version == 1 else { throw PolarError.invalidProject("La versión del archivo no es compatible.") }
         guard (1...4).contains(settings.columns), (1...6).contains(settings.rows),
@@ -465,7 +530,7 @@ struct PolarProject: Codable, Equatable, Sendable {
         try validateDate(settings.chosenDate)
         for (card, override) in cardOverrides {
             try override.photoLook?.validated()
-            guard let index = Int(card), index >= 0, index <= Int(Int32.max) else { throw PolarError.invalidProject("La tarjeta no es válida.") }
+            guard let index = Int(card), index >= 0, index <= Int(Int32.max), card == String(index) else { throw PolarError.invalidProject("La tarjeta no es válida.") }
             for (role, text) in override.texts {
                 guard TextRole(rawValue: role) != nil, text.utf16.count <= 500 else { throw PolarError.invalidProject("El texto de una tarjeta no es válido.") }
             }
@@ -495,6 +560,12 @@ struct PolarProject: Codable, Equatable, Sendable {
         else { throw PolarError.invalidProject("La lista de fotos no es válida.") }
         for slot in placements.compactMap({ $0 }) {
             try slot.photoLook?.validated()
+            if let b = slot.background {
+                guard b.colorHex == nil || b.colorHex!.range(of: "^[0-9A-Fa-f]{6}$", options: .regularExpression) != nil,
+                      b.imageID == nil || ids.contains(b.imageID!), b.feather.isFinite, (0...1).contains(b.feather),
+                      b.shadow.isFinite, (0...1).contains(b.shadow), asset(for: slot)?.maskPath?.isEmpty == false
+                else { throw PolarError.invalidProject("El fondo de una foto no es válido.") }
+            }
             guard ids.contains(slot.assetID), slot.zoom.isFinite, slot.zoom > 0, slot.zoom <= 4,
                   slot.offsetX.isFinite, (-1...1).contains(slot.offsetX), slot.offsetY.isFinite, (-1...1).contains(slot.offsetY),
                   (0...3).contains(slot.quarterTurns)
@@ -520,6 +591,7 @@ extension PolarProject {
         name = try c.decodeIfPresent(String.self, forKey: .name) ?? name
         updatedAtEpochMs = try c.decodeIfPresent(Int64.self, forKey: .updatedAtEpochMs) ?? updatedAtEpochMs
         cardOverrides = try c.decodeIfPresent([String: CardOverride].self, forKey: .cardOverrides) ?? cardOverrides
+        pageDesigns = try c.decodeIfPresent([String: PageDesign].self, forKey: .pageDesigns) ?? pageDesigns
     }
 }
 

@@ -13,5 +13,6 @@ mkdir -p "$APP_DIR/Contents/Resources/fonts" "$APP_DIR/Contents/Resources/licens
 cp "$BASE_DIR"/../PolarAndroid/app/src/main/res/font/*.ttf "$APP_DIR/Contents/Resources/fonts/"
 cp "$BASE_DIR"/../PolarAndroid/app/src/main/assets/fonts/*.ttf "$APP_DIR/Contents/Resources/fonts/"
 cp "$BASE_DIR"/../PolarAndroid/app/src/main/assets/licenses/* "$APP_DIR/Contents/Resources/licenses/"
+cp "$BASE_DIR/../PolarAndroid/app/src/main/assets/catalog/phrases.json" "$APP_DIR/Contents/Resources/phrases.json"
 codesign --force --sign - "$APP_DIR"
 print "Lista: $APP_DIR"

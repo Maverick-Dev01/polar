@@ -26,6 +26,8 @@ import com.polar.app.AppContainer
 import com.polar.app.R
 import com.polar.app.data.BitmapLoader
 import com.polar.app.core.look.LookResolver
+import com.polar.app.model.CutStyle
+import com.polar.app.ui.components.SwitchRow
 import com.polar.app.model.PhotoLook
 import com.polar.app.ui.editor.panels.lookNameResource
 import com.polar.app.ui.LayoutKind
@@ -78,6 +80,14 @@ fun FinishScreen(state: EditorUiState, vm: EditorViewModel, container: AppContai
             }
         }
         val actions: @Composable ColumnScope.() -> Unit = {
+            SwitchRow("Guías para recortar", p.settings.cutGuides, vm::setGuides, "Incluyen toda la tarjeta: fotografía y texto.")
+            if (p.settings.cutGuides) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    FilterChip(p.settings.cutStyle == CutStyle.CORNERS, { vm.setCutStyle(CutStyle.CORNERS) }, { Text("Esquinas") })
+                    FilterChip(p.settings.cutStyle != CutStyle.CORNERS, { vm.setCutStyle(CutStyle.LINES) }, { Text("Líneas") })
+                }
+            }
+
             Button(onClick = { onAction(ExportAction.PRINT, ExportFormat.PDF) }, enabled = !state.busy, modifier = Modifier.fillMaxWidth().heightIn(min=56.dp)) {
                 Icon(Icons.Outlined.Print, null); Spacer(Modifier.width(10.dp)); Text(stringResource(R.string.finish_print))
             }

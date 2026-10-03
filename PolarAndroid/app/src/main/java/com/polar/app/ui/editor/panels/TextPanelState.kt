@@ -33,7 +33,7 @@ private const val SAMPLE_DATE_MS = 1_771_070_400_000L // 14 feb 2026, para mostr
 
 fun textPanelState(state: EditorUiState, zone: TimeZone = TimeZone.getDefault()): TextPanelState {
     val p = state.project
-    val s = p.settings
+    val s = state.selectedCard?.let { p.settingsForCard(it) } ?: p.settingsForPage(state.page)
     val roles = s.style.textRoles
     val role = state.textRole.takeIf { it in roles } ?: roles.firstOrNull() ?: TextRole.TITLE
     val card = state.editCard

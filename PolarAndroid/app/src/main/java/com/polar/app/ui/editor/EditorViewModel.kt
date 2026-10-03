@@ -109,7 +109,7 @@ class EditorViewModel(private val projectId: String, private val deps: EditorDep
         _state.update { s ->
             val page = s.page.coerceIn(0, next.pageCount - 1)
             val slot = s.selectedSlot?.takeIf { it < next.placements.size }
-            s.copy(project=next).withSlot(slot).copy(page = page, canUndo = history.canUndo || history.hasOpenChange(next), canRedo = history.canRedo,
+            s.copy(project=next, selectedSlots = s.selectedSlots.filter { it in next.placements.indices }.toSet()).withSlot(slot).copy(page = page, canUndo = history.canUndo || history.hasOpenChange(next), canRedo = history.canRedo,
                 hasUnsavedChanges = true, saveFailed = false)
         }
         scheduleSave()
@@ -190,8 +190,26 @@ class EditorViewModel(private val projectId: String, private val deps: EditorDep
 
     fun selectSlot(slot: Int) = _state.update { s ->
         val page = slot / s.project.settings.capacity
+        if (s.multiSelecting) return@update s.copy(selectedSlots = if (slot in s.selectedSlots) s.selectedSlots - slot else s.selectedSlots + slot, page = page)
         s.withSlot(if (s.selectedSlot == slot) null else slot).copy(page = page)
     }
+
+    fun setMultiSelecting(on: Boolean) { endGesture(); _state.update { it.copy(multiSelecting = on, selectedSlots = emptySet(), tool = Tool.PHOTOS, trayExpanded = true) } }
+    fun selectAllOnPage() = _state.update { s -> s.copy(selectedSlots = s.project.placements.indices.filter { it / s.project.settings.capacity == s.page && s.project.placements[it] != null }.toSet()) }
+    fun removeSelectedPhotos() {
+        val slots = _state.value.selectedSlots
+        if (slots.isEmpty()) return
+        edit(UiText(R.string.editor_photo_removed), undoable = true) { ProjectEdits.clearSlots(it, slots) }
+        _state.update { it.copy(selectedSlots = emptySet()) }
+    }
+    fun copySelectedPhotos() {
+        val slots = _state.value.selectedSlots
+        val before = _state.value.project.pageCount
+        edit(UiText(R.string.raw_text, listOf("Fotos copiadas a una hoja nueva"))) { ProjectEdits.copySlotsToNewPage(it, slots) }
+        if (_state.value.project.pageCount == before) { message(UiText(R.string.raw_text, listOf("No se pudieron copiar más fotos. El límite es 2000."))); return }
+        _state.update { it.copy(page = before, selectedSlots = emptySet(), multiSelecting = false) }
+    }
+    fun setDesignScope(scope: DesignScope) = _state.update { it.copy(designScope = scope) }
 
     fun clearSelection() = _state.update { it.withSlot(null) }
 
@@ -305,8 +323,22 @@ class EditorViewModel(private val projectId: String, private val deps: EditorDep
     // ---------- diseño ----------
 
     fun selectStyle(style: TemplateStyle) {
-        edit(UiText(R.string.editor_style_now, listOf(style.displayName))) { ProjectEdits.selectStyle(it, style) }
-        _state.update { it.withSlot(null).copy(mode = EditorMode.EDIT, textRole = style.textRoles.firstOrNull() ?: TextRole.TITLE) }
+        val s = _state.value
+        if (s.designScope != DesignScope.ALL && !s.project.compatibleStyle(style)) {
+            message(UiText(R.string.raw_text, listOf("Este diseño agrupa otra cantidad de fotos. Elige «Colección» para reorganizar todas las hojas; tus fotos se conservarán.")))
+            return
+        }
+        if (s.designScope == DesignScope.CARD && s.selectedCard == null) {
+            message(UiText(R.string.raw_text, listOf("Selecciona una tarjeta primero."))); return
+        }
+        edit(UiText(R.string.editor_style_now, listOf(style.displayName))) {
+            when (s.designScope) {
+                DesignScope.ALL -> ProjectEdits.selectStyle(it, style)
+                DesignScope.PAGE -> ProjectEdits.setPageDesign(it, s.page, style)
+                DesignScope.CARD -> ProjectEdits.setCardDesign(it, s.selectedCard!!, style)
+            }
+        }
+        _state.update { it.copy(mode = EditorMode.EDIT, textRole = style.textRoles.firstOrNull() ?: TextRole.TITLE) }
     }
 
     fun applyMood(mood: MoodPreset) {
@@ -327,7 +359,14 @@ class EditorViewModel(private val projectId: String, private val deps: EditorDep
     }
 
     fun setGrid(columns: Int, rows: Int) = edit { ProjectEdits.setGrid(it, columns, rows) }
-    fun setCardFormat(format: CardFormat) = edit { ProjectEdits.updateSettings(it) { s -> s.copy(cardFormat = format) } }
+    fun setCardFormat(format: CardFormat) {
+        val s = _state.value
+        edit { p -> when (s.designScope) {
+            DesignScope.ALL -> ProjectEdits.updateSettings(p) { it.copy(cardFormat = format) }
+            DesignScope.PAGE -> ProjectEdits.setPageDesign(p, s.page, p.settingsForPage(s.page).style, format)
+            DesignScope.CARD -> s.selectedCard?.let { ProjectEdits.setCardFormat(p, it, format) } ?: p
+        } }
+    }
     fun setGap(value: Double) = edit { ProjectEdits.updateSettings(it) { s -> s.copy(gap = value.coerceIn(0.0, 30.0)) } }
     fun setRounded(on: Boolean) = edit { ProjectEdits.updateSettings(it) { s -> s.copy(roundedPhotos = on) } }
     fun setCalendarYear(year: Int) = edit { ProjectEdits.updateSettings(it) { s -> s.copy(calendarYear = year.coerceIn(1900, 2100)) } }
@@ -422,6 +461,54 @@ class EditorViewModel(private val projectId: String, private val deps: EditorDep
         edit(UiText(R.string.editor_photo_removed), undoable = true) { ProjectEdits.clearSlot(it, slot) }
     }
 
+    fun dismissBackgroundError() = _state.update { it.copy(backgroundError = null) }
+    fun removeBackground() {
+        val state = _state.value
+        val slot = state.selectedSlot ?: return
+        val photo = state.project.asset(state.selectedPlacement) ?: return
+        if (state.busy || locked) return
+        val remove = deps.removeBackground ?: return
+        val savedMask = photo.maskPath?.let { java.io.File(it) }
+        if (savedMask?.isFile == true && android.graphics.BitmapFactory.Options().let { bounds ->
+                bounds.inJustDecodeBounds = true
+                android.graphics.BitmapFactory.decodeFile(savedMask.path, bounds)
+                bounds.outWidth > 0 && bounds.outHeight > 0
+            }) { editSelectedBackground { PhotoBackground(colorHex = "FFFFFF") }; return }
+        viewModelScope.launch {
+            _state.update { it.copy(busy = true) }
+            try {
+                val mask = withContext(deps.io) { remove(photo, java.io.File(deps.store.projectDir(projectId), "photos")) }
+                edit { p ->
+                    // La edición puede continuar mientras se analiza: aplicar sólo al mismo original y posición.
+                    if (p.placements.getOrNull(slot)?.assetID != photo.id) p else p.copy(
+                        photos = p.photos.map { if (it.id == photo.id) it.copy(maskPath = mask) else it },
+                        placements = p.placements.mapIndexed { i, it -> if (i == slot) it?.copy(background = PhotoBackground(colorHex = "FFFFFF")) else it })
+                }
+            } catch (e: CancellationException) { throw e }
+            catch (e: Exception) {
+                Log.w("Polar", "No se pudo quitar el fondo", e)
+                _state.update { it.copy(backgroundError = "No se pudo quitar el fondo. La primera vez requiere Google Play Services actualizado y conexión para descargar el modelo. Se conserva tu original.\n" + (e.message ?: "Prueba de nuevo con otra fotografía.")) }
+            } finally { _state.update { it.copy(busy = false) } }
+        }
+    }
+    fun editSelectedBackground(change: (PhotoBackground?) -> PhotoBackground?) = editSelectedPlacement { it.copy(background = change(it.background)) }
+    fun addBackgroundPhoto(uri: String) {
+        val slot = _state.value.selectedSlot ?: return
+        val foregroundID = _state.value.selectedPlacement?.assetID ?: return
+        if (_state.value.busy || locked) return
+        viewModelScope.launch {
+            _state.update { it.copy(busy = true) }
+            try {
+                val result = deps.photos.import(projectId, listOf(uri))
+                val background = result.assets.firstOrNull() ?: throw IOException("No se pudo leer el fondo.")
+                edit { p -> if (p.placements.getOrNull(slot)?.assetID != foregroundID || p.photos.size >= ProjectEdits.MAX_PHOTOS) p else
+                    ProjectEdits.editPlacement(p.copy(photos = p.photos + background.copy(isBackground = true)), slot) { it.copy(background = (it.background ?: PhotoBackground()).copy(imageID = background.id)) } }
+            } catch (e: CancellationException) { throw e }
+            catch (e: Exception) { _state.update { it.copy(backgroundError = e.message ?: "No se pudo agregar el fondo.") } }
+            finally { _state.update { it.copy(busy = false) } }
+        }
+    }
+
     fun rotateSelected() {
         val slot = _state.value.selectedSlot ?: return
         edit { ProjectEdits.editPlacement(it, slot) { p -> p.copy(quarterTurns = p.quarterTurns + 1) } }
@@ -453,14 +540,7 @@ class EditorViewModel(private val projectId: String, private val deps: EditorDep
 
     fun dpiOf(slot: Int): Double? {
         val p = _state.value.project
-        val s = p.settings
-        val local = slot % s.capacity
-        val cards = PolarRenderer.calculateCardRects(s)
-        val rect = if (s.style == TemplateStyle.IMPORTED) cards.getOrNull(local) ?: return null
-        else {
-            val card = cards.getOrNull(local / s.style.photosPerCard) ?: return null
-            PolarRenderer.calculatePhotoRects(card, s.style, s).getOrNull(local % s.style.photosPerCard) ?: return null
-        }
+        val rect = PolarRenderer.photoRects(p, slot / p.settings.capacity).getOrNull(slot % p.settings.capacity) ?: return null
         return p.effectiveDPI(slot, rect.width, rect.height)
     }
 
