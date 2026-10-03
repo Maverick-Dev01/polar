@@ -34,6 +34,6 @@
 - [x] Teclado y distribución: insets IME, panel desplazable, preview ampliada; revisión móvil/tablet, claro/oscuro y texto grande.
 - [x] Segmentación nativa y composición: máscara a resolución de inferencia aplicada al original, fondo de color/imagen, borde/sombra y restauración; probar alpha y fallos.
 - [x] Guías opcionales al exportar: marco completo foto+texto y guías de esquinas/continuas; PDF/PNG/JPG ambos sistemas.
-- [ ] Verificación, documentación y release firmado con versiones coincidentes; sólo publicar tras comprobar regresiones.
+- [x] Verificación, documentación y release firmado con versiones coincidentes; sólo publicar tras comprobar regresiones.
 
 **Límite de verificación:** Vision y composición nativa aprobados. El recorte ML Kit positivo depende de que Google Play Services complete la descarga del modelo; el emulador agotó el tiempo de espera y conservó el original. Ver detalles en `docs/edicion-y-calidad-2.2.0.md`.

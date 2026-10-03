@@ -40,3 +40,11 @@ Las fotografías y capturas de revisión se mantienen locales y no se publican e
 - `5f68363689fd385669dbecd8be99f53a0aec0567359fe6052ff2681071291461  Polar-Mac-2.2.0.zip`
 
 Certificado Android SHA-256: `cd5a37bea894d1f30d53704caa7fe1af83afe6aa60d957951cd3bf9f07c4444e`. Lint debug/release: 0 errores, 81 advertencias pendientes.
+
+## Publicación y actualización comprobadas
+
+La release [Android y Mac 2.2.0](https://github.com/Maverick-Dev01/polar/releases/tag/android-v2.2.0) está marcada Latest. Se descargaron públicamente el APK, ZIP Mac, update.json y SHA256SUMS; sus hashes coinciden con los archivos locales anteriores.
+
+En el emulador, Polar 2.1.2 encontró 2.2.0 desde Ajustes, descargó/verificó el APK y abrió el instalador Android. Tras confirmar, quedó instalada la versión 2.2.0/build 6. El diseño de revisión previo (Polaroid, una hoja y nueve posiciones vacías) continuó visible y abrió correctamente. Se comprobó además que el catálogo de 120 frases carga en la compilación release, sin aplicar cambios al diseño. No se desinstaló ni se limpió la app.
+
+Mac se reabrió como 2.2.0/build 6 con los dos diseños anteriores y el diseño adicional de revisión. El emulador volvió a 1080×2400, densidad 420 y escala de fuente 1,0 tras las pruebas.
