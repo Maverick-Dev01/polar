@@ -27,6 +27,8 @@ import com.polar.app.model.PaperSize
 @Composable
 fun SettingsScreen(
     settings: AppSettings,
+    trashCount: Int,
+    onEmptyTrash: () -> Unit,
     onTheme: (ThemeMode) -> Unit,
     onUnits: (Units) -> Unit,
     onPaper: (PaperSize) -> Unit,
@@ -85,6 +87,10 @@ fun SettingsScreen(
                 RowItem(stringResource(R.string.settings_how_print)) { dialog = "print" }
                 HorizontalDivider()
                 RowItem(stringResource(R.string.settings_licenses)) { dialog = "licenses" }
+                if (trashCount > 0) {
+                    HorizontalDivider()
+                    RowItem(stringResource(R.string.settings_empty_trash, trashCount)) { dialog = "trash" }
+                }
             }
             Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)) {
                 Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
@@ -109,6 +115,13 @@ fun SettingsScreen(
             confirmButton = { TextButton(onClick = { dialog = null }) { Text(stringResource(R.string.action_ok)) } },
             title = { Text(stringResource(R.string.settings_how_print)) },
             text = { Text(stringResource(R.string.settings_how_print_body)) }
+        )
+        "trash" -> AlertDialog(
+            onDismissRequest = { dialog = null },
+            confirmButton = { TextButton(onClick = { dialog = null; onEmptyTrash() }) { Text(stringResource(R.string.settings_empty_trash_confirm)) } },
+            dismissButton = { TextButton(onClick = { dialog = null }) { Text(stringResource(R.string.action_cancel)) } },
+            title = { Text(stringResource(R.string.settings_empty_trash, trashCount)) },
+            text = { Text(stringResource(R.string.settings_empty_trash_body)) }
         )
         "licenses" -> AlertDialog(
             onDismissRequest = { dialog = null },

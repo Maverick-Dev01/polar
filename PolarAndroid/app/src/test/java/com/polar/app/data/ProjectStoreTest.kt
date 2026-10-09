@@ -65,9 +65,56 @@ class ProjectStoreTest {
         assertTrue(s.list().isEmpty())
         s.restore(id)
         assertEquals(listOf(id), s.list().map { it.id })
-        s.delete(id); s.emptyTrash()
+        s.delete(id); s.purge(id)
         s.restore(id)
         assertTrue(s.list().isEmpty())
+    }
+
+    private val week = 7L * 24 * 60 * 60 * 1000
+
+    @Test
+    fun trashOlderThanSevenDaysIsPurgedAtStartupAndRecentStays() {
+        val old = store().create(PolarProject(), "Viejo")
+        val recent = store().create(PolarProject(), "Reciente")
+        val first = store()
+        first.delete(old)
+        now += 6 * 24 * 60 * 60 * 1000L
+        first.delete(recent)
+        now += 2 * 24 * 60 * 60 * 1000L // viejo: 8 días; reciente: 2 días
+        val next = store() // sesión nueva: nada está protegido
+        assertEquals(1, next.purgeExpiredTrash())
+        next.restore(recent)
+        assertEquals(listOf(recent), next.list().map { it.id })
+        next.restore(old)
+        assertTrue(next.list().none { it.id == old })
+    }
+
+    @Test
+    fun exactlySevenDaysIsNotExpiredYet() {
+        val s = store()
+        val id = s.create(PolarProject(), "Justo")
+        s.delete(id)
+        now += week
+        assertEquals(0, store().purgeExpiredTrash())
+        now += 1
+        assertEquals(1, store().purgeExpiredTrash())
+    }
+
+    @Test
+    fun emptyTrashKeepsActiveProjectsAndTheLastUndoableDelete() {
+        val s = store()
+        val active = s.create(PolarProject(), "Activo")
+        val older = s.create(PolarProject(), "Antiguo")
+        val last = s.create(PolarProject(), "Último")
+        s.delete(older); s.delete(last)
+        assertEquals(0, s.trashCount().let { it - 1 })
+        assertEquals(1, s.emptyTrash())
+        assertEquals(0, s.trashCount())
+        assertEquals(listOf(active), s.list().map { it.id })
+        s.restore(last) // el último borrado sigue recuperable
+        assertEquals(setOf(active, last), s.list().map { it.id }.toSet())
+        assertEquals(0, s.emptyTrash())
+        assertEquals(setOf(active, last), s.list().map { it.id }.toSet())
     }
 
     @Test

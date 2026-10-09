@@ -30,6 +30,6 @@ class PolarApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         container = AppContainer(this)
-        container.store.emptyTrash() // lo borrado en la sesión anterior ya no se puede deshacer
+        container.store.purgeExpiredTrash() // lo borrado hace más de 7 días ya no se puede recuperar
     }
 }

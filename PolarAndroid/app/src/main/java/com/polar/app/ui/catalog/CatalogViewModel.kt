@@ -103,7 +103,7 @@ class CatalogViewModel(
 
     /** Limpia el proyecto a medio crear sin tapar el error real si la limpieza también falla. */
     private suspend fun discard(id: String) = withContext(NonCancellable + io) {
-        runCatching { store.delete(id); store.emptyTrash() }
+        runCatching { store.delete(id); store.purge(id) }
             .onFailure { Log.w("Polar", "No se pudo limpiar el proyecto $id", it) }
     }
 

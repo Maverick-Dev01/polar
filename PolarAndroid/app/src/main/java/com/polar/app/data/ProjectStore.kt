@@ -27,6 +27,10 @@ data class LoadedProject(val project: PolarProject, val missingPhotos: Int)
 class ProjectStore(private val root: File, private val clock: () -> Long = System::currentTimeMillis) {
     private val projects = File(root, "projects").apply { mkdirs() }
     private val trash = File(root, "trash").apply { mkdirs() }
+    private companion object {
+        const val TRASHED_AT = ".trashed-at"
+        const val TRASH_MAX_AGE_MS = 7L * 24 * 60 * 60 * 1000
+    }
     private val metaJson = Json { ignoreUnknownKeys = true; encodeDefaults = true }
 
     fun projectDir(id: String): File = File(projects, id)
@@ -113,19 +117,46 @@ class ProjectStore(private val root: File, private val clock: () -> Long = Syste
         save(id, load(id).project.copy(name = name))
     }
 
+    /** Último borrado de esta sesión: todavía se puede deshacer, así que ninguna limpieza lo toca. */
+    @Volatile private var lastDeleted: String? = null
+
     fun delete(id: String) {
         val target = File(trash, id)
         target.deleteRecursively()
         if (!projectDir(id).renameTo(target)) throw IOException("No se pudo borrar el diseño")
+        runCatching { File(target, TRASHED_AT).writeText(clock().toString()) }
+        lastDeleted = id
     }
 
     fun restore(id: String) {
         val source = File(trash, id)
         if (source.exists() && !source.renameTo(projectDir(id))) throw IOException("No se pudo recuperar el diseño")
+        File(projectDir(id), TRASHED_AT).delete()
+        if (lastDeleted == id) lastDeleted = null
     }
 
-    fun emptyTrash() {
-        trash.listFiles()?.forEach { it.deleteRecursively() }
+    /** Elimina para siempre sólo este elemento de la papelera (p. ej. un diseño a medio crear). */
+    fun purge(id: String) {
+        File(trash, id).deleteRecursively()
+        if (lastDeleted == id) lastDeleted = null
+    }
+
+    private fun trashEntries(): List<File> =
+        (trash.listFiles() ?: emptyArray()).filter { it.isDirectory && !File(projects, it.name).exists() }
+
+    /** Elementos que "Vaciar papelera" borraría: todos menos el último deshacible. */
+    fun trashCount(): Int = trashEntries().count { it.name != lastDeleted }
+
+    /** Vacía la papelera; nunca toca proyectos activos ni el último borrado que aún se puede deshacer. */
+    fun emptyTrash(): Int = trashEntries().filter { it.name != lastDeleted }.count { it.deleteRecursively() }
+
+    /** Al iniciar la app: lo borrado hace más de [maxAgeMs] se elimina; lo reciente sigue recuperable. */
+    fun purgeExpiredTrash(maxAgeMs: Long = TRASH_MAX_AGE_MS): Int {
+        val now = clock()
+        return trashEntries().filter { it.name != lastDeleted }.count { dir ->
+            val at = runCatching { File(dir, TRASHED_AT).readText().trim().toLong() }.getOrDefault(dir.lastModified())
+            now - at > maxAgeMs && dir.deleteRecursively()
+        }
     }
 
     private fun readMeta(id: String): ProjectMeta {
