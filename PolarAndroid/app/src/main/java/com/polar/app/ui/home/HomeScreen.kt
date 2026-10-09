@@ -88,7 +88,7 @@ fun HomeScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
+            if (!(state.loaded && state.all.isEmpty())) ExtendedFloatingActionButton(
                 onClick = onNew,
                 modifier = Modifier.semantics { contentDescription = newDesignLabel },
                 icon = { Icon(Icons.Filled.Add, null) },
@@ -187,7 +187,7 @@ private fun Header(state: HomeUiState, onSettings: () -> Unit, onQuery: (String)
                 value = state.query, onValueChange = onQuery, singleLine = true,
                 leadingIcon = { Icon(Icons.Filled.Search, null) },
                 placeholder = { Text(stringResource(R.string.home_search)) },
-                shape = RoundedCornerShape(24.dp), modifier = Modifier.fillMaxWidth()
+                shape = MaterialTheme.shapes.extraLarge, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
             )
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 PolarChip(state.sort == SortMode.RECENT, { onSort(SortMode.RECENT) }, { Text(stringResource(R.string.home_sort_recent)) })
