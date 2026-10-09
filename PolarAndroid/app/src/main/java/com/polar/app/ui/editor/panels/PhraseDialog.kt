@@ -1,5 +1,7 @@
 package com.polar.app.ui.editor.panels
 
+import com.polar.app.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -26,27 +28,27 @@ fun PhraseDialog(onPick: (String) -> Unit, onDismiss: () -> Unit) {
             BoxWithConstraints {
             val compact = maxHeight < 300.dp
             Column(Modifier.padding(if (compact) 8.dp else 16.dp), verticalArrangement = Arrangement.spacedBy(if (compact) 4.dp else 12.dp)) {
-                Text("Frases para tus recuerdos", style = if (compact) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge)
+                Text(stringResource(R.string.phrase_title), style = if (compact) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge)
                 if (draft == null) {
                     val matches = remember(query, category) { PhraseCatalog.search(phrases, query, category) }
                     LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     item {
-                    Text("120 frases originales de Polar. Puedes adaptar cualquiera o escribir la tuya.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.phrase_intro), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     item {
-                    OutlinedTextField(query, { query = it }, label = { Text("Buscar tema o palabras") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(query, { query = it }, label = { Text(stringResource(R.string.phrase_search)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
                     }
                     item {
                     Box {
-                        OutlinedButton({ categoryMenu = true }, Modifier.heightIn(min = 48.dp)) { Text(category ?: "Todas las categorías") }
+                        OutlinedButton({ categoryMenu = true }, Modifier.heightIn(min = 48.dp)) { Text(category ?: stringResource(R.string.phrase_all_categories)) }
                         DropdownMenu(categoryMenu, { categoryMenu = false }) {
                             (listOf<String?>(null) + phrases.map { it.category }.distinct()).forEach { c ->
-                                DropdownMenuItem({ Text(c ?: "Todas") }, { category = c; categoryMenu = false })
+                                DropdownMenuItem({ Text(c ?: stringResource(R.string.phrase_all)) }, { category = c; categoryMenu = false })
                             }
                         }
                     }
                     }
-                        if (matches.isEmpty()) item { Text("Sin coincidencias. Prueba otro tema o escribe tu frase.") }
+                        if (matches.isEmpty()) item { Text(stringResource(R.string.phrase_none)) }
                         items(matches, key = { it.id }) { phrase ->
                             OutlinedCard(onClick = { draft = TextFieldValue(phrase.text) }, modifier = Modifier.fillMaxWidth()) {
                                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -55,20 +57,20 @@ fun PhraseDialog(onPick: (String) -> Unit, onDismiss: () -> Unit) {
                                 }
                             }
                         }
-                        item { TextButton({ draft = TextFieldValue("") }) { Text("Escribir mi propia frase") } }
+                        item { TextButton({ draft = TextFieldValue("") }) { Text(stringResource(R.string.phrase_write_own)) } }
                     }
                 } else {
                     LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     item {
-                    Text("Edita el texto o mantén presionado para seleccionar sólo el fragmento que quieres imprimir.", style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.phrase_edit_hint), style = MaterialTheme.typography.bodyMedium)
                     }
                     item {
-                        OutlinedTextField(draft!!, { draft = it.copy(text = it.text.take(500)) }, label = { Text("Tu frase") }, minLines = 3, maxLines = 7, modifier = Modifier.fillMaxWidth())
+                        OutlinedTextField(draft!!, { draft = it.copy(text = it.text.take(500)) }, label = { Text(stringResource(R.string.phrase_yours)) }, minLines = 3, maxLines = 7, modifier = Modifier.fillMaxWidth())
                     }
                     item {
-                        Text("${draft!!.text.length} / 500 caracteres", style = MaterialTheme.typography.bodySmall)
+                        Text(stringResource(R.string.phrase_count, draft!!.text.length), style = MaterialTheme.typography.bodySmall)
                     }
-                    item { TextButton({ draft = null }) { Text("Volver al catálogo") } }
+                    item { TextButton({ draft = null }) { Text(stringResource(R.string.phrase_back)) } }
                     }
                 }
                 if (draft != null) {
@@ -77,12 +79,12 @@ fun PhraseDialog(onPick: (String) -> Unit, onDismiss: () -> Unit) {
                     val selected = if (selection.collapsed) value.text else value.text.substring(selection.min, selection.max)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button({ onPick(selected); onDismiss() }, enabled = selected.isNotBlank(), modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
-                        Text(if (selection.collapsed) "Usar este texto" else "Usar selección (${selected.length})")
+                        Text(if (selection.collapsed) stringResource(R.string.phrase_use) else stringResource(R.string.phrase_use_selection, selected.length))
                     }
-                    TextButton(onDismiss, Modifier.weight(1f).heightIn(min = 48.dp)) { Text("Cerrar") }
+                    TextButton(onDismiss, Modifier.weight(1f).heightIn(min = 48.dp)) { Text(stringResource(R.string.action_close)) }
                     }
                 } else {
-                    TextButton(onDismiss, Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Cerrar") }
+                    TextButton(onDismiss, Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(stringResource(R.string.action_close)) }
                 }
             }
             }

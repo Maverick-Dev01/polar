@@ -102,8 +102,8 @@ fun TextPanel(s: TextPanelState, cb: TextCallbacks) {
 
         if (s.role != TextRole.DATE) {
             SymmetricActions {
-                OutlinedButton(cb.onExpand, Modifier.weight(1f).heightIn(min = 48.dp)) { Text("Editar y ver") }
-                OutlinedButton({ phrases = true }, Modifier.weight(1f).heightIn(min = 48.dp)) { Text("Frases sugeridas") }
+                OutlinedButton(cb.onExpand, Modifier.weight(1f).heightIn(min = 48.dp)) { Text(stringResource(R.string.text_edit_view)) }
+                OutlinedButton({ phrases = true }, Modifier.weight(1f).heightIn(min = 48.dp)) { Text(stringResource(R.string.text_suggested_phrases)) }
             }
             DisposableEffect(Unit) { onDispose { cb.onFocus(false) } }
             OutlinedTextField(

@@ -93,7 +93,7 @@ class EditorViewModel(private val projectId: String, private val deps: EditorDep
         if (locked) return
         val current = _state.value.project
         val next = try { change(current).also { it.validated() } } catch (e: PolarException) {
-            message(UiText(R.string.raw_text, listOf(e.message ?: "Revisa las medidas del papel."))); return
+            message(if (e.message != null) UiText(R.string.raw_text, listOf(e.message!!)) else UiText(R.string.editor_paper_check)); return
         }
         if (next == current) return
         // Una acción puntual con aviso (p. ej. «Aplicar a todas») cierra antes el campo de texto abierto: así Deshacer sólo revierte esa acción.
@@ -207,8 +207,8 @@ class EditorViewModel(private val projectId: String, private val deps: EditorDep
     fun copySelectedPhotos() {
         val slots = _state.value.selectedSlots
         val before = _state.value.project.pageCount
-        edit(UiText(R.string.raw_text, listOf("Fotos copiadas a una hoja nueva"))) { ProjectEdits.copySlotsToNewPage(it, slots) }
-        if (_state.value.project.pageCount == before) { message(UiText(R.string.raw_text, listOf("No se pudieron copiar más fotos. El límite es 2000."))); return }
+        edit(UiText(R.string.editor_copied_new_page)) { ProjectEdits.copySlotsToNewPage(it, slots) }
+        if (_state.value.project.pageCount == before) { message(UiText(R.string.editor_copy_limit)); return }
         _state.update { it.copy(page = before, selectedSlots = emptySet(), multiSelecting = false) }
     }
     fun setDesignScope(scope: DesignScope) = _state.update { it.copy(designScope = scope) }
@@ -327,11 +327,11 @@ class EditorViewModel(private val projectId: String, private val deps: EditorDep
     fun selectStyle(style: TemplateStyle) {
         val s = _state.value
         if (s.designScope != DesignScope.ALL && !s.project.compatibleStyle(style)) {
-            message(UiText(R.string.raw_text, listOf("Este diseño agrupa otra cantidad de fotos. Elige «Colección» para reorganizar todas las hojas; tus fotos se conservarán.")))
+            message(UiText(R.string.editor_design_regroup))
             return
         }
         if (s.designScope == DesignScope.CARD && s.selectedCard == null) {
-            message(UiText(R.string.raw_text, listOf("Selecciona una tarjeta primero."))); return
+            message(UiText(R.string.editor_select_card_first)); return
         }
         edit(UiText(R.string.editor_style_now, listOf(style.displayName))) {
             when (s.designScope) {

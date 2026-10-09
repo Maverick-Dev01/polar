@@ -1,5 +1,7 @@
 package com.polar.app.ui.editor.panels
 
+import com.polar.app.R
+import androidx.compose.ui.res.stringResource
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -33,26 +35,26 @@ fun BackgroundControls(state: EditorUiState, vm: EditorViewModel, container: App
     }
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         HorizontalDivider()
-        SectionLabel("Fondo de la foto")
+        SectionLabel(stringResource(R.string.bg_title))
         if (state.busy) {
             LinearProgressIndicator(Modifier.fillMaxWidth())
-            Text("Preparando el recorte. La primera vez puede tardar mientras se descarga el modelo.", style = MaterialTheme.typography.bodySmall)
+            Text(stringResource(R.string.bg_preparing), style = MaterialTheme.typography.bodySmall)
         }
         if (options == null) {
-            OutlinedButton(vm::removeBackground, Modifier.fillMaxWidth().heightIn(min = 48.dp), enabled = !state.busy) { Text("Quitar fondo") }
-            Text("La primera vez necesita conexión y Servicios de Google Play para descargar el recorte. Se conservan el original y los rasgos del rostro. Revisa el borde del cabello y los fondos complejos.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            OutlinedButton(vm::removeBackground, Modifier.fillMaxWidth().heightIn(min = 48.dp), enabled = !state.busy) { Text(stringResource(R.string.bg_remove)) }
+            Text(stringResource(R.string.bg_remove_help), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("Blanco" to "FFFFFF", "Negro" to "000000", "Transparente" to null).forEach { (label, hex) ->
+                listOf(stringResource(R.string.bg_white) to "FFFFFF", stringResource(R.string.bg_black) to "000000", stringResource(R.string.bg_transparent) to null).forEach { (label, hex) ->
                     PolarChip(options.imageID == null && options.colorHex == hex, { vm.editSelectedBackground { options.copy(colorHex = hex, imageID = null) } }, { Text(label) })
                 }
-                matchedColor?.let { hex -> PolarChip(options.colorHex == hex && options.imageID == null, { vm.editSelectedBackground { options.copy(colorHex = hex, imageID = null) } }, { Text("Color de la foto") }) }
-                TextButton({ colorDialog = true }, Modifier.heightIn(min = 48.dp)) { Text("Otro color") }
+                matchedColor?.let { hex -> PolarChip(options.colorHex == hex && options.imageID == null, { vm.editSelectedBackground { options.copy(colorHex = hex, imageID = null) } }, { Text(stringResource(R.string.bg_photo_color)) }) }
+                TextButton({ colorDialog = true }, Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.bg_other_color)) }
             }
-            OutlinedButton({ picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }, Modifier.fillMaxWidth().heightIn(min = 48.dp), enabled = !state.busy) { Text("Agregar una foto de fondo") }
-            LabeledSlider("Suavizar borde", options.feather.toFloat(), 0f..1f, "${(options.feather*100).toInt()} %", { v -> vm.editSelectedBackground { options.copy(feather = v.toDouble()) } }, vm::beginGesture, vm::endGesture)
-            LabeledSlider("Sombra suave", options.shadow.toFloat(), 0f..1f, "${(options.shadow*100).toInt()} %", { v -> vm.editSelectedBackground { options.copy(shadow = v.toDouble()) } }, vm::beginGesture, vm::endGesture)
-            TextButton({ vm.editSelectedBackground { null } }, Modifier.heightIn(min = 48.dp)) { Text("Restaurar fondo original") }
+            OutlinedButton({ picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }, Modifier.fillMaxWidth().heightIn(min = 48.dp), enabled = !state.busy) { Text(stringResource(R.string.bg_add_photo)) }
+            LabeledSlider(stringResource(R.string.bg_feather), options.feather.toFloat(), 0f..1f, "${(options.feather*100).toInt()} %", { v -> vm.editSelectedBackground { options.copy(feather = v.toDouble()) } }, vm::beginGesture, vm::endGesture)
+            LabeledSlider(stringResource(R.string.bg_shadow), options.shadow.toFloat(), 0f..1f, "${(options.shadow*100).toInt()} %", { v -> vm.editSelectedBackground { options.copy(shadow = v.toDouble()) } }, vm::beginGesture, vm::endGesture)
+            TextButton({ vm.editSelectedBackground { null } }, Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.bg_restore)) }
         }
     }
     if (colorDialog) ColorChoiceDialog(options?.colorHex ?: "FFFFFF", { hex -> vm.editSelectedBackground { (it ?: PhotoBackground()).copy(colorHex = hex, imageID = null) } }) { colorDialog = false }

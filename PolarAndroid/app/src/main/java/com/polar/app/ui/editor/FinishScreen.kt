@@ -81,11 +81,11 @@ fun FinishScreen(state: EditorUiState, vm: EditorViewModel, container: AppContai
             }
         }
         val actions: @Composable ColumnScope.() -> Unit = {
-            SwitchRow("Guías para recortar", p.settings.cutGuides, vm::setGuides, "Incluyen toda la tarjeta: fotografía y texto.")
+            SwitchRow(stringResource(R.string.finish_guides), p.settings.cutGuides, vm::setGuides, stringResource(R.string.finish_guides_hint))
             if (p.settings.cutGuides) {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    FilterChip(p.settings.cutStyle == CutStyle.CORNERS, { vm.setCutStyle(CutStyle.CORNERS) }, { Text("Esquinas") })
-                    FilterChip(p.settings.cutStyle != CutStyle.CORNERS, { vm.setCutStyle(CutStyle.LINES) }, { Text("Líneas") })
+                    FilterChip(p.settings.cutStyle == CutStyle.CORNERS, { vm.setCutStyle(CutStyle.CORNERS) }, { Text(stringResource(R.string.finish_cut_corners)) })
+                    FilterChip(p.settings.cutStyle != CutStyle.CORNERS, { vm.setCutStyle(CutStyle.LINES) }, { Text(stringResource(R.string.finish_cut_lines)) })
                 }
             }
 

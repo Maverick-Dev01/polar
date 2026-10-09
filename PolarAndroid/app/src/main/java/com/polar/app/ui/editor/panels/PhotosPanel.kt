@@ -61,7 +61,7 @@ fun PhotosPanel(
                                 style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(12.dp))
                         }
                     }
-                    OutlinedButton(onSelect, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Seleccionar fotos de esta hoja") }
+                    OutlinedButton(onSelect, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(stringResource(R.string.photos_select_page)) }
                     Text(stringResource(R.string.photos_summary,pluralStringResource(R.plurals.photos_count,photos.size,photos.size),used.size),style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
                     SymmetricActions {
                         FilledTonalButton(onClick=onAdd,modifier=Modifier.weight(1f).heightIn(min=48.dp)) { Icon(Icons.Filled.Add,null,Modifier.size(20.dp));Spacer(Modifier.width(8.dp));Text(stringResource(R.string.photos_add)) }

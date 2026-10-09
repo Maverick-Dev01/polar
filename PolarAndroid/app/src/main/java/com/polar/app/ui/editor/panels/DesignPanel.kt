@@ -60,13 +60,13 @@ fun DesignPanel(state: EditorUiState, cb: DesignCallbacks) {
     var pickDate by remember { mutableStateOf(false) }
 
     PanelColumn {
-        SectionLabel("Aplicar diseño a")
+        SectionLabel(stringResource(R.string.design_apply_to))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf(DesignScope.ALL to "Colección", DesignScope.PAGE to "Hoja ${state.page + 1}", DesignScope.CARD to "Tarjeta seleccionada").forEach { (scope, label) ->
+            listOf(DesignScope.ALL to stringResource(R.string.design_scope_all), DesignScope.PAGE to stringResource(R.string.design_scope_page, state.page + 1), DesignScope.CARD to stringResource(R.string.design_scope_card)).forEach { (scope, label) ->
                 PolarChip(state.designScope == scope, { cb.onScope(scope) }, { Text(label) })
             }
         }
-        Text("Los diseños compatibles conservan las posiciones. La distribución de fotos por hoja se aplica a la colección.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.design_apply_help), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
         Surface(color = MaterialTheme.colorScheme.surfaceContainer, shape = MaterialTheme.shapes.medium) {
             Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {

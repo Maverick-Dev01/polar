@@ -1,5 +1,7 @@
 package com.polar.app.ui.editor.panels
 
+import com.polar.app.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
@@ -53,25 +55,25 @@ fun TextEditDialog(state: EditorUiState, container: AppContainer, onText: (Strin
                         pan = Offset(next.x.coerceIn(-size.width*(zoom-1)/2,size.width*(zoom-1)/2), next.y.coerceIn(-size.height*(zoom-1)/2,size.height*(zoom-1)/2))
                     }
                 }) {
-                    image?.let { Image(it, "Vista ampliada de la tarjeta. Pellizca para ampliar.", Modifier.fillMaxSize().graphicsLayer(scaleX = zoom, scaleY = zoom, translationX = pan.x, translationY = pan.y)) }
+                    image?.let { Image(it, stringResource(R.string.textedit_zoom_desc), Modifier.fillMaxSize().graphicsLayer(scaleX = zoom, scaleY = zoom, translationX = pan.x, translationY = pan.y)) }
                     TextButton({ zoom = 1f; pan = Offset.Zero }, Modifier.align(androidx.compose.ui.Alignment.TopEnd)) { Text("1×") }
                 }
             }
             val input: @Composable (Modifier) -> Unit = { modifier ->
                 Column(modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(panel.text, onText, label = { Text("Texto que se imprimirá") }, minLines = if (compact) 1 else 2, maxLines = 4, modifier = Modifier.fillMaxWidth())
-                    Text(if (compact) "${panel.text.length} / 500 caracteres" else "${panel.text.length} / 500 caracteres. Revisa el espacio en la vista ampliada.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    TextButton({ showPhrase = true }, Modifier.heightIn(min = 48.dp)) { Text("Buscar una frase") }
+                    OutlinedTextField(panel.text, onText, label = { Text(stringResource(R.string.textedit_label)) }, minLines = if (compact) 1 else 2, maxLines = 4, modifier = Modifier.fillMaxWidth())
+                    Text(if (compact) stringResource(R.string.phrase_count, panel.text.length) else stringResource(R.string.textedit_count_review, panel.text.length), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    TextButton({ showPhrase = true }, Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.textedit_find_phrase)) }
                 }
             }
             Column(Modifier.padding(if (compact) 8.dp else 16.dp), verticalArrangement = Arrangement.spacedBy(if (compact) 4.dp else 12.dp)) {
-                if (showHeading) Text("Editar ${panel.role.displayName.lowercase()}", style = if (compact) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge)
+                if (showHeading) Text(stringResource(R.string.textedit_title, panel.role.displayName.lowercase()), style = if (compact) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge)
                 if (horizontal) Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     preview(Modifier.weight(1f).fillMaxHeight()); input(Modifier.weight(1f).fillMaxHeight())
                 } else {
                     preview(Modifier.weight(1f).fillMaxWidth()); input(Modifier.weight(1f).fillMaxWidth())
                 }
-                Button(dismiss, Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Listo") }
+                Button(dismiss, Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(stringResource(R.string.textedit_done)) }
             }
             }
         }

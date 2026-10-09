@@ -159,7 +159,7 @@ fun EditorScreen(vm: EditorViewModel, container: AppContainer, notice: String?, 
     }
 
     state.backgroundError?.let { error ->
-        AlertDialog(onDismissRequest = vm::dismissBackgroundError, title = { Text("No se pudo cambiar el fondo") }, text = { Text(error) }, confirmButton = { TextButton(vm::dismissBackgroundError) { Text("Aceptar") } })
+        AlertDialog(onDismissRequest = vm::dismissBackgroundError, title = { Text(stringResource(R.string.bg_change_failed)) }, text = { Text(error) }, confirmButton = { TextButton(vm::dismissBackgroundError) { Text(stringResource(R.string.action_accept)) } })
     }
     when (state.mode) {
         EditorMode.CHANGE_DESIGN -> CatalogContent(
@@ -310,7 +310,7 @@ private fun EditorTopBar(state: EditorUiState, vm: EditorViewModel, onBack: () -
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                     DropdownMenuItem({ Text(stringResource(R.string.action_redo)) }, { menu = false; vm.redo() }, enabled = state.canRedo,
                         leadingIcon = { Icon(Icons.AutoMirrored.Filled.Redo, null) })
-                    DropdownMenuItem({ Text("Seleccionar varias fotos") }, { menu = false; vm.setMultiSelecting(true) })
+                    DropdownMenuItem({ Text(stringResource(R.string.editor_select_many)) }, { menu = false; vm.setMultiSelecting(true) })
                     DropdownMenuItem({ Text(stringResource(R.string.editor_add_page)) }, { menu = false; vm.addPage() })
                     DropdownMenuItem({ Text(stringResource(R.string.editor_clear_page)) }, { menu = false; vm.clearPage() })
                     DropdownMenuItem({ Text(stringResource(R.string.editor_remove_page)) }, { menu = false; vm.removePage() })
