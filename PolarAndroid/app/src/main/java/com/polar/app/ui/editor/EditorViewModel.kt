@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.polar.app.R
+import com.polar.app.data.FolderImages
 import com.polar.app.data.FolderListing
 import com.polar.app.core.edit.MoodPreset
 import com.polar.app.core.edit.ProjectEdits
@@ -462,12 +463,18 @@ class EditorViewModel(private val projectId: String, private val deps: EditorDep
                 1 -> UiText(R.string.editor_photo_added_one)
                 else -> UiText(R.string.editor_photos_added_many, listOf(added))
             }
-            val tail = when (ignored) {
-                0 -> null
-                1 -> UiText(R.string.editor_ignored_one)
-                else -> UiText(R.string.editor_ignored_many, listOf(ignored))
-            }
-            message(if (tail == null) head else UiText(R.string.editor_folder_summary, listOf(head, tail)), undoable = added > 0)
+            val notes = listOfNotNull(
+                if (listing.omitted > 0) UiText(R.string.editor_folder_capped, listOf(FolderImages.MAX)) else null,
+                when {
+                    ignored == 0 -> null
+                    ignored == 1 -> UiText(R.string.editor_ignored_one)
+                    else -> UiText(R.string.editor_ignored_many, listOf(ignored))
+                },
+                if (listing.unsupported > 0) UiText(R.string.editor_folder_heif, listOf(listing.unsupported)) else null
+            )
+            val text = notes.fold(head) { acc, note -> UiText(R.string.editor_folder_summary, listOf(acc, note)) }
+            message(text, undoable = added > 0)
+            return@launch
         }
     }
 

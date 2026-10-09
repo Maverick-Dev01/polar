@@ -7,6 +7,7 @@ import android.webkit.MimeTypeMap
 import com.polar.app.model.PhotoAsset
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 
 data class ImportResult(val assets: List<PhotoAsset>, val failed: Int)
@@ -33,15 +34,16 @@ class PhotoImporter(
             DocumentsContract.Document.COLUMN_DISPLAY_NAME,
             DocumentsContract.Document.COLUMN_MIME_TYPE
         )
-        runCatching {
-            context.contentResolver.query(parent, projection, null, null, null)?.use { c ->
-                while (c.moveToNext()) {
-                    val mime = c.getString(2)
-                    entries += FolderEntry(
-                        c.getString(1) ?: "", DocumentsContract.buildDocumentUriUsingTree(tree, c.getString(0)).toString(),
-                        mime, mime == DocumentsContract.Document.MIME_TYPE_DIR
-                    )
-                }
+        // Los errores (permiso revocado, carpeta ya no disponible) se propagan: no equivalen a una carpeta vacía.
+        val cursor = context.contentResolver.query(parent, projection, null, null, null) ?: throw java.io.IOException("Sin acceso a la carpeta")
+        cursor.use { c ->
+            while (c.moveToNext()) {
+                ensureActive()
+                val mime = c.getString(2)
+                entries += FolderEntry(
+                    c.getString(1) ?: "", DocumentsContract.buildDocumentUriUsingTree(tree, c.getString(0)).toString(),
+                    mime, mime == DocumentsContract.Document.MIME_TYPE_DIR
+                )
             }
         }
         FolderImages.select(entries)
@@ -51,6 +53,7 @@ class PhotoImporter(
         val assets = mutableListOf<PhotoAsset>()
         var failed = 0
         for (text in uris) {
+            ensureActive()
             val uri = Uri.parse(text)
             val info = loader.readInfo(uri)
             val stream = runCatching { context.contentResolver.openInputStream(uri) }.getOrNull()

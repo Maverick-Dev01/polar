@@ -20,7 +20,7 @@ class FolderImagesTest {
             file("notas.txt"), file("clip.mp4", "video/mp4"), file("sin_extension", "image/jpeg"),
             FolderEntry("Subcarpeta", "content://t/sub", null, true)
         )
-        val r = FolderImages.select(entries)
+        val r = FolderImages.select(entries, sdk = 34)
         assertEquals(6, r.uris.size)
         // txt y mp4 se ignoran; la subcarpeta no cuenta como archivo.
         assertEquals(2, r.ignored)
@@ -33,7 +33,8 @@ class FolderImagesTest {
         assertEquals(500, r.uris.size)
         assertEquals("content://t/img0001.jpg", r.uris.first())
         assertEquals("content://t/img0500.jpg", r.uris.last())
-        assertEquals(20, r.ignored)
+        assertEquals(0, r.ignored)
+        assertEquals(20, r.omitted)
     }
 
     @Test
@@ -41,5 +42,24 @@ class FolderImagesTest {
         val r = FolderImages.select(emptyList())
         assertEquals(0, r.uris.size)
         assertEquals(0, r.ignored)
+    }
+
+    @Test
+    fun heicIsExcludedBelowApi28AndCountedSeparately() {
+        val entries = listOf(file("a.jpg"), file("b.HEIC"), file("c.heif"), file("d.png", "image/png"), file("x.txt"))
+        val old = FolderImages.select(entries, sdk = 27)
+        assertEquals(listOf("content://t/a.jpg", "content://t/d.png"), old.uris)
+        assertEquals(2, old.unsupported)
+        assertEquals(1, old.ignored)
+        val modern = FolderImages.select(entries, sdk = 28)
+        assertEquals(4, modern.uris.size)
+        assertEquals(0, modern.unsupported)
+    }
+
+    @Test
+    fun heicDetectedByMimeWithoutExtension() {
+        val old = FolderImages.select(listOf(file("IMG_0001", "image/heic")), sdk = 26)
+        assertEquals(0, old.uris.size)
+        assertEquals(1, old.unsupported)
     }
 }
