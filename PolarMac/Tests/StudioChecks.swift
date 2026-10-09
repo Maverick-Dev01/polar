@@ -106,6 +106,20 @@ import SwiftUI
         precondition(studio.errorMessage?.contains("demasiado grande") == true,
                      "El límite de 5 MB debe aplicarse al destino del enlace antes de decodificar JSON")
         precondition(studio.project.settings.title == previousTitle)
+        var nav = SheetNavigator()
+        precondition(nav.scroll(dx: 30, dy: 0, ended: false, now: 10, enabled: true) == nil, "Bajo el umbral no cambia de hoja")
+        precondition(nav.scroll(dx: 60, dy: 0, ended: false, now: 10.05, enabled: true) == -1, "Deslizar a la derecha va a la hoja anterior")
+        precondition(nav.scroll(dx: 200, dy: 0, ended: false, now: 10.1, enabled: true) == nil, "Un gesto cambia una sola hoja")
+        precondition(nav.scroll(dx: 0, dy: 0, ended: true, now: 10.2, enabled: true) == nil)
+        precondition(nav.scroll(dx: -100, dy: 0, ended: false, now: 10.25, enabled: true) == nil, "El debounce frena un cambio inmediato")
+        precondition(nav.scroll(dx: 0, dy: 0, ended: true, now: 10.3, enabled: true) == nil)
+        precondition(nav.scroll(dx: -100, dy: 5, ended: false, now: 11, enabled: true) == 1, "Pasada la pausa, deslizar a la izquierda va a la siguiente")
+        precondition(nav.scroll(dx: 0, dy: 0, ended: true, now: 11.1, enabled: true) == nil)
+        precondition(nav.scroll(dx: 20, dy: 120, ended: false, now: 12, enabled: true) == nil, "El desplazamiento vertical no cambia de hoja")
+        precondition(nav.scroll(dx: 200, dy: 0, ended: false, now: 13, enabled: false) == nil, "Desactivado mientras se arrastra o se editan huecos")
+        precondition(nav.key(direction: 1, now: 20, enabled: false) == nil)
+        precondition(nav.key(direction: 1, now: 20, enabled: true) == 1 && nav.key(direction: 1, now: 20.05, enabled: true) == nil, "Las flechas también respetan la pausa")
+        precondition(TextSizePreset.matching(0) == .auto && TextSizePreset.matching(12) == .medium && TextSizePreset.matching(13) == nil)
         print("OK: deshacer, selección, huecos multipágina, 44 fotos/11 hojas, roles editables, importación al límite y symlink >5MB")
     }
 

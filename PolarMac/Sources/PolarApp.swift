@@ -89,6 +89,7 @@ private let cream = polarCream
     @ObservedObject var studio: Studio
     @NativeState<Bool> private var phrases = false
     @NativeState<Bool> private var expandedText = false
+    @NativeState<Bool> private var moreText = false
     @FocusState private var textFocused: Bool
     private let grid = [GridItem(.flexible()), GridItem(.flexible())]
 
@@ -129,7 +130,7 @@ private let cream = polarCream
         .onChange(of: textFocused) { _, focused in if focused { studio.beginEditing() } else { studio.endEditing() } }
         .onChange(of: studio.selectedTextRole) { _, _ in studio.endEditing() }
         .onChange(of: studio.textCardScope) { _, _ in studio.endEditing() }
-        .sheet(isPresented: $phrases) { PhrasePicker(onPick: studio.setTextValue) { phrases = false } }
+        .sheet(isPresented: $phrases) { PhrasePicker(onPick: { studio.setTextValue($0) }) { phrases = false } }
         .sheet(isPresented: $expandedText) { TextPreviewEditor(studio: studio) { studio.endEditing(); expandedText = false } }
         .onChange(of: studio.selectedSlot) { _, _ in
             if !studio.editingTemplate, studio.project.placements.indices.contains(studio.selectedSlot), studio.project.placements[studio.selectedSlot] != nil { studio.inspectorTab = 3 }
@@ -273,6 +274,8 @@ private let cream = polarCream
             .position(x: geo.size.width / 2, y: geo.size.height / 2)
         }
         .background(Color(nsColor: .unemphasizedSelectedContentBackgroundColor))
+        .background(SheetNavigationKeys(go: { studio.navigate(studio.page + $0) },
+                                        canGo: { !studio.editingTemplate && !studio.busy && !studio.dropTarget && !studio.batchSelecting && !studio.showingCrop && !studio.showingFinish && !studio.showingLibrary && studio.project.pageCount > 1 }).frame(width: 0, height: 0))
     }
 
     private var gallery: some View {
@@ -438,14 +441,45 @@ private let cream = polarCream
         }.font(.system(size: 13)).textFieldStyle(.roundedBorder)
     }
 
+    private var isMusicDesign: Bool { [.spotify, .playerRed, .playerGray].contains(studio.project.settingsForCard(studio.selectedCard).style) }
+    private func roleBinding(_ role: TextRole) -> Binding<String> {
+        Binding(get: { studio.textValue(role) }, set: { studio.setTextValue($0, role: role) })
+    }
+
+    private var songSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.s) {
+            section("Canción")
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                Text("Título").font(.system(size: 12)).foregroundStyle(.secondary)
+                TextField("Título de la canción", text: roleBinding(.song)).focused($textFocused)
+            }
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                Text("Artista").font(.system(size: 12)).foregroundStyle(.secondary)
+                TextField("Artista", text: roleBinding(.artist)).focused($textFocused)
+            }
+            if studio.project.settings.style == .spotify {
+                field("Enlace para el QR (opcional)", \.songURL)
+                if PolarRenderer.qrState(studio.project.settings.songURL) == .tooLong {
+                    Label("Enlace muy largo para un QR. Usa uno más corto; en la hoja aparecerá un aviso en su lugar.", systemImage: "exclamationmark.triangle")
+                        .font(.system(size: 11)).foregroundStyle(.orange)
+                } else {
+                    Text("Incluye un QR que abre ese enlace.").font(.system(size: 11)).foregroundStyle(.secondary)
+                }
+            }
+            Divider()
+        }
+    }
+
     private var textControls: some View {
         VStack(alignment: .leading, spacing: Spacing.m) {
-            section("Texto y tipografía")
             if studio.textRoles.isEmpty {
+                section("Texto y tipografía")
                 Text(studio.project.settings.style == .imported ? "El texto que ya viene impreso en la plantilla forma parte de la imagen." : "Este diseño reserva todo el espacio para las fotografías.")
                     .font(.system(size: 13)).foregroundStyle(.secondary)
             } else {
-                Picker("Texto", selection: $studio.selectedTextRole) {
+                if isMusicDesign { songSection }
+                section(isMusicDesign ? "Estilo del texto" : "Texto y tipografía")
+                Picker(isMusicDesign ? "Dar estilo a" : "Texto", selection: $studio.selectedTextRole) {
                     ForEach(studio.textRoles) { role in Text(role.name).tag(role) }
                 }
                 Picker("Aplicar a", selection: $studio.textCardScope) {
@@ -462,11 +496,11 @@ private let cream = polarCream
                     Picker("Formato", selection: setting(\.dateStyle)) { ForEach(DateStyle.allCases) { Text($0.name).tag($0) } }
                     Text("La fecha de la foto usa sus datos de captura; si no existen, no se imprime.").font(.caption).foregroundStyle(.secondary)
                 } else {
-                    TextField(studio.selectedTextRole.name, text: textValue, axis: .vertical).lineLimit(2...4).focused($textFocused)
-                    HStack(spacing: Spacing.s) {
-                        Button("Editar y ver") { studio.beginEditing(); expandedText = true }
-                        Button("Frases sugeridas") { phrases = true }
-                    }.frame(minHeight: 48)
+                    if !isMusicDesign { TextField(studio.selectedTextRole.name, text: textValue, axis: .vertical).lineLimit(2...4).focused($textFocused) }
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: Spacing.s) { textActions }
+                        VStack(spacing: Spacing.s) { textActions }
+                    }.buttonStyle(PolarButtonStyle(expands: true))
                 }
                 if studio.textCardScope { Button("Volver al texto general") { studio.returnToGeneralText() }.font(.system(size: 12)) }
                 else if !studio.project.cardOverrides.isEmpty { Button("Aplicar texto y estilo general a todas") { studio.applyGeneralTextToAll() }.font(.system(size: 12)) }
@@ -480,39 +514,45 @@ private let cream = polarCream
                     .font(studio.textAppearance(studio.selectedTextRole).fontName == ".System" ? .system(size: 23) : .custom(FontCatalog.postScriptName(studio.textAppearance(studio.selectedTextRole).fontName), size: 23))
                     .foregroundStyle(Color(nsColor: color(studio.textAppearance(studio.selectedTextRole).hex.isEmpty ? studio.project.settings.accentHex : studio.textAppearance(studio.selectedTextRole).hex)))
                     .lineLimit(2).frame(maxWidth: .infinity, alignment: .leading).padding(Spacing.m).background(Color.white, in: RoundedRectangle(cornerRadius: PolarRadius.small))
-                Toggle("Tamaño automático", isOn: automaticTextSize)
-                if !automaticTextSize.wrappedValue {
-                    Stepper("Tamaño \(Int(textSetting(\.size).wrappedValue)) pt", value: textSetting(\.size), in: 6...96, step: 1)
-                    Slider(value: textSetting(\.size), in: 6...96, step: 1, onEditingChanged: { editing in if editing { studio.beginEditing() } else { studio.endEditing() } })
+                VStack(alignment: .leading, spacing: Spacing.s) {
+                    Text("Tamaño").font(.system(size: 12))
+                    Picker("Tamaño", selection: Binding(get: { TextSizePreset.matching(textSetting(\.size).wrappedValue) }, set: { value in
+                        if let value { studio.editText { $0.size = value.points } }
+                    })) {
+                        ForEach(TextSizePreset.allCases) { Text($0.name).tag(Optional($0)) }
+                    }.pickerStyle(.segmented).labelsHidden()
+                    if !automaticTextSize.wrappedValue {
+                        Stepper("Exacto \(Int(textSetting(\.size).wrappedValue)) pt", value: textSetting(\.size), in: 6...96, step: 1)
+                        Slider(value: textSetting(\.size), in: 6...96, step: 1, onEditingChanged: { editing in if editing { studio.beginEditing() } else { studio.endEditing() } })
+                    }
                 }
                 HStack(spacing: Spacing.m) {
                     Toggle("Negrita", isOn: textSetting(\.bold)).frame(maxWidth: .infinity, minHeight: 48)
                     Toggle("Cursiva", isOn: textSetting(\.italic)).frame(maxWidth: .infinity, minHeight: 48)
                 }
-                Picker("Alineación", selection: textSetting(\.alignment)) {
-                    ForEach(TextAlignment.allCases) { value in Text(value.name).tag(value) }
-                }
                 ColorPicker("Color del texto", selection: textColor, supportsOpacity: false)
                 Button("Usar color del diseño") { studio.editText { $0.hex = "" } }.font(.system(size: 12))
                 Divider()
-                section("Posición del texto")
-                controlSlider("Horizontal", value: textSetting(\.offsetX), range: -60...60, suffix: "pt")
-                controlSlider("Vertical", value: textSetting(\.offsetY), range: -60...60, suffix: "pt")
-                Text("Si el texto no cabe, se reduce para ajustarse a su zona sin cubrir la foto.")
-                    .font(.system(size: 11)).foregroundStyle(.secondary)
-                Button("Restablecer este texto") { studio.resetTextStyle() }
-                if studio.project.settings.style == .spotify {
-                    Divider()
-                    field("Enlace de la canción (opcional)", \.songURL)
-                    if PolarRenderer.qrState(studio.project.settings.songURL) == .tooLong {
-                        Label("Enlace muy largo para un QR. Usa uno más corto; en la hoja aparecerá un aviso en su lugar.", systemImage: "exclamationmark.triangle")
-                            .font(.system(size: 11)).foregroundStyle(.orange)
-                    } else {
-                        Text("Incluye un QR que abre ese enlace.").font(.system(size: 11)).foregroundStyle(.secondary)
-                    }
+                DisclosureGroup("Más opciones", isExpanded: $moreText) {
+                    VStack(alignment: .leading, spacing: Spacing.m) {
+                        Picker("Alineación", selection: textSetting(\.alignment)) {
+                            ForEach(TextAlignment.allCases) { value in Text(value.name).tag(value) }
+                        }
+                        section("Posición del texto")
+                        controlSlider("Horizontal", value: textSetting(\.offsetX), range: -60...60, suffix: "pt")
+                        controlSlider("Vertical", value: textSetting(\.offsetY), range: -60...60, suffix: "pt")
+                        Text("Si el texto no cabe, se reduce para ajustarse a su zona sin cubrir la foto.")
+                            .font(.system(size: 11)).foregroundStyle(.secondary)
+                        Button("Restablecer este texto") { studio.resetTextStyle() }.frame(maxWidth: .infinity, minHeight: 48)
+                    }.padding(.top, Spacing.s)
                 }
             }
         }.font(.system(size: 13)).textFieldStyle(.roundedBorder)
+    }
+
+    @ViewBuilder private var textActions: some View {
+        Button("Editar y ver") { studio.beginEditing(); expandedText = true }.frame(maxWidth: .infinity, minHeight: 48)
+        Button("Frases sugeridas") { phrases = true }.frame(maxWidth: .infinity, minHeight: 48)
     }
 
     private var paperControls: some View {
@@ -690,5 +730,44 @@ private let cream = polarCream
     private func color(_ hex: String) -> NSColor {
         let rgb = UInt32(hex, radix: 16) ?? 0x92394A
         return NSColor(srgbRed: CGFloat((rgb >> 16) & 255) / 255, green: CGFloat((rgb >> 8) & 255) / 255, blue: CGFloat(rgb & 255) / 255, alpha: 1)
+    }
+}
+
+
+/// Cambia de hoja con dos dedos sobre la hoja y con ← → cuando el foco no está en un campo ni en un control.
+/// Ver `SheetNavigator` para el umbral y la pausa; se desactiva al editar huecos o arrastrar.
+struct SheetNavigationKeys: NSViewRepresentable {
+    let go: (Int) -> Void
+    let canGo: () -> Bool
+    func makeNSView(context: Context) -> NavView { NavView() }
+    func updateNSView(_ view: NavView, context: Context) { view.parent = self }
+    static func dismantleNSView(_ view: NavView, coordinator: ()) { view.stop() }
+    final class NavView: NSView {
+        var parent: SheetNavigationKeys?
+        private var monitor: Any?
+        private var navigator = SheetNavigator()
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            if window == nil { stop(); return }
+            guard monitor == nil else { return }
+            monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .scrollWheel]) { [weak self] event in
+                guard let self, event.window == self.window, let window = self.window, window.attachedSheet == nil, let parent = self.parent else { return event }
+                let responder = window.firstResponder
+                let typing = responder is NSText || responder is NSTextView || responder is NSControl
+                let now = ProcessInfo.processInfo.systemUptime
+                if event.type == .scrollWheel {
+                    guard event.hasPreciseScrollingDeltas, event.momentumPhase == [] else { return event }
+                    let inside = parent.canGo() && self.superview.map { $0.bounds.contains($0.convert(event.locationInWindow, from: nil)) } == true
+                    let ended = event.phase.contains(.ended) || event.phase.contains(.cancelled)
+                    if let step = self.navigator.scroll(dx: event.scrollingDeltaX, dy: event.scrollingDeltaY, ended: ended, now: now, enabled: inside) { parent.go(step) }
+                    return event
+                }
+                guard !typing, event.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty, event.keyCode == 123 || event.keyCode == 124 else { return event }
+                guard parent.canGo() else { return event }
+                if let step = self.navigator.key(direction: event.keyCode == 123 ? -1 : 1, now: now, enabled: true) { parent.go(step) }
+                return nil
+            }
+        }
+        func stop() { if let monitor { NSEvent.removeMonitor(monitor); self.monitor = nil } }
     }
 }

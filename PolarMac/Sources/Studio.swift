@@ -52,6 +52,45 @@ enum MoodPreset: String, CaseIterable, Identifiable {
     }
 }
 
+/// Tamaños rápidos del panel Texto. Auto (0) deja que la hoja ajuste el texto a su zona.
+enum TextSizePreset: String, CaseIterable, Identifiable {
+    case auto, small, medium, large
+    var id: String { rawValue }
+    var name: String { switch self { case .auto: return "Auto"; case .small: return "S"; case .medium: return "M"; case .large: return "L" } }
+    var points: Double { switch self { case .auto: return 0; case .small: return 9; case .medium: return 12; case .large: return 18 } }
+    static func matching(_ size: Double) -> TextSizePreset? { allCases.first { $0.points == size } }
+}
+
+/// Decide cuándo un gesto de dos dedos o una flecha cambia de hoja: umbral de desplazamiento acumulado,
+/// un solo cambio por gesto y una pausa mínima entre cambios (debounce).
+struct SheetNavigator {
+    static let threshold: CGFloat = 80
+    static let debounce: TimeInterval = 0.4
+    private var accumulated: CGFloat = 0
+    private var lastChange: TimeInterval = -.infinity
+    private var consumed = false
+
+    /// Devuelve -1 (hoja anterior), 1 (siguiente) o nil. `ended` cierra el gesto. Con `enabled == false` se descarta todo.
+    mutating func scroll(dx: CGFloat, dy: CGFloat, ended: Bool, now: TimeInterval, enabled: Bool) -> Int? {
+        defer { if ended { accumulated = 0; consumed = false } }
+        guard enabled else { accumulated = 0; return nil }
+        guard !consumed, abs(dx) > abs(dy) else { return nil }
+        accumulated += dx
+        guard abs(accumulated) >= Self.threshold else { return nil }
+        let direction = accumulated > 0 ? -1 : 1   // deslizar a la derecha trae la hoja anterior
+        accumulated = 0; consumed = true
+        guard now - lastChange >= Self.debounce else { return nil }
+        lastChange = now
+        return direction
+    }
+    /// Flechas ← (-1) y → (1); respetan la misma pausa para que mantener la tecla no salte hojas.
+    mutating func key(direction: Int, now: TimeInterval, enabled: Bool) -> Int? {
+        guard enabled, now - lastChange >= Self.debounce / 2 else { return nil }
+        lastChange = now
+        return direction
+    }
+}
+
 struct FontChoice: Identifiable {
     var id: String
     var name: String
@@ -308,8 +347,8 @@ struct FontChoice: Identifiable {
     func textAppearance(_ role: TextRole) -> TextAppearance {
         textCardScope ? TextResolver.appearance(project: project, card: selectedCard, role: role) : project.settings.textStyle(role)
     }
-    func setTextValue(_ value: String) {
-        let role = selectedTextRole
+    func setTextValue(_ value: String, role explicitRole: TextRole? = nil) {
+        let role = explicitRole ?? selectedTextRole
         let card = textCardScope ? selectedCard : nil
         change {
             let value = String(value.prefix(500))

@@ -115,7 +115,10 @@ struct LensRing: View {
                 ActionTile(title: "Rellenar", icon: "sparkles") { studio.fillAll() }.disabled(studio.project.photos.isEmpty)
                 ActionTile(title: "Encuadrar", icon: "crop") { studio.openCrop() }.disabled(selected == nil)
                 ActionTile(title: "Filtros", icon: "camera.filters") { studio.lookScope = 3; studio.inspectorTab = 4 }.disabled(selected == nil)
+                ActionTile(title: "Quitar fondo", icon: "person.crop.circle.badge.minus") { studio.removeBackground() }.disabled(selected == nil || studio.busy)
+                ActionTile(title: "Girar 90°", icon: "rotate.right") { studio.editPlacement { $0.quarterTurns = ($0.quarterTurns + 1) % 4 } }.disabled(selected == nil)
             }
+            if studio.busy { ProgressView("Preparando el recorte…").controlSize(.small) }
             if let photo = selected {
                 Text(photo.name).font(.headline).lineLimit(1).accessibilityLabel(photo.name)
                 RenderedCard(studio: studio).frame(height: 190)
