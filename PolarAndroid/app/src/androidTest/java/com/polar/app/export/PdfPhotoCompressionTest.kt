@@ -63,6 +63,35 @@ class PdfPhotoCompressionTest {
         } finally { bitmap.recycle() }
     }
 
+    @Test fun fittedRoundedPhotosCompressAndRenderLikeTheScreen() {
+        val bitmap = photograph()
+        val asset = PhotoAsset(path = "fixture", pixelWidth = bitmap.width, pixelHeight = bitmap.height)
+        val project = PolarProject(settings = PrintSettings(columns = 3, rows = 3, roundedPhotos = true),
+            photos = listOf(asset), placements = List(9) { PhotoPlacement(assetID = asset.id, zoom = 0.7) })
+        val plain = File(cache, "qa-fit-plain.pdf")
+        val compact = File(cache, "qa-fit-compact.pdf")
+        try {
+            PolarExporter.exportPdf(project, plain, { bitmap }, optimizePhotos = false)
+            PolarExporter.exportPdf(project, compact, { bitmap })
+            println("Ajustar: sin optimizar=${plain.length()}, optimizado=${compact.length()}")
+            assertTrue("Ajustar debe comprimir a la mitad", compact.length() < plain.length() / 2)
+            val screen = PolarExporter.renderPageToBitmap(project, 0, 72, { bitmap })
+            PdfRenderer(ParcelFileDescriptor.open(compact, ParcelFileDescriptor.MODE_READ_ONLY)).use { renderer ->
+                renderer.openPage(0).use { page ->
+                    val rendered = Bitmap.createBitmap(page.width, page.height, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.WHITE) }
+                    page.render(rendered, null, null, PdfRenderer.Page.RENDER_MODE_FOR_PRINT)
+                    val a = IntArray(rendered.width * rendered.height); val b = IntArray(a.size)
+                    rendered.getPixels(a, 0, rendered.width, 0, 0, rendered.width, rendered.height)
+                    screen.getPixels(b, 0, screen.width, 0, 0, screen.width, screen.height)
+                    var sum = 0L
+                    for (i in a.indices) sum += Math.abs(Color.red(a[i]) - Color.red(b[i])) + Math.abs(Color.green(a[i]) - Color.green(b[i])) + Math.abs(Color.blue(a[i]) - Color.blue(b[i]))
+                    val mean = sum / (a.size * 3.0)
+                    assertTrue("Diferencia media por canal $mean", mean <= 3.0)
+                }
+            }
+        } finally { bitmap.recycle() }
+    }
+
     @Test fun thirtyFilteredPhotosKeepFivePrintablePagesAndOriginalPixels() {
         val bitmap = photograph()
         val original = bitmap.copy(bitmap.config!!, false)

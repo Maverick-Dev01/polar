@@ -328,7 +328,7 @@ object PolarRenderer {
                 canvas.clipRect(rect.toAndroidRectF(scale))
             }
 
-            drawPhoto(canvas, photo, placement, rect, accent, bgColor, isPreview, scale, bitmapProvider, LookResolver.resolve(project, slot), cardIndex, card, pdfPhoto = pdfPhoto, backgroundPhoto = placement?.background?.imageID?.let { id -> project.photos.firstOrNull { it.id == id } })
+            drawPhoto(canvas, photo, placement, rect, accent, bgColor, isPreview, scale, bitmapProvider, LookResolver.resolve(project, slot), cardIndex, card, pdfPhoto = pdfPhoto, backgroundPhoto = placement?.background?.imageID?.let { id -> project.photos.firstOrNull { it.id == id } }, opaqueUnder = bgColor)
             canvas.restore()
         }
 
@@ -431,7 +431,8 @@ object PolarRenderer {
         card: PolarRect,
         clipPhoto: Boolean = true,
         pdfPhoto: ((Bitmap) -> Unit)? = null,
-        backgroundPhoto: PhotoAsset? = null
+        backgroundPhoto: PhotoAsset? = null,
+        opaqueUnder: Int? = null
     ) {
         if (photo == null || placement == null) {
             if (isPreview) {
@@ -475,6 +476,8 @@ object PolarRenderer {
             val layer = Bitmap.createBitmap(ceil(rect.width*rasterScale).toInt().coerceAtLeast(1), ceil(rect.height*rasterScale).toInt().coerceAtLeast(1), Bitmap.Config.ARGB_8888)
             try {
                 val layerCanvas = Canvas(layer)
+                // Bajo la foto sólo hay el color de la tarjeta: componer sobre él deja la capa opaca (JPEG en el PDF).
+                if (pdfPhoto != null && opaqueUnder != null) layerCanvas.drawColor(opaqueUnder)
                 if (pdfPhoto != null) layerCanvas.scale((layer.width / (rect.width * rasterScale)).toFloat(), (layer.height / (rect.height * rasterScale)).toFloat())
                 draw(layerCanvas, 0.0, 0.0,rasterScale)
                 PhotoFilters.grain(layer, look, PhotoFilters.seed(photo.id, cardIndex), rect.left-card.left, rect.top-card.top, rect.width/layer.width, rect.height/layer.height)
