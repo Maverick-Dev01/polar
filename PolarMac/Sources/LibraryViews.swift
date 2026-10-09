@@ -16,6 +16,10 @@ typealias NativeState<Value> = SwiftUI.State<Value>
         }
         .preferredColorScheme(studio.preferences.theme == .system ? nil : studio.preferences.theme == .dark ? .dark : .light)
         .sheet(isPresented: $studio.showingWelcome) { WelcomeView(studio: studio) }
+        .sheet(isPresented: $studio.showingHelp) { HelpCenterView(studio: studio) }
+        .onChange(of: studio.showingLibrary) { _, on in if on { studio.helpMode = false; studio.tourIndex = nil } }
+        .onChange(of: studio.showingFinish) { _, on in if on { studio.helpMode = false; studio.tourIndex = nil } }
+        .onChange(of: studio.showingCrop) { _, on in if on { studio.helpMode = false; studio.tourIndex = nil } }
         .sheet(isPresented: Binding(get: { studio.moldWizard != nil }, set: { if !$0 { studio.closeMoldWizard() } })) { MoldWizardView(studio: studio) }
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.24), value: studio.showingFinish)
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.24), value: studio.showingCrop)
@@ -44,7 +48,7 @@ typealias NativeState<Value> = SwiftUI.State<Value>
                 }
                 Spacer()
                 SettingsLink { Label("Ajustes", systemImage: "gearshape") }
-                Button("Abrir .polar…") { studio.openProject() }
+                Button("Abrir archivo .polar…") { studio.openProject() }
                 Button { studio.newProject() } label: { Label("Nuevo diseño", systemImage: "plus") }.buttonStyle(PolarButtonStyle(primary: true))
             }
             HStack {
@@ -99,6 +103,7 @@ typealias NativeState<Value> = SwiftUI.State<Value>
                 Button("Vaciar papelera", role: .destructive) { studio.emptyTrash() }
                 Button("Cancelar", role: .cancel) {}
             } message: { Text("Los diseños borrados se eliminarán para siempre.") }
+            Button { NSApp.keyWindow?.close(); studio.openHelp() } label: { Label("Ayuda y guía de uso", systemImage: "questionmark.circle") }.frame(maxWidth: .infinity, minHeight: 48)
             Button("Volver a ver la bienvenida") { NSApp.keyWindow?.close(); studio.showingWelcome = true }.frame(maxWidth: .infinity, minHeight: 48)
             Text("Para imprimir, elige el mismo papel y orientación y usa Tamaño real / 100 %.").foregroundStyle(.secondary)
             Text("Funciona sin conexión. Tus fotos se copian a la biblioteca de Polar; los originales no se modifican ni se envían.").font(.callout).foregroundStyle(.secondary)
@@ -244,7 +249,7 @@ typealias NativeState<Value> = SwiftUI.State<Value>
             ActionTile(title: "Abrir", icon: "folder") { menu = false; studio.openDesign(item.id) }
             ActionTile(title: "Renombrar", icon: "pencil") { menu = false; name = item.name; renaming = true }
             ActionTile(title: "Duplicar", icon: "doc.on.doc") { menu = false; studio.duplicateDesign(item.id) }
-            ActionTile(title: "Compartir", icon: "square.and.arrow.up") { menu = false; studio.share(studio.library.projectFile(item.id)) }
+            ActionTile(title: "Compartir archivo .polar", icon: "square.and.arrow.up") { menu = false; studio.share(studio.library.projectFile(item.id)) }
             ActionTile(title: "Borrar", icon: "trash") { menu = false; studio.deleteDesign(item.id) }
         }
     }

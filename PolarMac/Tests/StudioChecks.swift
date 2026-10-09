@@ -120,7 +120,42 @@ import SwiftUI
         precondition(nav.key(direction: 1, now: 20, enabled: false) == nil)
         precondition(nav.key(direction: 1, now: 20, enabled: true) == 1 && nav.key(direction: 1, now: 20.05, enabled: true) == nil, "Las flechas también respetan la pausa")
         precondition(TextSizePreset.matching(0) == .auto && TextSizePreset.matching(12) == .medium && TextSizePreset.matching(13) == nil)
+        try await folderListing()
         print("OK: deshacer, selección, huecos multipágina, 44 fotos/11 hojas, roles editables, importación al límite y symlink >5MB")
+    }
+
+    /// «Agregar carpeta»: sólo imágenes del primer nivel, por nombre natural, tope de 500, avisos.
+    static func folderListing() async throws {
+        let fm = FileManager.default
+        let dir = fm.temporaryDirectory.appendingPathComponent("polar-folder-\(UUID().uuidString)")
+        defer { try? fm.removeItem(at: dir) }
+        try fm.createDirectory(at: dir.appendingPathComponent("sub"), withIntermediateDirectories: true)
+        for name in ["foto10.png", "foto2.JPG", "foto1.png", "notas.txt", ".oculta.png", "sub/dentro.png"] { fm.createFile(atPath: dir.appendingPathComponent(name).path, contents: Data([0])) }
+        let small = PhotoImporter.folderListing(dir)
+        precondition(small.urls.map(\.lastPathComponent) == ["foto1.png", "foto2.JPG", "foto10.png"], "orden natural, sin subcarpetas ni ocultos: \(small.urls.map(\.lastPathComponent))")
+        precondition(small.omitted == 0 && small.ignored == 1, "ignora lo que no es imagen")
+        let big = dir.appendingPathComponent("grande"); try fm.createDirectory(at: big, withIntermediateDirectories: true)
+        for i in 0..<503 { fm.createFile(atPath: big.appendingPathComponent(String(format: "f%03d.jpg", i)).path, contents: Data([0])) }
+        let capped = PhotoImporter.folderListing(big)
+        precondition(capped.urls.count == 500 && capped.omitted == 3 && capped.urls.last?.lastPathComponent == "f499.jpg", "tope de 500 por nombre")
+        precondition(PhotoImporter.folderListing(dir.appendingPathComponent("no-existe")).urls.isEmpty, "carpeta ilegible: vacía")
+        precondition(PhotoImporter.folderStatus(added: 3, unreadable: 0, omitted: 0) == "3 fotos agregadas")
+        precondition(PhotoImporter.folderStatus(added: 1, unreadable: 0, omitted: 0) == "1 foto agregada")
+        precondition(PhotoImporter.folderStatus(added: 4, unreadable: 2, omitted: 0) == "4 fotos agregadas · 2 no se pudieron leer")
+        precondition(PhotoImporter.folderStatus(added: 500, unreadable: 0, omitted: 3) == "Se agregaron las primeras 500; el resto se omitió")
+        // De punta a punta por el Studio con fotos reales.
+        let studio = Studio(storageRoot: dir.appendingPathComponent("studio"))
+        let photos = dir.appendingPathComponent("reales"); try fm.createDirectory(at: photos, withIntermediateDirectories: true)
+        for n in ["b2.png", "a10.png", "a2.png"] { try solidFolderPNG(photos.appendingPathComponent(n)) }
+        fm.createFile(atPath: photos.appendingPathComponent("roto.png").path, contents: Data([1, 2, 3]))
+        studio.importFolder(photos)
+        let deadline = Date().addingTimeInterval(10)
+        while studio.busy && Date() < deadline { try await Task.sleep(nanoseconds: 10_000_000) }
+        precondition(studio.project.photos.map(\.name) == ["a2", "a10", "b2"] && studio.status == "3 fotos agregadas · 1 no se pudieron leer", "importFolder: \(studio.project.photos.map(\.name)) \(studio.status)")
+    }
+    static func solidFolderPNG(_ url: URL) throws {
+        let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: 40, pixelsHigh: 30, bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
+        try rep.representation(using: .png, properties: [:])!.write(to: url)
     }
 
     static func importPhotos(_ urls: [URL], into studio: Studio) async throws {

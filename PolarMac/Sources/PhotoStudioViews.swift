@@ -16,7 +16,7 @@ import AppKit
                 Text("Edita o selecciona sólo el fragmento que quieres imprimir.").foregroundStyle(.secondary)
                 PhraseTextEditor(text: Binding(get: { self.draft ?? "" }, set: { self.draft = String($0.prefix(500)) }), selection: $selection).frame(minHeight: 160)
                 Text("\(draft.count) / 500 caracteres").font(.caption).foregroundStyle(.secondary)
-                Button(selection.length > 0 ? "Usar selección" : "Usar este texto") {
+                Button(selection.length > 0 ? "Usar selección (\(selection.length))" : "Usar este texto") {
                     let value = draft as NSString
                     let range = NSIntersectionRange(selection, NSRange(location: 0, length: value.length))
                     onPick(range.length > 0 ? value.substring(with: range) : draft); onDismiss()

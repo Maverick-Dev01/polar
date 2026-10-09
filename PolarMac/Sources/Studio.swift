@@ -56,7 +56,7 @@ enum MoodPreset: String, CaseIterable, Identifiable {
 enum TextSizePreset: String, CaseIterable, Identifiable {
     case auto, small, medium, large
     var id: String { rawValue }
-    var name: String { switch self { case .auto: return "Auto"; case .small: return "S"; case .medium: return "M"; case .large: return "L" } }
+    var name: String { switch self { case .auto: return "Auto"; case .small: return "Chica"; case .medium: return "Mediana"; case .large: return "Grande" } }
     var points: Double { switch self { case .auto: return 0; case .small: return 9; case .medium: return 12; case .large: return 18 } }
     static func matching(_ size: Double) -> TextSizePreset? { allCases.first { $0.points == size } }
 }
@@ -127,6 +127,12 @@ struct FontChoice: Identifiable {
     @Published var showingLibrary = true
     @Published var showingSettings = false
     @Published var showingWelcome = false
+    // Guía: centro de ayuda, modo «?» y recorrido (índice del paso en help.json, nil = sin recorrido).
+    @Published var showingHelp = false
+    @Published var helpArticleID: String?
+    @Published var helpMode = false
+    @Published var helpSelected: String?
+    @Published var tourIndex: Int?
     @Published var showingFinish = false
     @Published var showingCrop = false
     @Published var comparing = false
@@ -622,7 +628,21 @@ struct FontChoice: Identifiable {
         if runPanel(panel) == .OK { importURLs(panel.urls, fill: true) }
     }
 
-    func importURLs(_ urls: [URL], fill: Bool) {
+        /// «Agregar carpeta…»: sólo carpetas; las imágenes del primer nivel, por nombre, hasta 500.
+    func addFolder() {
+        let panel = NSOpenPanel()
+        panel.title = "Elige una carpeta con fotos"
+        panel.prompt = "Agregar carpeta"
+        panel.canChooseFiles = false; panel.canChooseDirectories = true; panel.allowsMultipleSelection = false
+        guard runPanel(panel) == .OK, let folder = panel.url else { return }
+        importFolder(folder)
+    }
+    func importFolder(_ folder: URL) {
+        let listing = PhotoImporter.folderListing(folder)
+        importURLs(listing.urls, fill: true, omitted: listing.omitted > 0, folder: true)
+    }
+
+    func importURLs(_ urls: [URL], fill: Bool, omitted: Bool = false, folder: Bool = false) {
         guard !busy else { return }
         busy = true; status = "Leyendo fotos…"
         DispatchQueue.global(qos: .userInitiated).async {
@@ -655,6 +675,10 @@ struct FontChoice: Identifiable {
                     self.thumbnails.removeAll()
                 }
                 self.status = "\(added.count) \(added.count == 1 ? "foto agregada" : "fotos agregadas"). \(self.project.photos.count) en tu galería."
+                if folder {
+                    self.status = PhotoImporter.folderStatus(added: added.count, unreadable: result.skipped.count, omitted: omitted ? 1 : 0)
+                    if incoming.count <= added.count { return }
+                }
                 if incoming.count > added.count { self.errorMessage = "La galería admite hasta 2000 fotos. No se agregaron las restantes." }
                 else if !result.skipped.isEmpty { self.errorMessage = "No se pudieron leer: " + result.skipped.prefix(5).joined(separator: ", ") }
             }

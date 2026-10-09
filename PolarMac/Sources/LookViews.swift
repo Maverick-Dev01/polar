@@ -104,6 +104,7 @@ struct FileTabs: View {
                         .background(selection == item.0 ? polarCream : polarSurface, in: RoundedRectangle(cornerRadius: PolarRadius.small))
                         .overlay(alignment: .bottom) { Rectangle().fill(selection == item.0 ? polarInk : .clear).frame(height: 2) }
                 }.buttonStyle(.plain).accessibilityLabel(item.1).accessibilityAddTraits(selection == item.0 ? .isSelected : [])
+                    .helpTarget(["tool.diseno", "tool.texto", "tool.papel", "tool.fotos", "tool.filtros"][item.0])
             }
         }.padding(Spacing.s)
     }
@@ -165,8 +166,9 @@ struct LensRing: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.m) {
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: Spacing.m) {
-                ActionTile(title: "Agregar", icon: "plus") { studio.addPhotos() }
-                ActionTile(title: "Rellenar", icon: "sparkles") { studio.fillAll() }.disabled(studio.project.photos.isEmpty)
+                ActionTile(title: "Agregar fotos", icon: "plus") { studio.addPhotos() }
+                ActionTile(title: "Agregar carpeta", icon: "folder.badge.plus") { studio.addFolder() }
+                ActionTile(title: "Rellenar todo", icon: "sparkles") { studio.fillAll() }.disabled(studio.project.photos.isEmpty)
                 ActionTile(title: "Encuadrar", icon: "crop") { studio.openCrop() }.disabled(selected == nil)
                 ActionTile(title: "Filtros", icon: "camera.filters") { studio.lookScope = 3; studio.inspectorTab = 4 }.disabled(selected == nil)
                 ActionTile(title: "Quitar fondo", icon: "person.crop.circle.badge.minus") { studio.removeBackground() }.disabled(selected == nil || studio.busy)
@@ -249,9 +251,9 @@ private let presetImageCache: NSCache<NSString, NSImage> = { let cache = NSCache
         VStack(alignment: .leading, spacing: Spacing.m) {
             Text("Aplicar a").font(.headline)
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: Spacing.s) {
-                scope("Todo proyecto", 0, "square.stack")
+                scope("Todo el proyecto", 0, "square.stack")
                 scope("Esta página", 1, "doc")
-                scope("Elegir páginas", 2, "doc.on.doc")
+                scope("Varias páginas", 2, "doc.on.doc")
                 scope("Esta foto", 3, "photo")
             }
             if studio.lookScope == 2 {
@@ -480,6 +482,8 @@ struct PhotoKeys: NSViewRepresentable {
     var nudge: ((Double, Double) -> Void)?
     var begin: (() -> Void)?
     var end: (() -> Void)?
+    /// Con el modo «?» o el recorrido activos las teclas no hacen nada.
+    var blocked: (() -> Bool)?
     func makeNSView(context: Context) -> KeyView { KeyView() }
     func updateNSView(_ view: KeyView, context: Context) { view.handlers = self }
     static func dismantleNSView(_ view: KeyView, coordinator: ()) { view.stop() }
@@ -495,7 +499,7 @@ struct PhotoKeys: NSViewRepresentable {
             guard monitor == nil else { return }
             focusObserver = NotificationCenter.default.addObserver(forName: NSWindow.didResignKeyNotification, object: window, queue: .main) { [weak self] _ in self?.finishInteraction() }
             monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp, .scrollWheel]) { [weak self] event in
-                guard let self, event.window == self.window, !(self.window?.firstResponder is NSTextView), let handlers = self.handlers else { return event }
+                guard let self, event.window == self.window, !(self.window?.firstResponder is NSTextView), let handlers = self.handlers, handlers.blocked?() != true else { return event }
                 if event.type == .scrollWheel, event.modifierFlags.contains(.command), let zoom = handlers.zoom {
                     if !self.wheelActive { self.wheelActive = true; handlers.begin?() }
                     zoom(Double(event.scrollingDeltaY) * 0.015)
