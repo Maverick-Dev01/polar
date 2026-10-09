@@ -18,6 +18,8 @@ data class AppSettings(
     val units: Units = Units.MM,
     val defaultPaper: PaperSize = PaperSize.LETTER,
     val onboardingSeen: Boolean = false,
+    /** El recorrido del editor ya se vio (o se saltó): no vuelve a salir solo. */
+    val tourSeen: Boolean = false,
     val exportQuality: ExportQuality = ExportQuality.HIGH
 )
 
@@ -28,6 +30,7 @@ class SettingsRepository(private val context: Context) {
     private val unitsKey = stringPreferencesKey("units")
     private val paperKey = stringPreferencesKey("default_paper")
     private val onboardingKey = booleanPreferencesKey("onboarding_seen")
+    private val tourKey = booleanPreferencesKey("tour_seen")
     private val exportQualityKey = stringPreferencesKey("export_quality")
 
     val settings: Flow<AppSettings> = context.polarDataStore.data.map { p ->
@@ -36,6 +39,7 @@ class SettingsRepository(private val context: Context) {
             units = p[unitsKey]?.let { runCatching { Units.valueOf(it) }.getOrNull() } ?: Units.MM,
             defaultPaper = p[paperKey]?.let { runCatching { PaperSize.valueOf(it) }.getOrNull() } ?: PaperSize.LETTER,
             onboardingSeen = p[onboardingKey] ?: false,
+            tourSeen = p[tourKey] ?: false,
             exportQuality = p[exportQualityKey]?.let { runCatching { ExportQuality.valueOf(it) }.getOrNull() } ?: ExportQuality.HIGH
         )
     }
@@ -45,4 +49,5 @@ class SettingsRepository(private val context: Context) {
     suspend fun setDefaultPaper(paper: PaperSize) { context.polarDataStore.edit { it[paperKey] = paper.name } }
     suspend fun setExportQuality(quality: ExportQuality) { context.polarDataStore.edit { it[exportQualityKey] = quality.name } }
     suspend fun setOnboardingSeen(seen: Boolean) { context.polarDataStore.edit { it[onboardingKey] = seen } }
+    suspend fun setTourSeen(seen: Boolean) { context.polarDataStore.edit { it[tourKey] = seen } }
 }

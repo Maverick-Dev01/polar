@@ -68,13 +68,19 @@ android {
     packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
     // La geometría de los diseños es la misma que usa la Mac: se copia de shared-fixtures/ al compilar.
     sourceSets.getByName("main").resources.srcDir(layout.buildDirectory.dir("generated/shared-geometry"))
+    sourceSets.getByName("main").assets.srcDir(layout.buildDirectory.dir("generated/shared-help"))
 }
 
 val copySharedGeometry = tasks.register<Copy>("copySharedGeometry") {
     from(rootProject.projectDir.parentFile.resolve("shared-fixtures/estilos-geometria.json"))
     into(layout.buildDirectory.dir("generated/shared-geometry"))
 }
-tasks.named("preBuild") { dependsOn(copySharedGeometry) }
+// La guía de uso es la misma que muestra la Mac (shared-fixtures/help.json): se copia a los assets al compilar.
+val copySharedHelp = tasks.register<Copy>("copySharedHelp") {
+    from(rootProject.projectDir.parentFile.resolve("shared-fixtures/help.json"))
+    into(layout.buildDirectory.dir("generated/shared-help"))
+}
+tasks.named("preBuild") { dependsOn(copySharedGeometry, copySharedHelp) }
 
 tasks.matching { it.name in setOf("packageRelease", "packageReleaseBundle", "signReleaseBundle", "packagePlay", "packagePlayBundle", "signPlayBundle") }.configureEach {
     doFirst {

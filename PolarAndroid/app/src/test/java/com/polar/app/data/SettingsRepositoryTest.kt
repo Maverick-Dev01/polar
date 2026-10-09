@@ -29,4 +29,13 @@ class SettingsRepositoryTest {
         repo.setExportQuality(com.polar.app.export.ExportQuality.LIGHT)
         assertEquals(com.polar.app.export.ExportQuality.LIGHT, SettingsRepository(ApplicationProvider.getApplicationContext()).settings.first().exportQuality)
     }
+
+    @Test
+    fun tourIsUnseenByDefaultAndStaysSeenAcrossRepositories() = runTest {
+        val repo = SettingsRepository(ApplicationProvider.getApplicationContext())
+        assertEquals(false, repo.settings.first().tourSeen)
+        repo.setTourSeen(true)
+        assertEquals(true, SettingsRepository(ApplicationProvider.getApplicationContext()).settings.first().tourSeen)
+        repo.setTourSeen(false) // el DataStore se comparte entre pruebas
+    }
 }
