@@ -14,9 +14,20 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
-data class TemplateLoad(val template: ImportedTemplate, val detectedCount: Int)
+data class TemplateLoad(
+    val template: ImportedTemplate,
+    val detectedCount: Int,
+    /** Algún hueco no encaja bien en rectángulo, redondeado ni óvalo: se dejó como rectángulo («forma aproximada»). */
+    val approximateShape: Boolean = false,
+    val fingerprint: TemplateFingerprint? = null
+)
+
+/** Resultado de buscar huecos: [approximate] marca los que cayeron a rectángulo por no ajustar bien. */
+data class DetectedRegions(val regions: List<TemplateRegion>, val approximate: Set<String>, val found: Boolean)
 
 object TemplateImporter {
+    /** Un óvalo llena π/4 ≈ 78.5 % de su caja: por debajo de 70 % no es un hueco con forma. */
+    private const val MIN_FILL = 0.70
 
     fun loadTemplate(file: File): TemplateLoad {
         if (!file.exists() || !file.canRead()) {
@@ -74,34 +85,38 @@ object TemplateImporter {
         bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
         bitmap.recycle()
 
-        val found = findRegionsFromPixels(pixels, width, height)
-        val detectedCount = if (found.size == 1 && found[0].x == 0.2 && found[0].width == 0.6) 0 else found.size
+        val detected = detect(pixels, width, height)
+        val dhash = TemplateFingerprint.dhash(pixels, width, height)
 
         return TemplateLoad(
-            template = ImportedTemplate(path = file.absolutePath, pixelWidth = origWidth, pixelHeight = origHeight, regions = found),
-            detectedCount = detectedCount
+            template = ImportedTemplate(path = file.absolutePath, pixelWidth = origWidth, pixelHeight = origHeight, regions = detected.regions),
+            detectedCount = if (detected.found) detected.regions.size else 0,
+            approximateShape = detected.approximate.isNotEmpty(),
+            fingerprint = TemplateFingerprint(dhash, TemplateFingerprint.sha256(file))
         )
     }
 
-    fun findRegionsFromPixels(pixels: IntArray, width: Int, height: Int): List<TemplateRegion> {
-        val transparent = scanRegions(pixels, width, height, transparent = true)
-        val white = scanRegions(pixels, width, height, transparent = false)
-        val combined = transparent + white
+    fun findRegionsFromPixels(pixels: IntArray, width: Int, height: Int): List<TemplateRegion> =
+        detect(pixels, width, height).regions
 
-        val ordered = rowOrder(combined)
-        val accepted = ordered.take(64)
-        if (accepted.isEmpty()) {
-            return listOf(TemplateRegion(x = 0.2, y = 0.2, width = 0.6, height = 0.6))
+    fun detect(pixels: IntArray, width: Int, height: Int): DetectedRegions {
+        val combined = scanRegions(pixels, width, height, transparent = true) + scanRegions(pixels, width, height, transparent = false)
+        val ordered = rowOrder(combined.map { it.region }).take(64)
+        if (ordered.isEmpty()) {
+            return DetectedRegions(listOf(TemplateRegion(x = 0.2, y = 0.2, width = 0.6, height = 0.6)), emptySet(), found = false)
         }
-        return accepted
+        val approximate = combined.filter { it.approximate }.map { it.region.id }.toSet()
+        return DetectedRegions(ordered, approximate, found = true)
     }
+
+    private class Found(val region: TemplateRegion, val approximate: Boolean)
 
     private fun scanRegions(
         pixels: IntArray,
         width: Int,
         height: Int,
         transparent: Boolean
-    ): List<TemplateRegion> {
+    ): List<Found> {
         val visited = BooleanArray(width * height)
 
         fun matches(index: Int): Boolean {
@@ -116,7 +131,7 @@ object TemplateImporter {
             return a >= 245 && r >= 235 && g >= 235 && b >= 235
         }
 
-        val output = mutableListOf<TemplateRegion>()
+        val output = mutableListOf<Found>()
         val queue = IntArray(width * height)
 
         for (start in 0 until width * height) {
@@ -170,15 +185,24 @@ object TemplateImporter {
                 h >= max(8, height / 30) &&
                 area >= (width * height) / 200 &&
                 area < (width * height) * 9 / 10 &&
-                (count.toDouble() / area.toDouble()) >= 0.90
+                (count.toDouble() / area.toDouble()) >= MIN_FILL
             ) {
+                // La máscara del hueco dentro de su caja decide si es rectángulo, redondeado u óvalo.
+                val mask = BooleanArray(w * h)
+                for (k in 0 until tail) { val i = queue[k]; mask[(i / width - minY) * w + (i % width - minX)] = true }
+                val fit = ShapeDetector.detect(mask, w, h)
                 output.add(
-                    TemplateRegion(
-                        x = minX.toDouble() / width,
-                        y = minY.toDouble() / height,
-                        width = w.toDouble() / width,
-                        height = h.toDouble() / height,
-                        isTransparent = transparent
+                    Found(
+                        TemplateRegion(
+                            x = minX.toDouble() / width,
+                            y = minY.toDouble() / height,
+                            width = w.toDouble() / width,
+                            height = h.toDouble() / height,
+                            isTransparent = transparent,
+                            shape = fit.shape,
+                            radius = fit.radius
+                        ),
+                        fit.approximate
                     )
                 )
             }
