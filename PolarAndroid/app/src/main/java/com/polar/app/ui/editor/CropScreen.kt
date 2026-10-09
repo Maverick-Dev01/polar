@@ -80,7 +80,7 @@ fun CropScreen(state: EditorUiState,vm: EditorViewModel,container: AppContainer)
     Scaffold(topBar={ TopAppBar(title={Text(stringResource(R.string.crop_title,state.selectedCardNumber ?: 1),maxLines=2)},navigationIcon={IconButton(onClick={vm.setMode(EditorMode.EDIT)}){Icon(Icons.Filled.Close,stringResource(R.string.action_close))}},actions={TextButton(onClick={vm.setMode(EditorMode.EDIT)}){Text(stringResource(R.string.crop_done))}}) }) { padding ->
         BoxWithConstraints(Modifier.padding(padding).fillMaxSize()) {
             val previewHeight=(maxHeight*.43f).coerceIn(200.dp,440.dp)
-            Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal=16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.align(Alignment.TopCenter).widthIn(max=640.dp).fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal=16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
                 Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.Center) {
                     IconButton(onClick={vm.adjacentPhoto(-1)},enabled=position>0){Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft,stringResource(R.string.crop_previous))}
                     Text(stringResource(R.string.crop_position,position+1,slots.size),modifier=Modifier.weight(1f),textAlign=androidx.compose.ui.text.style.TextAlign.Center)
