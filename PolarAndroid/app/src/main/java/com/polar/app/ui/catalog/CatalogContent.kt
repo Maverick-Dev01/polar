@@ -19,6 +19,13 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.FileOpen
 import androidx.compose.material.icons.outlined.Upload
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import com.polar.app.ui.theme.Spacing
 import com.polar.app.ui.components.SymmetricActions
@@ -56,9 +63,14 @@ fun CatalogContent(
     onBack: () -> Unit
 ) {
     var category by rememberSaveable { mutableStateOf<DesignCategory?>(null) }
-    val styles = remember(category) {
-        TemplateStyle.entries.filter { it != TemplateStyle.IMPORTED && (category == null || it.category == category) }
+    var query by rememberSaveable { mutableStateOf("") }
+    val styles = remember(category, query) {
+        CatalogSearch.filter(
+            TemplateStyle.entries.filter { it != TemplateStyle.IMPORTED && (category == null || it.category == category) },
+            query
+        )
     }
+    val focus = LocalFocusManager.current
     val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { it?.let(onImportTemplate) }
     val pickPolar = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { it?.let(onOpenPolar) }
 
@@ -79,9 +91,30 @@ fun CatalogContent(
                 verticalArrangement = Arrangement.spacedBy(Spacing.grid)
             ) {
                 item(span = { GridItemSpan(maxLineSpan) }) {
+                    OutlinedTextField(
+                        value = query, onValueChange = { query = it }, singleLine = true,
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                        placeholder = { Text(stringResource(R.string.catalog_search_hint)) },
+                        leadingIcon = { Icon(Icons.Filled.Search, null) },
+                        trailingIcon = {
+                            if (query.isNotEmpty()) IconButton(onClick = { query = "" }) { Icon(Icons.Filled.Close, stringResource(R.string.catalog_search_clear)) }
+                        },
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                        keyboardActions = KeyboardActions(onSearch = { focus.clearFocus() }),
+                        shape = MaterialTheme.shapes.medium
+                    )
+                }
+                item(span = { GridItemSpan(maxLineSpan) }) {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(vertical = 4.dp)) {
                         item { PolarChip(category == null, { category = null }, { Text(stringResource(R.string.catalog_all)) },modifier=Modifier.heightIn(min=48.dp)) }
                         items(DesignCategory.entries) { c -> PolarChip(category == c, { category = c }, { Text(c.displayName) },modifier=Modifier.heightIn(min=48.dp)) }
+                    }
+                }
+                if (styles.isEmpty()) item(span = { GridItemSpan(maxLineSpan) }) {
+                    Column(Modifier.fillMaxWidth().padding(vertical = Spacing.xl), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
+                        Text(stringResource(R.string.catalog_no_results, query.trim()), style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
+                        Text(stringResource(R.string.catalog_no_results_hint), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+                        OutlinedButton(onClick = { query = ""; category = null }, modifier = Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.catalog_show_all)) }
                     }
                 }
                 items(styles, key = { it.name }) { style ->

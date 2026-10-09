@@ -153,6 +153,11 @@
     <string name="text_title_all">Texto · todas las tarjetas</string>
     <string name="text_title_card">Texto · tarjeta %1$d</string>
     <string name="photos_summary">%1$s · %2$d en la hoja</string>
+    <string name="catalog_search_hint">Buscar diseños</string>
+    <string name="catalog_search_clear">Borrar búsqueda</string>
+    <string name="catalog_no_results">No hay diseños con «%1$s»</string>
+    <string name="catalog_no_results_hint">Prueba con otra palabra o revisa cómo la escribiste.</string>
+    <string name="catalog_show_all">Ver todos</string>
     <string name="photos_add">Agregar</string>
     <string name="photos_add_folder">Agregar carpeta</string>
     <string name="editor_folder_empty">No se encontraron fotos para agregar</string>
