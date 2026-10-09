@@ -120,6 +120,9 @@ struct FontChoice: Identifiable {
     @Published var lastExport: URL?
     @Published var projectURL: URL?
     let library: LibraryStore
+    let molds: MoldLibrary
+    @Published var savedMolds: [SavedMold] = []
+    @Published var moldWizard: MoldWizardState?
     @Published var libraryItems: [LibraryItem] = []
     @Published var showingLibrary = true
     @Published var showingSettings = false
@@ -160,6 +163,7 @@ struct FontChoice: Identifiable {
 
     init(storageRoot: URL? = nil) {
         library = LibraryStore(root: storageRoot)
+        molds = MoldLibrary(appRoot: library.root)
         preferences = library.preferences()
         FontCatalog.registerFonts()
         fontChoices = [FontChoice(id: ".System", name: "Sistema")] + FontCatalog.bundledChoices.map { FontChoice(id: $0.id, name: $0.name) } + NSFontManager.shared.availableFonts.sorted().compactMap { name in
@@ -170,6 +174,7 @@ struct FontChoice: Identifiable {
         project.normalized()
         project.name = "Nuevo diseño"
         libraryItems = library.list()
+        savedMolds = molds.list()
         previewImage = PolarRenderer.preview(project: project, page: 0)
     }
 
@@ -333,7 +338,9 @@ struct FontChoice: Identifiable {
         let base: [TextRole]
         switch project.settingsForCard(selectedCard).style {
         case .filmVertical, .filmHorizontal, .calendar, .borderless, .imported: base = []
-        case .spotify, .playerRed, .playerGray: base = [.song, .artist]
+        case .spotify, .playerRed, .playerGray, .vinyl, .cassette: base = [.song, .artist]
+        case .photobooth, .collage: base = [.title, .caption]
+        case .washi: base = [.caption]
         case .instagram: base = [.title, .caption]
         case .postcard, .editorial, .celebration: base = [.title, .subtitle, .caption]
         default: base = [.title, .subtitle]
@@ -415,31 +422,74 @@ struct FontChoice: Identifiable {
         }
     }
 
+    /// «Importar molde…» abre el asistente de 3 pasos (elegir imagen, revisar espacios, nombre y guardar).
     func importTemplate() {
         guard !busy else { return }
+        endEditing()
+        moldWizard = MoldWizardState()
+    }
+    func closeMoldWizard() { moldWizard = nil }
+    func refreshMolds() { savedMolds = molds.list() }
+
+    /// Paso 1: abre el selector de archivos y lee la imagen (huecos, formas y moldes parecidos).
+    func pickMoldImage() {
+        guard !busy, moldWizard != nil else { return }
         let panel = NSOpenPanel()
-        panel.title = "Importar un molde de imagen"
-        panel.prompt = "Importar"
+        panel.title = "Elige la imagen de tu molde"
+        panel.prompt = "Elegir"
         panel.allowedContentTypes = [.image]
         guard runPanel(panel) == .OK, let url = panel.url else { return }
-        busy = true; status = "Buscando huecos en la plantilla…"
+        loadMoldImage(url)
+    }
+    func loadMoldImage(_ url: URL) {
+        guard var state = moldWizard else { return }
+        busy = true; status = "Buscando espacios en el molde…"
+        let library = molds
         DispatchQueue.global(qos: .userInitiated).async {
-            do {
-                let result = try TemplateImporter.read(url: url)
-                DispatchQueue.main.async {
-                    self.busy = false
-                    self.change {
-                        $0.settings.importedTemplate = result.template
-                        $0.selectStyle(.imported)
-                    }
-                    self.page = 0; self.selectedSlot = 0; self.inspectorTab = 0; self.editingTemplate = true
-                    self.thumbnails.removeAll(); self.refresh()
-                    self.status = result.detectedCount == 0 ? "No encontré huecos claros. Ajusta el hueco manual o añade otros." : "\(result.detectedCount) huecos encontrados. Revísalos antes de imprimir."
-                }
-            } catch {
-                DispatchQueue.main.async { self.busy = false; self.errorMessage = error.localizedDescription; self.status = "No se importó la plantilla." }
+            state.load(url: url, library: library)
+            DispatchQueue.main.async {
+                self.busy = false
+                if self.moldWizard != nil { self.moldWizard = state }
+                self.status = state.errorMessage == nil ? "Revisa los espacios del molde." : "No se leyó el molde."
             }
         }
+    }
+
+    enum MoldUse { case saveOnly, currentProject, newProject }
+    /// Paso 3: guarda el molde en «Mis moldes» y, según se elija, lo usa en este proyecto o en uno nuevo.
+    func finishMoldWizard(_ use: MoldUse) {
+        guard let state = moldWizard, state.canGoNext || state.step == .save else { return }
+        do {
+            let mold = try state.save(in: molds)
+            refreshMolds(); moldWizard = nil
+            if use == .saveOnly { status = "Molde «\(mold.nombre)» guardado en Mis moldes."; designCategory = "Mis moldes" }
+            else { useMold(mold, inNewProject: use == .newProject) }
+        } catch { errorMessage = error.localizedDescription }
+    }
+    /// «Usar el existente» del aviso de molde parecido.
+    func useExistingMold(_ mold: SavedMold) { moldWizard = nil; useMold(mold, inNewProject: false) }
+
+    /// Aplica un molde guardado. El proyecto se guarda enseguida con su propia copia de la imagen, así que borrar
+    /// el molde de «Mis moldes» después no rompe este proyecto.
+    func useMold(_ mold: SavedMold, inNewProject: Bool = false) {
+        guard !busy else { return }
+        if inNewProject, !newProject() { return }
+        do {
+            let template = try molds.template(for: mold)
+            change {
+                $0.settings.importedTemplate = template
+                $0.selectStyle(.imported)
+            }
+            designScope = 0; page = 0; selectedSlot = 0; inspectorTab = 0; editingTemplate = false
+            thumbnails.removeAll(); flush(); refresh()
+            status = "Molde «\(mold.nombre)» listo. Coloca tus fotos."
+        } catch { errorMessage = error.localizedDescription }
+    }
+    func deleteMold(_ mold: SavedMold) {
+        do {
+            try molds.delete(mold.id); refreshMolds()
+            status = "Molde «\(mold.nombre)» quitado de Mis moldes. Tus proyectos conservan su copia."
+        } catch { errorMessage = error.localizedDescription }
     }
 
     func editTemplateRegion(_ edit: (inout TemplateRegion) -> Void) {
@@ -656,9 +706,9 @@ struct FontChoice: Identifiable {
         } catch { errorMessage = error.localizedDescription }
     }
 
-    func newProject() {
-        guard !busy else { return }
-        guard confirmDiscard() else { return }
+    @discardableResult func newProject() -> Bool {
+        guard !busy else { return false }
+        guard confirmDiscard() else { return false }
         let photos = project.photos
         project = PolarProject(); project.photos = photos; project.normalized()
         project.name = "Nuevo diseño"; project.settings.paperSize = preferences.defaultPaper
@@ -668,6 +718,7 @@ struct FontChoice: Identifiable {
         undoHistory.removeAll(); redoHistory.removeAll(); editingTemplate = false; selectedTextRole = .title; refresh()
         textCardScope = false; showingLibrary = false; showingCrop = false; showingFinish = false; comparing = false; suggestedLook = nil; lookPages.removeAll(); flush()
         status = "Nuevo diseño. Elige un molde y coloca tus fotos."
+        return true
     }
 
     func confirmDiscard() -> Bool {

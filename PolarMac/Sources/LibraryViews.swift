@@ -4,19 +4,6 @@ import AppKit
 // La macro State del SDK nuevo requiere Xcode; usamos el property wrapper nativo disponible desde macOS 10.15.
 typealias NativeState<Value> = SwiftUI.State<Value>
 
-extension TemplateStyle {
-    var category: String {
-        switch self {
-        case .polaroid, .mini, .square, .borderless, .instagram: return "Clásicos"
-        case .spotify, .playerRed, .playerGray: return "Música"
-        case .filmVertical, .filmHorizontal: return "Cine"
-        case .calendar: return "Fechas"
-        case .ticket, .celebration, .heart, .pets, .botanical: return "Ocasiones"
-        default: return "Libre"
-        }
-    }
-}
-
 @MainActor struct PolarRootView: View {
     @ObservedObject var studio: Studio
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -29,6 +16,7 @@ extension TemplateStyle {
         }
         .preferredColorScheme(studio.preferences.theme == .system ? nil : studio.preferences.theme == .dark ? .dark : .light)
         .sheet(isPresented: $studio.showingWelcome) { WelcomeView(studio: studio) }
+        .sheet(isPresented: Binding(get: { studio.moldWizard != nil }, set: { if !$0 { studio.closeMoldWizard() } })) { MoldWizardView(studio: studio) }
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.24), value: studio.showingFinish)
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.24), value: studio.showingCrop)
         .alert("No pudimos completar la acción", isPresented: Binding(get: { studio.errorMessage != nil }, set: { if !$0 { studio.errorMessage = nil } })) {

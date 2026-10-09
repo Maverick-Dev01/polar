@@ -5,6 +5,12 @@ extension TemplateStyle {
         switch self {
         case .polaroid, .mini, .square: return "Un recuerdo con marco y dedicatoria."
         case .spotify, .playerRed, .playerGray: return "Tu foto y la canción que la acompaña."
+        case .photobooth: return "Tira vertical de 4 fotos, como cabina."
+        case .instaxWide: return "Formato ancho con pie grueso."
+        case .vinyl: return "Disco con tu foto de etiqueta."
+        case .cassette: return "Casete con tu foto en la etiqueta."
+        case .collage: return "Una foto grande y dos pequeñas."
+        case .washi: return "Foto con cinta y pie manuscrito."
         case .filmVertical, .filmHorizontal: return "Cinco recuerdos en una tira de película."
         case .calendar: return "Una foto para cada mes del año."
         case .ticket: return "Un boleto para recordar una ocasión."

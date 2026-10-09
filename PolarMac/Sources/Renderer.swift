@@ -82,7 +82,14 @@ enum PolarRenderer {
         case .pets: return [r(0.065, 0.07, 0.87, 0.65)]
         case .heart: return [r(0.065, 0.08, 0.87, 0.65)]
         case .editorial: return [r(0.065, 0.19, 0.87, 0.55)]
+        case .photobooth, .instaxWide, .vinyl, .cassette, .collage, .washi: return StyleGeometryTable.photoRects(in: card, style: style)
         }
+    }
+
+    /// Forma y radio (fracción del lado menor) del hueco `index` de un diseño; sólo los diseños nuevos tienen formas propias.
+    static func photoShape(style: TemplateStyle, index: Int) -> (shape: RegionShape, radius: CGFloat) {
+        guard style.isDataDriven, let slots = StyleGeometryTable.geometry(style)?.photoSlots, slots.indices.contains(index) else { return (.rect, 0) }
+        return (slots[index].shape, CGFloat(slots[index].radius))
     }
 
     static func preview(project: PolarProject, page: Int, scale: CGFloat = 2, printReady: Bool = false) -> NSImage {
@@ -282,6 +289,8 @@ enum PolarRenderer {
         case .ticket: background = NSColor(red: 0.89, green: 0.79, blue: 0.65, alpha: 1)
         case .botanical, .pets, .editorial: background = NSColor(red: 0.98, green: 0.97, blue: 0.93, alpha: 1)
         case .celebration, .heart: background = accent.blended(withFraction: 0.94, of: .white) ?? .white
+        case .photobooth, .instaxWide, .vinyl, .cassette, .collage, .washi:
+            background = StyleGeometryTable.geometry(style).map { hexColor($0.defaultBackground) } ?? .white
         default: background = .white
         }
         let radius = style == .playerGray || style == .playerRed ? min(card.width, card.height) * 0.08 : 0
@@ -294,6 +303,7 @@ enum PolarRenderer {
             stroke(card.insetBy(dx: 2, dy: 2), color: accent, width: 3, context: context)
         }
         let slots = photoRects(in: card, style: style, settings: s)
+        if style.isDataDriven { drawDecorations(style, layer: "below", card: card, context: context) }
         for (subslot, rect) in slots.enumerated() {
             context.saveGState()
             defer { context.restoreGState() }
@@ -302,16 +312,35 @@ enum PolarRenderer {
             let photo = project.asset(for: placement)
             let rounded = s.roundedPhotos || style == .playerGray || style == .playerRed || style == .pets
             if style == .heart { context.addPath(heartPath(in: rect)); context.clip() }
+            let slotShape = photoShape(style: style, index: subslot)
             try drawPhoto(photo, placement: placement, in: rect, radius: rounded ? min(rect.width, rect.height) * 0.045 : 0,
+                          shape: slotShape.shape, shapeRadius: slotShape.radius,
                           accent: accent, background: background, context: context, isPreview: isPreview, isPDF: isPDF, quality: quality,
                           look: LookResolver.resolve(project: project, slot: slot), card: card, cardIndex: firstSlot / style.photosPerCard, backgroundPhoto: placement?.background?.imageID.flatMap { id in project.photos.first { $0.id == id } })
         }
         func userText(_ role: TextRole, in rect: CGRect, size: CGFloat, color: NSColor = .black,
-                      weight: NSFont.Weight = .regular, alignment: NSTextAlignment = .center) {
+                      weight: NSFont.Weight = .regular, alignment: NSTextAlignment = .center, designFont: String = ".System") {
             let cardIndex = firstSlot / style.photosPerCard
+            var appearance = TextResolver.appearance(project: project, card: cardIndex, role: role)
+            if appearance.fontName == ".System" { appearance.fontName = designFont }  // «Del diseño»: la fuente propia del diseño
             text(TextResolver.text(project: project, card: cardIndex, role: role), in: rect, size: size, color: color, weight: weight,
-                 alignment: alignment, appearance: TextResolver.appearance(project: project, card: cardIndex, role: role),
+                 alignment: alignment, appearance: appearance,
                  card: card, photos: role == .date && style == .borderless ? [] : slots)
+        }
+        /// Un diseño nuevo escribe cada rol en su hueco de la tabla compartida, con su fuente, tamaño y color de diseño.
+        func dataText(_ role: TextRole) {
+            guard let slot = StyleGeometryTable.textSlot(style, role) else { return }
+            if role == .date && TextResolver.dateSource(project: project, card: firstSlot / style.photosPerCard) == .none { return }
+            userText(role, in: r(CGFloat(slot.x), CGFloat(slot.y), CGFloat(slot.w), CGFloat(slot.h)),
+                     size: CGFloat(slot.defaultSizePt) * card.width / StyleGeometryTable.referenceCardWidthPt, color: hexColor(slot.color),
+                     weight: slot.bold ? .bold : .regular,
+                     alignment: slot.align == "left" ? .left : slot.align == "right" ? .right : .center, designFont: slot.defaultFont)
+        }
+        func drawQRSlot(_ slot: QRSlotGeometry) throws {
+            guard !s.songURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+            let side = CGFloat(slot.size) * card.width
+            try drawQR(s.songURL, in: CGRect(x: card.minX + CGFloat(slot.x) * card.width, y: card.minY + CGFloat(slot.y) * card.height, width: side, height: side),
+                       context: context, isPreview: isPreview, quietZone: 0.08)
         }
         let fontSize = card.width * 0.06
         switch style {
@@ -333,10 +362,12 @@ enum PolarRenderer {
             userText(.song, in: r(0.07, 0.634, 0.80, 0.055), size: fontSize * 0.83, color: .white, weight: .semibold, alignment: .left)
             userText(.artist, in: r(0.07, 0.693, 0.80, 0.04), size: fontSize * 0.62, color: .white, alignment: .left)
             drawPlayer(in: r(0.075, 0.76, 0.85, 0.195), color: .white, context: context, volume: true)
+            if let slot = LegacyQRSlot.slot(.playerRed, aspect: style.aspect) { try drawQRSlot(slot) }
         case .playerGray:
             userText(.song, in: r(0.56, 0.16, 0.38, 0.11), size: card.height * 0.064, color: .white, weight: .semibold, alignment: .left)
             userText(.artist, in: r(0.56, 0.30, 0.38, 0.09), size: card.height * 0.05, color: .white, alignment: .left)
             drawPlayer(in: r(0.56, 0.44, 0.38, 0.42), color: .white, context: context, volume: true)
+            if let slot = LegacyQRSlot.slot(.playerGray, aspect: style.aspect) { try drawQRSlot(slot) }
             line(from: CGPoint(x: card.midX - card.width * 0.07, y: card.maxY - card.height * 0.05),
                  to: CGPoint(x: card.midX + card.width * 0.07, y: card.maxY - card.height * 0.05), color: .white, width: 1, context: context)
         case .ticket:
@@ -411,9 +442,13 @@ enum PolarRenderer {
             userText(.subtitle, in: r(0.065, 0.135, 0.87, 0.04), size: fontSize * 0.55, alignment: .left)
             userText(.caption, in: r(0.065, 0.79, 0.87, 0.12), size: fontSize * 0.80, color: .darkGray, alignment: .left)
             text("POLAR / \(String(format: "%03d", firstSlot + 1))", in: r(0.065, 0.95, 0.87, 0.025), size: fontSize * 0.42, color: accent, alignment: .right)
+        case .photobooth, .instaxWide, .vinyl, .cassette, .collage, .washi:
+            drawDecorations(style, layer: "above", card: card, context: context)
+            for role in (StyleGeometryTable.geometry(style)?.textSlots ?? []).compactMap(\.textRole) { dataText(role) }
+            if let slot = StyleGeometryTable.geometry(style)?.qrSlot { try drawQRSlot(slot) }
         case .borderless, .imported: break
         }
-        if style.supportsDate && TextResolver.dateSource(project: project, card: firstSlot / style.photosPerCard) != .none {
+        if style.supportsDate && !style.isDataDriven && TextResolver.dateSource(project: project, card: firstSlot / style.photosPerCard) != .none {
             let layout: (CGRect, CGFloat, NSColor, NSTextAlignment)?
             switch style {
             case .polaroid, .mini, .pets, .heart: layout = (r(0.07, 0.955, 0.86, 0.035), fontSize * 0.5, .gray, .center)
@@ -455,6 +490,7 @@ enum PolarRenderer {
             let placement = project.placements.indices.contains(slot) ? project.placements[slot] : nil
             if !isPreview && placement == nil { return }
             try drawPhoto(project.asset(for: placement), placement: placement, in: cards[index], radius: 0,
+                          shape: template.regions[index].shape, shapeRadius: CGFloat(template.regions[index].radius),
                           accent: color(project.settings.accentHex), background: .white, context: context, isPreview: isPreview, isPDF: isPDF, quality: quality,
                           look: LookResolver.resolve(project: project, slot: slot), card: cards[index], cardIndex: slot, backgroundPhoto: placement?.background?.imageID.flatMap { id in project.photos.first { $0.id == id } })
         }
@@ -477,14 +513,27 @@ enum PolarRenderer {
         }
     }
 
+    /// Contorno del hueco de una foto: rectángulo (con esquinas redondeadas fijas en puntos), rectángulo redondeado
+    /// (radio = fracción del lado menor) u óvalo.
+    static func shapePath(_ rect: CGRect, shape: RegionShape = .rect, shapeRadius: CGFloat = 0, radius: CGFloat = 0) -> CGPath {
+        switch shape {
+        case .rect: return CGPath(roundedRect: rect, cornerWidth: radius, cornerHeight: radius, transform: nil)
+        case .ellipse: return CGPath(ellipseIn: rect, transform: nil)
+        case .round:
+            let r = min(min(rect.width, rect.height) / 2, max(0, shapeRadius) * min(rect.width, rect.height))
+            return CGPath(roundedRect: rect, cornerWidth: r, cornerHeight: r, transform: nil)
+        }
+    }
+
     private static func drawPhoto(_ photo: PhotoAsset?, placement: PhotoPlacement?, in rect: CGRect, radius: CGFloat,
+                                  shape: RegionShape = .rect, shapeRadius: CGFloat = 0,
                                   accent: NSColor, background: NSColor, context: CGContext, isPreview: Bool, isPDF: Bool, quality: ExportQuality = .high,
                                   look: PhotoLook, card: CGRect, cardIndex: Int, clipPhoto: Bool = true, backgroundPhoto: PhotoAsset? = nil) throws {
         context.saveGState()
         defer { context.restoreGState() }
         guard context.boundingBoxOfClipPath.intersects(rect) else { return }
         if clipPhoto {
-            context.addPath(CGPath(roundedRect: rect, cornerWidth: radius, cornerHeight: radius, transform: nil))
+            context.addPath(shapePath(rect, shape: shape, shapeRadius: shapeRadius, radius: radius))
             context.clip()
         }
         guard let photo, let placement else {
@@ -647,7 +696,7 @@ enum PolarRenderer {
         return qrContext.createCGImage(output, from: output.extent)
     }
 
-    private static func drawQR(_ value: String, in rect: CGRect, context: CGContext, isPreview: Bool) throws {
+    private static func drawQR(_ value: String, in rect: CGRect, context: CGContext, isPreview: Bool, quietZone: CGFloat = 0.10) throws {
         let link = value.trimmingCharacters(in: .whitespacesAndNewlines)
         guard qrState(link) == .ok, let image = qrImage(link) else {  // image built once; nil also means marker
             // Too long for a QR: leave a visible marker instead of failing the whole export or vanishing silently.
@@ -658,7 +707,7 @@ enum PolarRenderer {
             return
         }
         fill(rect, color: .white, context: context)
-        let inset = rect.width * 0.10
+        let inset = rect.width * quietZone
         let target = rect.insetBy(dx: inset, dy: inset)
         context.saveGState()
         context.interpolationQuality = .none
@@ -707,6 +756,39 @@ enum PolarRenderer {
         for y in [rect.minY, rect.maxY] {
             line(from: CGPoint(x: rect.minX - 5, y: y), to: CGPoint(x: rect.minX - 1.5, y: y), color: gray, width: 0.35, context: context)
             line(from: CGPoint(x: rect.maxX + 1.5, y: y), to: CGPoint(x: rect.maxX + 5, y: y), color: gray, width: 0.35, context: context)
+        }
+    }
+
+    /// Color «#RRGGBB» o «RRGGBB» de la tabla compartida.
+    static func hexColor(_ hex: String) -> NSColor { color(hex.hasPrefix("#") ? String(hex.dropFirst()) : hex) }
+
+    /// Dibuja los adornos de un diseño nuevo de una capa («below» antes de las fotos, «above» después), en el orden de la tabla.
+    private static func drawDecorations(_ style: TemplateStyle, layer: String, card: CGRect, context: CGContext) {
+        guard let decorations = StyleGeometryTable.geometry(style)?.decorations else { return }
+        for item in decorations where item.layer == layer {
+            let rect = CGRect(x: card.minX + CGFloat(item.x) * card.width, y: card.minY + CGFloat(item.y) * card.height,
+                              width: CGFloat(item.w) * card.width, height: CGFloat(item.h) * card.height)
+            let tint = hexColor(item.color).withAlphaComponent(CGFloat(item.opacity))
+            context.saveGState()
+            defer { context.restoreGState() }
+            if item.rotationDeg != 0 {  // sentido horario, alrededor del centro, en puntos
+                context.translateBy(x: rect.midX, y: rect.midY)
+                context.rotate(by: CGFloat(item.rotationDeg) * .pi / 180)
+                context.translateBy(x: -rect.midX, y: -rect.midY)
+            }
+            switch item.type {
+            case "rect": fill(rect, color: tint, context: context)
+            case "roundRect": fill(rect, color: tint, radius: CGFloat(item.radius ?? 0) * min(rect.width, rect.height), context: context)
+            case "ellipse":
+                context.setFillColor(tint.cgColor); context.addEllipse(in: rect); context.fillPath()
+            case "ring":
+                context.setStrokeColor(tint.cgColor); context.setLineWidth(CGFloat(item.strokeW ?? 0) * card.width)
+                context.addEllipse(in: rect); context.strokePath()
+            case "stripes":
+                let count = max(1, item.count ?? 1), band = rect.width / CGFloat(2 * count - 1)
+                for i in 0..<count { fill(CGRect(x: rect.minX + CGFloat(2 * i) * band, y: rect.minY, width: band, height: rect.height), color: tint, context: context) }
+            default: break
+            }
         }
     }
 

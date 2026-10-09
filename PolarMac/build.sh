@@ -14,5 +14,6 @@ cp "$BASE_DIR"/../PolarAndroid/app/src/main/res/font/*.ttf "$APP_DIR/Contents/Re
 cp "$BASE_DIR"/../PolarAndroid/app/src/main/assets/fonts/*.ttf "$APP_DIR/Contents/Resources/fonts/"
 cp "$BASE_DIR"/../PolarAndroid/app/src/main/assets/licenses/* "$APP_DIR/Contents/Resources/licenses/"
 cp "$BASE_DIR/../PolarAndroid/app/src/main/assets/catalog/phrases.json" "$APP_DIR/Contents/Resources/phrases.json"
+cp "$BASE_DIR/../shared-fixtures/estilos-geometria.json" "$APP_DIR/Contents/Resources/estilos-geometria.json"
 codesign --force --sign - "$APP_DIR"
 print "Lista: $APP_DIR"

@@ -111,7 +111,11 @@ struct TextAppearance: Codable, Equatable, Sendable {
 enum TemplateStyle: String, Codable, CaseIterable, Identifiable, Sendable {
     case polaroid, mini, spotify, playerRed, playerGray, ticket, filmVertical, filmHorizontal, calendar, instagram, custom
     case borderless, square, postcard, botanical, celebration, pets, heart, editorial, imported
+    case photobooth, instaxWide, vinyl, cassette, collage, washi
     var id: String { rawValue }
+    /// Diseños nuevos de la fase 3: su geometría viene de `shared-fixtures/estilos-geometria.json`.
+    var isDataDriven: Bool { [.photobooth, .instaxWide, .vinyl, .cassette, .collage, .washi].contains(self) }
+    var isMusic: Bool { [.spotify, .playerRed, .playerGray, .vinyl, .cassette].contains(self) }
     var name: String {
         switch self {
         case .polaroid: return "Polaroid"
@@ -134,6 +138,12 @@ enum TemplateStyle: String, Codable, CaseIterable, Identifiable, Sendable {
         case .heart: return "Corazón"
         case .editorial: return "Editorial"
         case .imported: return "Plantilla importada"
+        case .photobooth: return "Fotomatón"
+        case .instaxWide: return "Instantánea ancha"
+        case .vinyl: return "Vinilo"
+        case .cassette: return "Casete"
+        case .collage: return "Collage"
+        case .washi: return "Cinta washi"
         }
     }
     var symbol: String {
@@ -155,6 +165,12 @@ enum TemplateStyle: String, Codable, CaseIterable, Identifiable, Sendable {
         case .heart: return "heart"
         case .editorial: return "doc.richtext"
         case .imported: return "photo.badge.plus"
+        case .photobooth: return "photo.stack"
+        case .instaxWide: return "rectangle.portrait.on.rectangle.portrait"
+        case .vinyl: return "opticaldisc"
+        case .cassette: return "recordingtape"
+        case .collage: return "square.grid.2x2"
+        case .washi: return "bandage"
         }
     }
     var grid: (Int, Int) {
@@ -168,9 +184,22 @@ enum TemplateStyle: String, Codable, CaseIterable, Identifiable, Sendable {
         case .custom, .borderless, .postcard, .botanical, .pets, .heart, .editorial: return (2, 3)
         case .square, .celebration: return (3, 3)
         case .imported: return (1, 1)
+        case .photobooth: return (3, 1)
+        case .instaxWide: return (2, 3)
+        case .vinyl: return (3, 3)
+        case .washi: return (2, 3)
+        case .cassette: return (2, 4)
+        case .collage: return (2, 3)
         }
     }
-    var photosPerCard: Int { self == .filmVertical || self == .filmHorizontal ? 5 : 1 }
+    var photosPerCard: Int {
+        switch self {
+        case .filmVertical, .filmHorizontal: return 5
+        case .photobooth: return 4
+        case .collage: return 3
+        default: return 1
+        }
+    }
     var suggestedLook: String? { self == .filmVertical || self == .filmHorizontal ? "bw" : nil }
     var supportsDate: Bool { ![Self.filmVertical, .filmHorizontal, .calendar, .imported].contains(self) }
     var aspect: CGFloat {
@@ -193,6 +222,11 @@ enum TemplateStyle: String, Codable, CaseIterable, Identifiable, Sendable {
         case .celebration: return 0.70
         case .pets: return 0.80
         case .imported: return 0.75
+        case .photobooth: return 0.3
+        case .instaxWide: return 1.256
+        case .vinyl, .collage: return 0.75
+        case .cassette: return 1.6
+        case .washi: return 0.8
         }
     }
 }
@@ -289,7 +323,8 @@ struct PrintSettings: Codable, Equatable, Sendable {
     init(from decoder: Decoder) throws {
         self.init()
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        style = try c.decodeIfPresent(TemplateStyle.self, forKey: .style) ?? style
+        // Un id de diseño que esta versión no conoce (un .polar de una versión más nueva) degrada a Polaroid en vez de fallar.
+        style = (try? c.decodeIfPresent(TemplateStyle.self, forKey: .style)) ?? style
         columns = try c.decodeIfPresent(Int.self, forKey: .columns) ?? columns
         rows = try c.decodeIfPresent(Int.self, forKey: .rows) ?? rows
         margin = try c.decodeIfPresent(Double.self, forKey: .margin) ?? margin
@@ -341,6 +376,11 @@ struct PhotoBackground: Codable, Equatable, Sendable {
     var feather: Double = 0.2
     var shadow: Double = 0.15
 }
+/// Decodifica un valor y lo descarta (en vez de fallar todo el archivo) si no lo entiende, por ejemplo un diseño desconocido.
+struct LenientDecodable<Value: Decodable>: Decodable {
+    let value: Value?
+    init(from decoder: Decoder) throws { value = try? Value(from: decoder) }
+}
 struct PageDesign: Codable, Equatable, Sendable {
     var style: TemplateStyle
     var format: CardFormat = .original
@@ -387,7 +427,7 @@ extension CardOverride {
         dateSource = try c.decodeIfPresent(DateSource.self, forKey: .dateSource)
         chosenDate = try c.decodeIfPresent(Date.self, forKey: .chosenDate)
         photoLook = try c.decodeIfPresent(PhotoLook.self, forKey: .photoLook)
-        designStyle = try c.decodeIfPresent(TemplateStyle.self, forKey: .designStyle)
+        designStyle = (try? c.decodeIfPresent(TemplateStyle.self, forKey: .designStyle)) ?? nil
         designFormat = try c.decodeIfPresent(CardFormat.self, forKey: .designFormat)
     }
 }
@@ -551,7 +591,8 @@ struct PolarProject: Codable, Equatable, Sendable {
             for region in template.regions {
                 guard region.x.isFinite, region.y.isFinite, region.width.isFinite, region.height.isFinite,
                       region.x >= 0, region.y >= 0, region.width > 0, region.height > 0,
-                      region.x + region.width <= 1.000000001, region.y + region.height <= 1.000000001
+                      region.x + region.width <= 1.000000001, region.y + region.height <= 1.000000001,
+                      region.radius.isFinite, (0...0.5).contains(region.radius)
                 else { throw PolarError.invalidProject("Un espacio de la plantilla queda fuera de la imagen.") }
             }
         }
@@ -591,7 +632,10 @@ extension PolarProject {
         name = try c.decodeIfPresent(String.self, forKey: .name) ?? name
         updatedAtEpochMs = try c.decodeIfPresent(Int64.self, forKey: .updatedAtEpochMs) ?? updatedAtEpochMs
         cardOverrides = try c.decodeIfPresent([String: CardOverride].self, forKey: .cardOverrides) ?? cardOverrides
-        pageDesigns = try c.decodeIfPresent([String: PageDesign].self, forKey: .pageDesigns) ?? pageDesigns
+        pageDesigns = (try c.decodeIfPresent([String: LenientDecodable<PageDesign>].self, forKey: .pageDesigns) ?? [:]).compactMapValues(\.value)
+        // Si el diseño principal degradó a Polaroid, los diseños por hoja o tarjeta de otra cantidad de fotos ya no encajan: se descartan.
+        pageDesigns = pageDesigns.filter { compatibleStyle($0.value.style) }
+        for key in cardOverrides.keys where !(cardOverrides[key]?.designStyle.map(compatibleStyle) ?? true) { cardOverrides[key]?.designStyle = nil }
     }
 }
 
@@ -651,6 +695,18 @@ enum ExportQuality: String, Codable, CaseIterable, Identifiable {
         case .light: return "Fotos a 200 ppp con compresión ligera. Archivo pequeño, ideal para enviar."
         case .high: return "Fotos a 300 ppp con compresión de alta calidad. Equilibrio recomendado para imprimir."
         case .max: return "Fotos a 300 ppp sin recomprimir en el PDF; JPG con la máxima calidad. El archivo pesa más."
+        }
+    }
+}
+extension TemplateStyle {
+    var category: String {
+        switch self {
+        case .polaroid, .mini, .square, .borderless, .instagram, .photobooth, .instaxWide: return "Clásicos"
+        case .spotify, .playerRed, .playerGray, .vinyl, .cassette: return "Música"
+        case .filmVertical, .filmHorizontal: return "Cine"
+        case .calendar: return "Fechas"
+        case .ticket, .celebration, .heart, .pets, .botanical, .washi: return "Ocasiones"
+        default: return "Libre"
         }
     }
 }

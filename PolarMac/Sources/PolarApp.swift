@@ -47,7 +47,7 @@ private let cream = polarCream
             CommandGroup(replacing: .newItem) {
                 Button("Nuevo diseño") { studio.newProject() }.keyboardShortcut("n")
                 Button("Abrir diseño…") { studio.openProject() }.keyboardShortcut("o")
-                Button("Importar plantilla…") { studio.importTemplate() }
+                Button("Importar molde…") { studio.importTemplate() }
                 Button("Guardar diseño…") { studio.saveProject() }.keyboardShortcut("s")
                 Button("Guardar diseño como…") { studio.saveProject(asNew: true) }.keyboardShortcut("s", modifiers: [.command, .shift])
             }
@@ -158,7 +158,7 @@ private let cream = polarCream
                     Button("Guardar diseño") { studio.saveProject() }
                     Button("Guardar como…") { studio.saveProject(asNew: true) }
                     Divider()
-                    Button("Importar plantilla…") { studio.importTemplate() }
+                    Button("Importar molde…") { studio.importTemplate() }
                 } label: { Label("Proyecto", systemImage: "folder") }
                 Button { studio.addPhotos() } label: { Label("Agregar fotos", systemImage: "plus") }
                 Spacer()
@@ -190,14 +190,18 @@ private let cream = polarCream
                 Text("La cuadrícula es común. Puedes combinar estilos con la misma cantidad de fotos por tarjeta.").font(.caption).foregroundStyle(.secondary)
                 TextField("Buscar diseño", text: $studio.designSearch).textFieldStyle(.roundedBorder).font(.system(size: 12))
                 Picker("Categoría", selection: $studio.designCategory) {
-                    ForEach(["Todos", "Clásicos", "Música", "Cine", "Fechas", "Ocasiones", "Libre"], id: \.self) { Text($0).tag($0) }
+                    ForEach(["Todos", "Clásicos", "Música", "Cine", "Fechas", "Ocasiones", "Libre", "Mis moldes"], id: \.self) { Text($0).tag($0) }
                 }.font(.system(size: 12)).foregroundStyle(Color(nsColor: .labelColor))
-                LazyVGrid(columns: grid, spacing: Spacing.s) {
-                    ForEach(TemplateStyle.allCases.filter { (studio.designSearch.isEmpty || $0.name.localizedCaseInsensitiveContains(studio.designSearch)) && (studio.designCategory == "Todos" || $0.category == studio.designCategory) }) { style in
-                        DesignCatalogTile(studio: studio, style: style)
+                if studio.designCategory == "Mis moldes" {
+                    MyMoldsCatalog(studio: studio)
+                } else {
+                    LazyVGrid(columns: grid, spacing: Spacing.s) {
+                        ForEach(TemplateStyle.allCases.filter { (studio.designSearch.isEmpty || $0.name.localizedCaseInsensitiveContains(studio.designSearch)) && (studio.designCategory == "Todos" || $0.category == studio.designCategory) }) { style in
+                            DesignCatalogTile(studio: studio, style: style)
+                        }
                     }
+                    Button { studio.importTemplate() } label: { Label("Importar molde…", systemImage: "square.and.arrow.down") }.font(.system(size: 12))
                 }
-                Button { studio.importTemplate() } label: { Label("Importar plantilla…", systemImage: "square.and.arrow.down") }.font(.system(size: 12))
                 Text("Personaliza texto, color y distribución. Guarda cada diseño para volver a usarlo.")
                     .font(.system(size: 10)).foregroundStyle(.secondary).lineSpacing(3).padding(.top, 4)
             }.padding(16)
@@ -441,7 +445,7 @@ private let cream = polarCream
         }.font(.system(size: 13)).textFieldStyle(.roundedBorder)
     }
 
-    private var isMusicDesign: Bool { [.spotify, .playerRed, .playerGray].contains(studio.project.settingsForCard(studio.selectedCard).style) }
+    private var isMusicDesign: Bool { studio.project.settingsForCard(studio.selectedCard).style.isMusic }
     private func roleBinding(_ role: TextRole) -> Binding<String> {
         Binding(get: { studio.textValue(role) }, set: { studio.setTextValue($0, role: role) })
     }
@@ -457,17 +461,15 @@ private let cream = polarCream
                 Text("Artista").font(.system(size: 12)).foregroundStyle(.secondary)
                 TextField("Artista", text: roleBinding(.artist)).focused($textFocused)
             }
-            if studio.project.settings.style == .spotify {
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Enlace para el QR (opcional)").font(.system(size: 12)).foregroundStyle(.secondary)
-                    TextField("https://…", text: setting(\.songURL)).font(.system(size: 13))
-                }
-                if PolarRenderer.qrState(studio.project.settings.songURL) == .tooLong {
-                    Label("Enlace muy largo para un QR. Usa uno más corto; en la hoja aparecerá un aviso en su lugar.", systemImage: "exclamationmark.triangle")
-                        .font(.system(size: 11)).foregroundStyle(.orange)
-                } else {
-                    Text("Incluye un QR que abre ese enlace.").font(.system(size: 11)).foregroundStyle(.secondary)
-                }
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                Text("Enlace para el QR (opcional)").font(.system(size: 12)).foregroundStyle(.secondary)
+                TextField("https://…", text: setting(\.songURL)).font(.system(size: 13))
+            }
+            if PolarRenderer.qrState(studio.project.settings.songURL) == .tooLong {
+                Label("Enlace muy largo para un QR. Usa uno más corto; en la hoja aparecerá un aviso en su lugar.", systemImage: "exclamationmark.triangle")
+                    .font(.system(size: 11)).foregroundStyle(.orange)
+            } else {
+                Text("Incluye un QR que abre ese enlace.").font(.system(size: 11)).foregroundStyle(.secondary)
             }
             Divider()
         }
@@ -617,12 +619,21 @@ private let cream = polarCream
                     controlSlider("Arriba", value: regionSetting(\.y), range: 0...98, suffix: "%")
                     controlSlider("Ancho", value: regionSetting(\.width), range: 2...100, suffix: "%")
                     controlSlider("Alto", value: regionSetting(\.height), range: 2...100, suffix: "%")
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        Text("Forma").font(.system(size: 12)).foregroundStyle(.secondary)
+                        EqualChoice(title: "Forma del hueco", options: RegionShape.allCases.map { ($0, $0.name) },
+                                    selection: Binding(get: { template.regions[local].shape }, set: { value in
+                                        if let value { studio.editTemplateRegion { $0.shape = value; $0.radius = value == .round ? max($0.radius, 0.2) : 0 } } }))
+                        if template.regions[local].shape == .round {
+                            controlSlider("Redondeo", value: Binding(get: { template.regions[local].radius * 100 }, set: { value in studio.editTemplateRegion { $0.radius = min(0.5, max(0.01, value / 100)) } }), range: 1...50, suffix: "%")
+                        }
+                    }
                 }
                 ViewThatFits(in: .horizontal) {
                     HStack(spacing: Spacing.s) { templateActions(template) }
                     VStack(spacing: Spacing.s) { templateActions(template) }
                 }.font(.system(size: 12)).buttonStyle(PolarButtonStyle(expands: true))
-                Button("Importar otra plantilla…") { studio.importTemplate() }
+                Button("Importar otro molde…") { studio.importTemplate() }
             }
         }
     }
