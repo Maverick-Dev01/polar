@@ -93,6 +93,7 @@ extension TemplateStyle {
 
 @MainActor struct PreferencesView: View {
     @ObservedObject var studio: Studio
+    @NativeState<Bool> private var confirmEmpty = false
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.l) {
             HStack { Text("Ajustes").font(.title.bold()); Spacer(); Button("Listo") { NSApp.keyWindow?.close() }.frame(minHeight: 48) }
@@ -101,10 +102,19 @@ extension TemplateStyle {
                 Picker("Unidades", selection: $studio.preferences.units) { ForEach(AppUnits.allCases) { Text($0.name).tag($0) } }
                 Picker("Papel para nuevos diseños", selection: $studio.preferences.defaultPaper) { ForEach(PaperSize.allCases) { Text($0.name).tag($0) } }
             }
+            HStack {
+                Text("Papelera: \(studio.trashCount) \(studio.trashCount == 1 ? "diseño" : "diseños"). Se vacía sola tras 7 días.").foregroundStyle(.secondary)
+                Spacer()
+                Button("Vaciar papelera (\(studio.trashCount))") { confirmEmpty = true }.disabled(studio.trashCount == 0)
+            }
+            .confirmationDialog("¿Vaciar la papelera?", isPresented: $confirmEmpty) {
+                Button("Vaciar papelera", role: .destructive) { studio.emptyTrash() }
+                Button("Cancelar", role: .cancel) {}
+            } message: { Text("Los diseños borrados se eliminarán para siempre.") }
             Button("Volver a ver la bienvenida") { NSApp.keyWindow?.close(); studio.showingWelcome = true }.frame(maxWidth: .infinity, minHeight: 48)
             Text("Para imprimir, elige el mismo papel y orientación y usa Tamaño real / 100 %.").foregroundStyle(.secondary)
             Text("Funciona sin conexión. Tus fotos se copian a la biblioteca de Polar; los originales no se modifican ni se envían.").font(.callout).foregroundStyle(.secondary)
-            Text("Polar \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "2.1.0") · Mac").font(.caption).foregroundStyle(.secondary)
+            Text("Polar \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?") · Mac").font(.caption).foregroundStyle(.secondary)
             Button("Mostrar licencias de las fuentes") {
                 if let url = Bundle.main.resourceURL?.appendingPathComponent("licenses") { NSWorkspace.shared.open(url) }
             }
@@ -159,7 +169,7 @@ extension TemplateStyle {
             }.frame(height: 205)
             if !studio.lowQualitySlots.isEmpty {
                 HStack {
-                    Label("\(studio.lowQualitySlots.count) \(studio.lowQualitySlots.count == 1 ? "foto tiene" : "fotos tienen") poca resolución para este tamaño", systemImage: "exclamationmark.triangle").foregroundStyle(polarInk)
+                    Label("\(studio.lowQualitySlots.count) \(studio.lowQualitySlots.count == 1 ? "foto con resolución baja o aceptable" : "fotos con resolución baja o aceptable")", systemImage: "exclamationmark.triangle").foregroundStyle(polarInk)
                     Button("Revisar") {
                         let slot = studio.lowQualitySlots[0]
                         studio.showingFinish = false; studio.openCrop(slot: slot)
@@ -174,23 +184,28 @@ extension TemplateStyle {
                     Text("Esquinas").tag(CutStyle.corners); Text("Líneas completas").tag(CutStyle.lines)
                 }.disabled(studio.busy)
             }
+            VStack(alignment: .leading, spacing: Spacing.s) {
+                Picker("Calidad", selection: $studio.preferences.exportQuality) {
+                    ForEach(ExportQuality.allCases) { Text($0.title).tag($0) }
+                }.pickerStyle(.segmented).frame(maxWidth: 420).disabled(studio.busy)
+                Text(studio.preferences.exportQuality.help).font(.callout).foregroundStyle(.secondary)
+            }
             if studio.busy { ProgressView("Preparando archivo…") }
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: Spacing.m) { finishActions }
                 VStack(spacing: Spacing.m) { finishActions }
             }
-            Text("Imprime al 100 %. PDF: todas las hojas, fotos a 300 ppp y texto nítido. JPG: una hoja más ligera a 300 ppp. PNG: sin pérdida, más peso.").font(.callout).foregroundStyle(.secondary)
+            Text("Imprime al 100 %. PDF: todas las hojas con texto nítido. JPG: una hoja más ligera. PNG: sin pérdida, más peso.").font(.callout).foregroundStyle(.secondary)
             Spacer(minLength: 0)
         }.padding(Spacing.l).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading).background(polarCream).tint(polarInk)
     }
     @ViewBuilder private var finishActions: some View {
         ActionTile(title: "Imprimir", icon: "printer") { studio.printDesign() }.disabled(studio.printPDF == nil || studio.busy)
         Menu {
-            Button("PDF · alta calidad · más ligero") { studio.export(.pdf) }
-            Button("PDF sin compresión JPEG · más peso") { studio.export(.pdfLossless) }
+            Button("PDF · todas las hojas") { studio.export(.pdf) }
         } label: { Label("Guardar PDF", systemImage: "doc").padding(Spacing.m) }.disabled(studio.busy)
         Menu {
-            Button("JPG · alta calidad · más ligero") { studio.export(.jpeg) }
+            Button("JPG · esta hoja") { studio.export(.jpeg) }
             Button("PNG · sin pérdida · más peso") { studio.export(.png) }
         } label: { Label("Guardar imagen", systemImage: "photo").padding(Spacing.m) }.disabled(studio.busy)
         ActionTile(title: "Compartir PDF", icon: "square.and.arrow.up") { if let url = studio.printPDF { studio.share(url) } }.disabled(studio.printPDF == nil || studio.busy)

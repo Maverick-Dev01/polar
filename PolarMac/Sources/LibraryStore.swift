@@ -19,6 +19,17 @@ struct AppPreferences: Codable {
     var units: AppUnits = .mm
     var defaultPaper: PaperSize = .letter
     var onboardingSeen = false
+    var exportQuality: ExportQuality = .high
+
+    init() {}
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        theme = try c.decodeIfPresent(AppTheme.self, forKey: .theme) ?? theme
+        units = try c.decodeIfPresent(AppUnits.self, forKey: .units) ?? units
+        defaultPaper = try c.decodeIfPresent(PaperSize.self, forKey: .defaultPaper) ?? defaultPaper
+        onboardingSeen = try c.decodeIfPresent(Bool.self, forKey: .onboardingSeen) ?? onboardingSeen
+        exportQuality = (try? c.decodeIfPresent(ExportQuality.self, forKey: .exportQuality)) ?? .high
+    }
 }
 
 struct LibraryItem: Identifiable {
@@ -141,9 +152,39 @@ struct LibraryItem: Identifiable {
     func delete(_ id: UUID) throws {
         let trash = root.appendingPathComponent("trash")
         try fm.createDirectory(at: trash, withIntermediateDirectories: true)
-        try fm.moveItem(at: directory(id), to: trash.appendingPathComponent(id.uuidString))
+        let destination = trash.appendingPathComponent(id.uuidString)
+        try? fm.removeItem(at: destination)
+        try fm.moveItem(at: directory(id), to: destination)
+        // The folder keeps its old mtime when moved, so stamp the deletion time for the 7-day purge.
+        try? fm.setAttributes([.modificationDate: Date()], ofItemAtPath: destination.path)
+    }
+    static let trashRetentionDays = 7
+    private var trash: URL { root.appendingPathComponent("trash") }
+    private func trashEntries() -> [URL] {
+        (try? fm.contentsOfDirectory(at: trash, includingPropertiesForKeys: [.contentModificationDateKey])) ?? []
+    }
+    /// Number of deleted designs still in the trash.
+    func trashCount() -> Int { trashEntries().count }
+    /// Removes trashed designs deleted more than 7 days before `now`. Never touches `projects/`.
+    @discardableResult func purgeTrash(now: Date = Date()) -> Int {
+        let limit = now.addingTimeInterval(-Double(Self.trashRetentionDays) * 86_400)
+        var removed = 0
+        for entry in trashEntries() {
+            let date = (try? entry.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
+            if date < limit, (try? fm.removeItem(at: entry)) != nil { removed += 1 }
+        }
+        return removed
+    }
+    /// Permanently empties the trash, except the design that can still be undone in this session.
+    @discardableResult func emptyTrash(keeping kept: UUID? = nil) -> Int {
+        var removed = 0
+        for entry in trashEntries() where entry.lastPathComponent != kept?.uuidString {
+            if (try? fm.removeItem(at: entry)) != nil { removed += 1 }
+        }
+        return removed
     }
     func restore(_ id: UUID) throws {
+        try fm.createDirectory(at: directory(id).deletingLastPathComponent(), withIntermediateDirectories: true)
         try fm.moveItem(at: root.appendingPathComponent("trash/\(id.uuidString)"), to: directory(id))
     }
     func preferences() -> AppPreferences {

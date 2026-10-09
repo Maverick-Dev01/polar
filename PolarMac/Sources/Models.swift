@@ -628,3 +628,29 @@ enum TextResolver {
         project.cardOverrides[String(card)]?.dateSource ?? project.settings.dateSource
     }
 }
+
+/// Resolution tiers for a photo at its printed size. LOW < 150 ppp, FAIR < 220 ppp, GOOD otherwise.
+enum PhotoQuality: Equatable {
+    case low, fair, good
+    static let lowDPI = 150.0, fairDPI = 220.0
+    static func of(dpi: Double) -> PhotoQuality { dpi < lowDPI ? .low : (dpi < fairDPI ? .fair : .good) }
+    var badge: String? { self == .low ? "Baja" : (self == .fair ? "Aceptable" : nil) }
+}
+
+/// Export quality preference (app setting; never stored in the .polar file).
+enum ExportQuality: String, Codable, CaseIterable, Identifiable {
+    case light, high, max
+    var id: String { rawValue }
+    var title: String { self == .light ? "Ligero" : (self == .high ? "Alta" : "Máxima") }
+    var dpi: CGFloat { self == .light ? 200 : 300 }
+    /// JPEG quality applied to photos embedded in the PDF; nil keeps rendered pixels untouched.
+    var jpegQuality: Double? { self == .light ? 0.85 : (self == .high ? 0.94 : nil) }
+    var imageJPEGQuality: Double { self == .light ? 0.85 : 0.94 }
+    var help: String {
+        switch self {
+        case .light: return "Fotos a 200 ppp con compresión ligera. Archivo pequeño, ideal para enviar."
+        case .high: return "Fotos a 300 ppp con compresión de alta calidad. Equilibrio recomendado para imprimir."
+        case .max: return "Fotos a 300 ppp sin recomprimir. El archivo pesa más."
+        }
+    }
+}

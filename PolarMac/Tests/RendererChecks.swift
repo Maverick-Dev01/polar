@@ -341,7 +341,7 @@ struct RendererChecks {
         check(embedded.contains { ($0["filter"] as? String) == "DCTDecode" && $0["width"] as? Int == visibleWidth
             && $0["height"] as? Int == visibleHeight }, "PDF only embeds the visible 300 dpi photo, not unused cropped pixels")
         let losslessURL = directory.appendingPathComponent("lossless.pdf")
-        try PolarRenderer.writePDF(project: noisyProject, to: losslessURL, optimizePhotos: false)
+        try PolarRenderer.writePDF(project: noisyProject, to: losslessURL, quality: .max)
         check(!pdfImages(at: losslessURL).contains { $0["filter"] as? String == "DCTDecode" }, "lossless PDF does not introduce JPEG encoding")
         check(PDFDocument(url: losslessURL)!.string!.contains("Nuestros momentos"), "lossless PDF retains vector text")
         let jpegURL = directory.appendingPathComponent("compact.jpg"), losslessPNG = directory.appendingPathComponent("lossless.png")

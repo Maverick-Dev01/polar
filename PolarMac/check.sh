@@ -3,6 +3,7 @@ set -eu
 BASE_DIR="$(cd -- "$(dirname -- "$0")" && pwd)"
 cd "$BASE_DIR"
 mkdir -p .build
+export POLAR_FONT_DIRS="$BASE_DIR/../PolarAndroid/app/src/main/res/font:$BASE_DIR/../PolarAndroid/app/src/main/assets/fonts"
 sources=(Sources/Models.swift Sources/PhotoLook.swift Sources/PhotoStudio.swift Sources/TemplateImport.swift Sources/PhotoImporter.swift Sources/Renderer.swift Sources/FontCatalog.swift Sources/LibraryStore.swift Sources/Studio.swift)
 for test in Tests/*Checks.swift; do
     executable=".build/check-${test:t:r}"

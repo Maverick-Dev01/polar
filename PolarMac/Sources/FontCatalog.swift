@@ -13,14 +13,17 @@ enum FontCatalog {
         "Avenir Next": "Josefin Sans", "ChalkboardSE-Regular": "Patrick Hand", "SnellRoundhand": "Dancing Script",
         "Courier": "Courier Prime", "serif": "Gelasio", "sans-serif-medium": "Montserrat", "casual": "Patrick Hand", "cursive": "Dancing Script"
     ]
+    /// Where bundled fonts are looked up: the app's Resources/fonts, plus any directories in POLAR_FONT_DIRS
+    /// (colon separated; used by check.sh so the test binaries find the fonts without a bundle).
+    static var fontDirectories: [URL] {
+        let extra = (ProcessInfo.processInfo.environment["POLAR_FONT_DIRS"] ?? "").split(separator: ":").map { URL(fileURLWithPath: String($0)) }
+        return [Bundle.main.resourceURL?.appendingPathComponent("fonts")].compactMap { $0 } + extra
+    }
     private static let registered: [String: String] = {
-        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         var names: [String: String] = [:]
         for choice in bundledChoices {
             let filename = choice.id.lowercased().replacingOccurrences(of: " ", with: "_") + ".ttf"
-            let candidates = [Bundle.main.resourceURL?.appendingPathComponent("fonts/" + filename),
-                              root.appendingPathComponent("PolarAndroid/app/src/main/res/font/" + filename),
-                              root.appendingPathComponent("PolarAndroid/app/src/main/assets/fonts/" + filename)].compactMap { $0 }
+            let candidates = fontDirectories.map { $0.appendingPathComponent(filename) }
             guard let url = candidates.first(where: { FileManager.default.isReadableFile(atPath: $0.path) }),
                   let descriptors = CTFontManagerCreateFontDescriptorsFromURL(url as CFURL) as? [CTFontDescriptor],
                   let descriptor = descriptors.first, let name = CTFontDescriptorCopyAttribute(descriptor, kCTFontNameAttribute) as? String else { continue }
