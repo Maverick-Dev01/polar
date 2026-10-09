@@ -32,6 +32,7 @@ import com.polar.app.ui.components.SymmetricActions
 import com.polar.app.model.PhotoAsset
 import com.polar.app.ui.theme.PolarColors
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PhotosPanel(
     photos: List<PhotoAsset>,
@@ -66,8 +67,8 @@ fun PhotosPanel(
                     OutlinedButton(onSelect, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(stringResource(R.string.photos_select_page)) }
                     Text(stringResource(R.string.photos_summary,pluralStringResource(R.plurals.photos_count,photos.size,photos.size),used.size),style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
                     SymmetricActions {
-                        FilledTonalButton(onClick=onAdd,modifier=Modifier.weight(1f).heightIn(min=48.dp)) { Icon(Icons.Filled.Add,null,Modifier.size(20.dp));Spacer(Modifier.width(8.dp));Text(stringResource(R.string.photos_add)) }
-                        FilledTonalButton(onClick=onAddFolder,modifier=Modifier.weight(1f).heightIn(min=48.dp)) { Icon(Icons.Filled.FolderOpen,null,Modifier.size(20.dp));Spacer(Modifier.width(8.dp));Text(stringResource(R.string.photos_add_folder)) }
+                        FilledTonalButton(onClick=onAdd,modifier=Modifier.weight(1f).fillMaxRowHeight().heightIn(min=48.dp)) { Icon(Icons.Filled.Add,null,Modifier.size(20.dp));Spacer(Modifier.width(8.dp));Text(stringResource(R.string.photos_add)) }
+                        FilledTonalButton(onClick=onAddFolder,modifier=Modifier.weight(1f).fillMaxRowHeight().heightIn(min=48.dp)) { Icon(Icons.Filled.FolderOpen,null,Modifier.size(20.dp));Spacer(Modifier.width(8.dp));Text(stringResource(R.string.photos_add_folder)) }
                     }
                     if(photos.isNotEmpty()) FilledTonalButton(onClick=onFill,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)) { Icon(Icons.Filled.AutoAwesome,null,Modifier.size(20.dp));Spacer(Modifier.width(8.dp));Text(stringResource(R.string.photos_fill)) }
                 }
