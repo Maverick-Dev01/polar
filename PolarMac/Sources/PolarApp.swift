@@ -275,7 +275,7 @@ private let cream = polarCream
         }
         .background(Color(nsColor: .unemphasizedSelectedContentBackgroundColor))
         .background(SheetNavigationKeys(go: { studio.navigate(studio.page + $0) },
-                                        canGo: { !studio.editingTemplate && !studio.busy && !studio.dropTarget && !studio.batchSelecting && !studio.showingCrop && !studio.showingFinish && !studio.showingLibrary && studio.project.pageCount > 1 }).frame(width: 0, height: 0))
+                                        canGo: { !studio.isInTransaction && NSEvent.pressedMouseButtons == 0 && !studio.editingTemplate && !studio.busy && !studio.dropTarget && !studio.batchSelecting && !studio.showingCrop && !studio.showingFinish && !studio.showingLibrary && studio.project.pageCount > 1 }).frame(width: 0, height: 0))
     }
 
     private var gallery: some View {
@@ -458,7 +458,10 @@ private let cream = polarCream
                 TextField("Artista", text: roleBinding(.artist)).focused($textFocused)
             }
             if studio.project.settings.style == .spotify {
-                field("Enlace para el QR (opcional)", \.songURL)
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    Text("Enlace para el QR (opcional)").font(.system(size: 12)).foregroundStyle(.secondary)
+                    TextField("https://…", text: setting(\.songURL)).font(.system(size: 13))
+                }
                 if PolarRenderer.qrState(studio.project.settings.songURL) == .tooLong {
                     Label("Enlace muy largo para un QR. Usa uno más corto; en la hoja aparecerá un aviso en su lugar.", systemImage: "exclamationmark.triangle")
                         .font(.system(size: 11)).foregroundStyle(.orange)
@@ -764,7 +767,7 @@ struct SheetNavigationKeys: NSViewRepresentable {
                     if let step = self.navigator.scroll(dx: event.scrollingDeltaX, dy: event.scrollingDeltaY, ended: ended, now: now, enabled: inside) { parent.go(step) }
                     return event
                 }
-                guard !typing, event.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty, event.keyCode == 123 || event.keyCode == 124 else { return event }
+                guard !typing, !event.isARepeat, event.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty, event.keyCode == 123 || event.keyCode == 124 else { return event }
                 guard parent.canGo() else { return event }
                 if let step = self.navigator.key(direction: event.keyCode == 123 ? -1 : 1, now: now, enabled: true) { parent.go(step) }
                 return nil

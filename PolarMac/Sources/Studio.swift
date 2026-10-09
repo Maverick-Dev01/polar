@@ -149,6 +149,7 @@ struct FontChoice: Identifiable {
     private var previewWork: DispatchWorkItem?
     private var undoHistory: [PolarProject] = []
     private var redoHistory: [PolarProject] = []
+    var isInTransaction: Bool { transactionBase != nil }
     var canUndo: Bool { !undoHistory.isEmpty || transactionBase.map { $0 != project } == true }
     var canRedo: Bool { !redoHistory.isEmpty }
 
