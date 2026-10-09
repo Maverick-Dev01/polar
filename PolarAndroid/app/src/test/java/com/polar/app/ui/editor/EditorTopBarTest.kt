@@ -25,7 +25,7 @@ class EditorTopBarTest {
 
     private fun show(fontScale: Float = 1f, name: String = "Boda de Ana y Luis en la playa con la familia") = compose.setContent {
         CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, fontScale)) {
-            PolarTheme(ThemeMode.LIGHT) { EditorTopBar(name, "Foto + canción", "Guardado", canUndo = true, canRedo = true, actions = actions) }
+            PolarTheme(ThemeMode.LIGHT) { EditorTopBar(name, "Foto + canción", "Guardado", SaveStatusKind.SAVED, canUndo = true, canRedo = true, actions = actions) }
         }
     }
 
@@ -67,6 +67,7 @@ class EditorTopBarTest {
         val print = compose.onNodeWithText("Imprimir").fetchSemanticsNode().boundsInRoot
         assertNoOverlap(bounds("Volver a tus diseños"), bounds("Deshacer"), bounds("Más opciones"), print)
         assertTrue("Imprimir debe caber en pantalla", print.right <= 360f * compose.density.density + 1f)
+        compose.onNodeWithContentDescription("Guardado").assertExists()
         compose.onNodeWithContentDescription("Más opciones").performClick()
         compose.onNodeWithText("Rehacer").performClick()
         assertEquals(listOf("rehacer"), log)

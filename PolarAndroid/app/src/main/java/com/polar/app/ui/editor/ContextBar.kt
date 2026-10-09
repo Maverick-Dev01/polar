@@ -1,8 +1,6 @@
 package com.polar.app.ui.editor
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.automirrored.outlined.RotateRight
@@ -12,11 +10,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.polar.app.R
 
-private val ActionWidth = 88.dp
 private val MinActionWidth = 60.dp
 
 @Composable
@@ -34,12 +32,23 @@ fun ContextBar(hasPhoto: Boolean, onChange: () -> Unit, onCrop: () -> Unit, onRe
                 Triple(Icons.Outlined.TextFields, R.string.ctx_text, onText),
                 Triple(Icons.Outlined.Delete, R.string.ctx_remove, onRemove)
             )
+            val largeFont = LocalDensity.current.fontScale > 1.15f
             BoxWithConstraints {
-                // Si caben, las seis acciones se reparten igual; si no, cada una conserva su ancho y la fila se desplaza.
-                val fits = maxWidth - 8.dp >= MinActionWidth * actions.size
-                val rowModifier = Modifier.heightIn(min = 64.dp).padding(horizontal = 4.dp)
-                Row(if (fits) rowModifier.fillMaxWidth() else rowModifier.horizontalScroll(rememberScrollState()), verticalAlignment = Alignment.CenterVertically) {
-                    actions.forEach { (icon, label, click) -> Action(icon, stringResource(label), click, if (fits) Modifier.weight(1f) else Modifier.width(ActionWidth)) }
+                // Caben en una fila si hay 60 dp por acción y la letra es normal; si no, dos filas de tres con el mismo ancho
+                // (nada queda escondido en un desplazamiento y las etiquetas no se cortan).
+                val oneRow = !largeFont && maxWidth - 8.dp >= MinActionWidth * actions.size
+                if (oneRow) {
+                    Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                        actions.forEach { (icon, label, click) -> Action(icon, stringResource(label), click, Modifier.weight(1f)) }
+                    }
+                } else {
+                    Column(Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 4.dp)) {
+                        actions.chunked(3).forEach { rowActions ->
+                            Row(Modifier.fillMaxWidth().height(IntrinsicSize.Max), verticalAlignment = Alignment.CenterVertically) {
+                                rowActions.forEach { (icon, label, click) -> Action(icon, stringResource(label), click, Modifier.weight(1f).fillMaxHeight()) }
+                            }
+                        }
+                    }
                 }
             }
         } else {
@@ -57,7 +66,7 @@ private fun RowScope.Action(icon: ImageVector, label: String, onClick: () -> Uni
     TextButton(onClick = onClick, modifier = modifier.heightIn(min=64.dp), contentPadding = PaddingValues(2.dp)) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(icon, null,modifier=Modifier.size(24.dp))
-            Text(label, style = MaterialTheme.typography.labelSmall,minLines=2,maxLines=2,textAlign=androidx.compose.ui.text.style.TextAlign.Center)
+            Text(label, style = MaterialTheme.typography.labelSmall,minLines=2,textAlign=androidx.compose.ui.text.style.TextAlign.Center)
         }
     }
 }

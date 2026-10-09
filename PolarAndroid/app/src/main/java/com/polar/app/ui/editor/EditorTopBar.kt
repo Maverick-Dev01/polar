@@ -7,7 +7,10 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Redo
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Print
+import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -22,6 +25,8 @@ import com.polar.app.R
 /** En anchos menores de 400 dp o con letra mayor a 1.15, Rehacer pasa al menú para que nada se encime. */
 fun redoInMenu(widthDp: Float, fontScale: Float): Boolean = widthDp < 400f || fontScale > 1.15f
 
+enum class SaveStatusKind { SAVED, SAVING, FAILED }
+
 class EditorTopBarActions(
     val onBack: () -> Unit, val onRename: () -> Unit, val onUndo: () -> Unit, val onRedo: () -> Unit, val onPrint: () -> Unit,
     val onSelectMany: () -> Unit, val onAddPage: () -> Unit, val onClearPage: () -> Unit, val onRemovePage: () -> Unit
@@ -30,20 +35,31 @@ class EditorTopBarActions(
 /** Atrás · nombre y estado · Deshacer · Rehacer · ⋮ · «Imprimir» (ícono y texto). */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditorTopBar(name: String, styleName: String, status: String, canUndo: Boolean, canRedo: Boolean, actions: EditorTopBarActions) {
+fun EditorTopBar(name: String, styleName: String, status: String, statusKind: SaveStatusKind, canUndo: Boolean, canRedo: Boolean, actions: EditorTopBarActions) {
     var menu by remember { mutableStateOf(false) }
     val fontScale = LocalDensity.current.fontScale
     BoxWithConstraints {
         val redoInMenu = redoInMenu(maxWidth.value, fontScale)
         val narrow = maxWidth < 480.dp
+        val statusIcon = when (statusKind) {
+            SaveStatusKind.SAVED -> Icons.Outlined.CheckCircle
+            SaveStatusKind.SAVING -> Icons.Outlined.Sync
+            SaveStatusKind.FAILED -> Icons.Outlined.ErrorOutline
+        }
         TopAppBar(
             expandedHeight = if (fontScale >= 1.2f) 104.dp else 88.dp,
             navigationIcon = { IconButton(onClick = actions.onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.editor_back)) } },
             title = {
                 Column(Modifier.clickable(onClick = actions.onRename)) {
-                    Text(name, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.semantics { contentDescription = name })
-                    Text(
-                        if (narrow) status else "$styleName · $status", style = if (narrow) MaterialTheme.typography.labelSmall else MaterialTheme.typography.bodySmall,
+                    Text(name, style = MaterialTheme.typography.titleMedium, maxLines = if (narrow) 1 else 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.semantics { contentDescription = name })
+                    if (narrow) {
+                        // Estrecho: el estado va como ícono (nunca «Guarda…»); el lector de pantalla lo dice completo.
+                        Icon(
+                            statusIcon, status, Modifier.size(16.dp),
+                            tint = if (statusKind == SaveStatusKind.FAILED) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else Text(
+                        "$styleName · $status", style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis
                     )
                 }

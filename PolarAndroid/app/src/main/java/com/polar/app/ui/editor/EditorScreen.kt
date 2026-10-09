@@ -227,6 +227,11 @@ private fun EditorLayout(state: EditorUiState, vm: EditorViewModel, container: A
                     state.saving || state.hasUnsavedChanges -> R.string.editor_saving
                     else -> R.string.editor_saved
                 }),
+                statusKind = when {
+                    state.saveFailed -> SaveStatusKind.FAILED
+                    state.saving || state.hasUnsavedChanges -> SaveStatusKind.SAVING
+                    else -> SaveStatusKind.SAVED
+                },
                 canUndo = state.canUndo, canRedo = state.canRedo,
                 actions = EditorTopBarActions(
                     onBack = onBack, onRename = { renaming = true }, onUndo = vm::undo, onRedo = vm::redo,
@@ -307,7 +312,7 @@ private fun Hint() {
     ) {
         Icon(Icons.Outlined.Info, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
         Spacer(Modifier.width(8.dp))
-        Text(stringResource(R.string.editor_hint), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.editor_hint), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 3, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
     }
 }
 
