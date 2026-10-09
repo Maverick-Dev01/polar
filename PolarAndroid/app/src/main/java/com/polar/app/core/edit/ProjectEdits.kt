@@ -279,6 +279,16 @@ object ProjectEdits {
 
     // ---------- Plantilla importada ----------
 
+    /** Usa un molde (de «Mis moldes» o recién importado) en este proyecto: conserva fotos y textos. */
+    fun applyTemplate(p: PolarProject, template: ImportedTemplate): PolarProject {
+        val base = p.withStyle(TemplateStyle.IMPORTED)
+        return base.copy(
+            settings = base.settings.copy(importedTemplate = template),
+            pageDesigns = emptyMap(),
+            cardOverrides = base.cardOverrides.mapValues { it.value.copy(designStyle = null, designFormat = null) }
+        ).normalized()
+    }
+
     fun editTemplateRegion(p: PolarProject, index: Int, change: (TemplateRegion) -> TemplateRegion): PolarProject {
         val t = p.settings.importedTemplate ?: return p
         if (index !in t.regions.indices) return p

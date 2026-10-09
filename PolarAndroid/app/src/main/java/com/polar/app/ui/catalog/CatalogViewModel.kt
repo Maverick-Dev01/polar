@@ -7,7 +7,9 @@ import com.polar.app.R
 import com.polar.app.core.edit.ProjectEdits
 import com.polar.app.data.ProjectStore
 import com.polar.app.model.*
+import com.polar.app.template.SavedTemplate
 import com.polar.app.template.TemplateImporter
+import com.polar.app.template.TemplateLibrary
 import com.polar.app.ui.UiText
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -38,7 +40,8 @@ class CatalogViewModel(
     private val newName: String,
     private val templateName: String,
     private val openedName: String,
-    private val io: CoroutineDispatcher = Dispatchers.IO
+    private val io: CoroutineDispatcher = Dispatchers.IO,
+    private val templates: TemplateLibrary? = null
 ) : ViewModel() {
     private val _events = Channel<CatalogEvent>(Channel.BUFFERED)
     val events: Flow<CatalogEvent> = _events.receiveAsFlow()
@@ -92,6 +95,33 @@ class CatalogViewModel(
             }
             val notice = if (detected == 0) UiText(R.string.catalog_no_holes) else UiText(R.string.catalog_holes_found, listOf(detected))
             _events.send(CatalogEvent.Created(newId, notice))
+        } catch (e: CancellationException) {
+            id?.let { discard(it) }
+            throw e
+        } catch (e: Exception) {
+            id?.let { discard(it) }
+            fail(e)
+        }
+    }
+
+    /** Un diseño nuevo con un molde de «Mis moldes»: el proyecto lleva su propia copia de la imagen. */
+    fun createFromSavedTemplate(saved: SavedTemplate) = guarded {
+        var id: String? = null
+        try {
+            val newId = withContext(io) {
+                val library = templates ?: throw PolarException("Mis moldes no está disponible.")
+                val created = store.create(PolarProject(), saved.name)
+                id = created
+                val source = library.imageFile(saved)
+                val copy = source.inputStream().use { store.importTemplateFile(created, it, source.extension) }
+                val imported = ImportedTemplate(path = copy.absolutePath, pixelWidth = saved.pixelWidth, pixelHeight = saved.pixelHeight, regions = saved.regions)
+                store.save(created, PolarProject(
+                    settings = PrintSettings(style = TemplateStyle.IMPORTED, columns = 1, rows = 1, paperSize = defaultPaper(), importedTemplate = imported),
+                    name = saved.name
+                ).normalized())
+                created
+            }
+            _events.send(CatalogEvent.Created(newId))
         } catch (e: CancellationException) {
             id?.let { discard(it) }
             throw e

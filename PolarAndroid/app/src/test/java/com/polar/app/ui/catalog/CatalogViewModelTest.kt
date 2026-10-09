@@ -81,4 +81,25 @@ class CatalogViewModelTest {
         advanceUntilIdle()
         assertEquals(1, store.list().size)
     }
+
+    @Test
+    fun createFromSavedTemplateCopiesTheImageIntoTheNewProject() = runTest(main.dispatcher) {
+        val store = ProjectStore(tmp.root)
+        val library = com.polar.app.template.TemplateLibrary(tmp.root)
+        val source = File(tmp.root, "src.png").apply { writeBytes(byteArrayOf(1, 2, 3)) }
+        val regions = listOf(com.polar.app.model.TemplateRegion(x = 0.1, y = 0.1, width = 0.5, height = 0.5, shape = com.polar.app.model.RegionShape.ELLIPSE))
+        val saved = library.save("Mi molde", source, regions, com.polar.app.template.TemplateFingerprint(5L, "sha"), 100, 200)
+        val v = CatalogViewModel(store, { "" }, { _, _ -> File("x") }, { PaperSize.A4 }, "Nuevo", "Plantilla", "Abierto", main.dispatcher, library)
+        v.createFromSavedTemplate(saved); advanceUntilIdle()
+        val created = v.events.first() as CatalogEvent.Created
+        val p = store.load(created.id).project
+        assertEquals("Mi molde", p.name)
+        assertEquals(TemplateStyle.IMPORTED, p.settings.style)
+        val template = p.settings.importedTemplate!!
+        assertTrue(File(template.path).readBytes().contentEquals(byteArrayOf(1, 2, 3)))
+        assertTrue(template.path.startsWith(store.projectDir(created.id).absolutePath))
+        assertEquals(com.polar.app.model.RegionShape.ELLIPSE, template.regions[0].shape)
+        library.delete(saved.id) // el proyecto conserva su copia
+        assertTrue(File(store.load(created.id).project.settings.importedTemplate!!.path).exists())
+    }
 }

@@ -16,6 +16,7 @@ import com.polar.app.engine.PhotoQuality
 import com.polar.app.engine.photoQuality
 import com.polar.app.engine.PolarRenderer
 import com.polar.app.model.*
+import com.polar.app.template.SavedTemplate
 import com.polar.app.ui.UiText
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -61,6 +62,7 @@ class EditorViewModel(private val projectId: String, private val deps: EditorDep
             return
         }
         var templateMissing = false
+        loadedTemplatePath = loaded.project.settings.importedTemplate?.path
         loaded.project.settings.importedTemplate?.let { t ->
             try {
                 templateBitmap = withContext(deps.io) { deps.loadTemplate(t.path) }
@@ -110,6 +112,7 @@ class EditorViewModel(private val projectId: String, private val deps: EditorDep
 
     private fun commit(next: PolarProject) {
         if (locked) return
+        syncTemplateBitmap(next)
         _state.update { s ->
             val page = s.page.coerceIn(0, next.pageCount - 1)
             val slot = s.selectedSlot?.takeIf { it < next.placements.size }
@@ -285,7 +288,55 @@ class EditorViewModel(private val projectId: String, private val deps: EditorDep
         _state.update { it.copy(textScope = scope) }
     }
 
-    fun setMode(mode: EditorMode) { endGesture(); _state.update { it.copy(mode = mode, comparing = false, focusBackground = false) } }
+    fun setMode(mode: EditorMode) { endGesture(); _state.update { it.copy(mode = mode, comparing = false, focusBackground = false, catalogMine = if (mode == EditorMode.CHANGE_DESIGN) it.catalogMine else false) } }
+
+    /** «Usar mi molde» (pestaña Diseño): abre el catálogo directo en «Mis moldes». */
+    fun openMyTemplates() { endGesture(); _state.update { it.copy(mode = EditorMode.CHANGE_DESIGN, catalogMine = true, comparing = false, focusBackground = false) } }
+
+    /**
+     * Usa un molde guardado: el proyecto recibe su propia copia de la imagen, así borrar el molde
+     * de «Mis moldes» nunca lo rompe.
+     */
+    fun useTemplate(saved: SavedTemplate) {
+        val library = deps.templates ?: return
+        if (locked) return
+        viewModelScope.launch {
+            val imported = try {
+                withContext(deps.io) {
+                    val source = library.imageFile(saved)
+                    val copy = source.inputStream().use { deps.store.importTemplateFile(projectId, it, source.extension) }
+                    ImportedTemplate(path = copy.absolutePath, pixelWidth = saved.pixelWidth, pixelHeight = saved.pixelHeight, regions = saved.regions)
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w("Polar", "No se pudo usar el molde", e)
+                message(UiText(R.string.action_failed)); return@launch
+            }
+            val bitmap = try { withContext(deps.io) { deps.loadTemplate(imported.path) } } catch (e: CancellationException) { throw e } catch (e: Exception) { null }
+            if (bitmap == null) { message(UiText(R.string.editor_template_missing)); return@launch }
+            templateBitmap = bitmap
+            loadedTemplatePath = imported.path
+            edit(UiText(R.string.editor_template_applied, listOf(saved.name))) { ProjectEdits.applyTemplate(it, imported) }
+            _state.update { it.copy(mode = EditorMode.EDIT, catalogMine = false, editingRegions = false, selectedSlot = null, templateVersion = it.templateVersion + 1, textRole = TemplateStyle.IMPORTED.textRoles.firstOrNull() ?: it.textRole) }
+        }
+    }
+
+    private var loadedTemplatePath: String? = null
+
+    /** Deshacer o rehacer pueden volver a un molde distinto del que está en memoria. */
+    private fun syncTemplateBitmap(project: PolarProject) {
+        val path = project.settings.importedTemplate?.path
+        if (path == loadedTemplatePath) return
+        loadedTemplatePath = path
+        viewModelScope.launch {
+            val bitmap = if (path == null) null else try { withContext(deps.io) { deps.loadTemplate(path) } } catch (e: CancellationException) { throw e } catch (e: Exception) { null }
+            if (loadedTemplatePath == path) {
+                templateBitmap = bitmap
+                _state.update { it.copy(templateVersion = it.templateVersion + 1) }
+            }
+        }
+    }
 
     /** Acción directa «Quitar fondo» del menú de la tarjeta: abre Encuadrar con la sección de fondo a la vista. */
     fun openCropForBackground() {

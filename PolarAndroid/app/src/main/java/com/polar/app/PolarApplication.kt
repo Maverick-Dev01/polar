@@ -10,9 +10,11 @@ import com.polar.app.data.SettingsRepository
 import com.polar.app.data.UpdateRepository
 import com.polar.app.engine.Thumbnailer
 import com.polar.app.export.AndroidExportService
+import com.polar.app.template.TemplateLibrary
 
 class AppContainer(context: Context) {
     val store = ProjectStore(context.filesDir)
+    val templates = TemplateLibrary(context.filesDir)
     val bitmaps = BitmapLoader(context)
     val fonts = AndroidFontProvider(context)
     val exports = AndroidExportService(context, bitmaps, fonts)

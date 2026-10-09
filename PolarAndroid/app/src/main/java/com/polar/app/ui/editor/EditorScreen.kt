@@ -49,6 +49,8 @@ import com.polar.app.ui.LayoutKind
 import com.polar.app.ui.LocalLayout
 import com.polar.app.ui.Share
 import com.polar.app.ui.catalog.CatalogContent
+import com.polar.app.ui.catalog.rememberMyTemplates
+import com.polar.app.ui.importer.ImportWizardScreen
 import com.polar.app.ui.theme.PolarColors
 import com.polar.app.model.suggestedPhotoPreset
 import kotlinx.coroutines.delay
@@ -163,12 +165,18 @@ fun EditorScreen(vm: EditorViewModel, container: AppContainer, notice: String?, 
         AlertDialog(onDismissRequest = vm::dismissBackgroundError, title = { Text(stringResource(R.string.bg_change_failed)) }, text = { Text(error.resolve()) }, confirmButton = { TextButton(vm::dismissBackgroundError) { Text(stringResource(R.string.action_accept)) } })
     }
     when (state.mode) {
-        EditorMode.CHANGE_DESIGN -> CatalogContent(
-            title = stringResource(R.string.catalog_change), current = state.selectedCard?.let { state.project.settingsForCard(it).style } ?: state.project.settingsForPage(state.page).style,
-            thumbnails = container.thumbnails, showImport = false,
-            onPick = vm::selectStyle, onImportTemplate = {}, onOpenPolar = {},
-            onBack = { vm.setMode(EditorMode.EDIT) }
-        )
+        EditorMode.CHANGE_DESIGN -> {
+            val library = rememberMyTemplates(container)
+            CatalogContent(
+                title = stringResource(R.string.catalog_change), current = state.selectedCard?.let { state.project.settingsForCard(it).style } ?: state.project.settingsForPage(state.page).style,
+                thumbnails = container.thumbnails, showImport = false,
+                onPick = vm::selectStyle, onImportTemplate = { vm.setMode(EditorMode.IMPORT_TEMPLATE) }, onOpenPolar = {},
+                onBack = { vm.setMode(EditorMode.EDIT) },
+                templates = library.templates, initialMine = state.catalogMine, templateThumbnail = library.thumbnail,
+                onPickTemplate = vm::useTemplate, onDeleteTemplate = library.delete
+            )
+        }
+        EditorMode.IMPORT_TEMPLATE -> ImportWizardScreen(container, onDone = vm::useTemplate, onExit = { vm.openMyTemplates() })
         EditorMode.CROP -> CropScreen(state, vm, container)
         EditorMode.FINISH -> {
             val quality by remember { container.settings.settings.map { it.exportQuality } }.collectAsState(ExportQuality.HIGH)

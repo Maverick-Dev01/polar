@@ -6,6 +6,8 @@ import com.polar.app.core.edit.MoodPreset
 import com.polar.app.data.PhotoSource
 import com.polar.app.data.ProjectStore
 import com.polar.app.model.*
+import com.polar.app.template.SavedTemplate
+import com.polar.app.template.TemplateLibrary
 import com.polar.app.ui.UiText
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -14,7 +16,7 @@ import kotlinx.coroutines.SupervisorJob
 import java.io.File
 
 enum class Tool { PHOTOS, FILTERS, DESIGN, TEXT, PAPER }
-enum class EditorMode { EDIT, CROP, FINISH, CHANGE_DESIGN }
+enum class EditorMode { EDIT, CROP, FINISH, CHANGE_DESIGN, IMPORT_TEMPLATE }
 enum class LookScope { ALL, PAGE, PAGES, PHOTO }
 enum class DesignScope { ALL, PAGE, CARD }
 enum class TextScope { ALL, CARD }
@@ -52,7 +54,9 @@ data class EditorUiState(
     val backgroundError: UiText? = null,
     val lastMood: MoodPreset = MoodPreset.COUPLE,
     val loadFailed: Boolean = false,
-    val focusBackground: Boolean = false
+    val focusBackground: Boolean = false,
+    /** Al abrir el catálogo desde «Usar mi molde» se muestra directo «Mis moldes». */
+    val catalogMine: Boolean = false
 ) {
     val selectedCard: Int? get() = selectedSlot?.let { project.cardOfSlot(it) }
     val selectedPlacement: PhotoPlacement? get() = selectedSlot?.let { project.placements.getOrNull(it) }
@@ -81,5 +85,6 @@ class EditorDeps(
     val io: CoroutineDispatcher = Dispatchers.IO,
     val appScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
     val autosaveDelayMs: Long = 800,
-    val removeBackground: (suspend (PhotoAsset, File) -> String)? = null
+    val removeBackground: (suspend (PhotoAsset, File) -> String)? = null,
+    val templates: TemplateLibrary? = null
 )

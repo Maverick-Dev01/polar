@@ -92,7 +92,7 @@ fun ToolPanel(tool: Tool, state: EditorUiState, vm: EditorViewModel, container: 
                     }
                     Tool.FILTERS -> FiltersPanel(state,vm,container)
                     Tool.DESIGN -> DesignPanel(state, DesignCallbacks(
-                        onScope = vm::setDesignScope, onChangeDesign = { vm.setMode(EditorMode.CHANGE_DESIGN) }, onAccent = vm::setAccent, onLayout = vm::applyLayout,
+                        onScope = vm::setDesignScope, onChangeDesign = { vm.setMode(EditorMode.CHANGE_DESIGN) }, onUseMyTemplate = vm::openMyTemplates, onAccent = vm::setAccent, onLayout = vm::applyLayout,
                         onMood = vm::applyMood, onSuggested = { val roles = state.project.settingsForPage(state.page).style.textRoles; vm.setTextRole(roles.firstOrNull { it == TextRole.CAPTION } ?: roles.firstOrNull { it == TextRole.SUBTITLE } ?: roles.firstOrNull() ?: TextRole.TITLE); choosePhrase = true }, onFormat = vm::setCardFormat,
                         onGrid = vm::setGrid, onGap = { vm.setGap(it.toDouble()) }, onRounded = vm::setRounded,
                         onYear = vm::setCalendarYear, onHighlight = vm::setHighlightDate, onSpecialDate = vm::setSpecialDate,

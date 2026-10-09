@@ -25,6 +25,7 @@ import java.util.Date
 
 class DesignCallbacks(
     val onChangeDesign: () -> Unit,
+    val onUseMyTemplate: () -> Unit = {},
     val onScope: (DesignScope) -> Unit = {},
     val onAccent: (String) -> Unit,
     val onLayout: (Int) -> Unit,
@@ -77,6 +78,7 @@ fun DesignPanel(state: EditorUiState, cb: DesignCallbacks) {
                 FilledTonalButton(onClick = cb.onChangeDesign) { Text(stringResource(R.string.design_change)) }
             }
         }
+        OutlinedButton(onClick = cb.onUseMyTemplate, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(stringResource(R.string.design_use_mine)) }
 
         SectionLabel(stringResource(R.string.design_color))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -122,6 +124,12 @@ fun DesignPanel(state: EditorUiState, cb: DesignCallbacks) {
             if (state.editingRegions && index != null && index in regions.indices) {
                 val r = regions[index]
                 Text(stringResource(R.string.design_hole_n, index + 1, regions.size), style = MaterialTheme.typography.titleSmall)
+                SectionLabel(stringResource(R.string.design_shape))
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    RegionShape.entries.forEach { shape ->
+                        PolarChip(r.shape == shape, { cb.onRegion { it.copy(shape = shape, radius = if (shape == RegionShape.ROUND) 0.2 else 0.0) } }, { Text(shape.displayName) }, modifier = Modifier.heightIn(min = 48.dp))
+                    }
+                }
                 RegionSlider(stringResource(R.string.design_left), r.x, cb) { v -> { it.copy(x = v) } }
                 RegionSlider(stringResource(R.string.design_top), r.y, cb) { v -> { it.copy(y = v) } }
                 RegionSlider(stringResource(R.string.design_width), r.width, cb) { v -> { it.copy(width = v) } }

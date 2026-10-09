@@ -86,7 +86,8 @@ fun PolarNavHost(container: AppContainer, startOnboarding: Boolean) {
                                 }
                             },
                             loadTemplate = { path -> container.bitmaps.load(path, BitmapLoader.PREVIEW_MAX) },
-                            removeBackground = container.backgrounds::mask
+                            removeBackground = container.backgrounds::mask,
+                            templates = container.templates
                         )
                     )
                 }
