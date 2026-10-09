@@ -119,4 +119,80 @@ var lastStudioRoot: URL?
     }
 }
 
-MainActor.assumeIsolated { run() }
+/// Subproyecto 3: los 6 diseños nuevos (una tarjeta grande cada uno), el catálogo y los pasos del asistente de moldes.
+@MainActor func runSub3() {
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("polar-snapshots-sub3-\(UUID().uuidString)")
+    defer { try? FileManager.default.removeItem(at: root) }
+    let fixtures = URL(fileURLWithPath: ProcessInfo.processInfo.environment["POLAR_FIXTURES_DIR"] ?? "../shared-fixtures").appendingPathComponent("moldes")
+
+    // Diseños: una sola tarjeta por hoja, con texto, fecha y (en los musicales) QR.
+    for style in [TemplateStyle.photobooth, .instaxWide, .vinyl, .cassette, .collage, .washi, .spotify, .playerRed, .playerGray] {
+        let name = "10-diseno-\(style.rawValue)"
+        guard nameFilter.isEmpty || name.contains(nameFilter) else { continue }
+        var p = PolarProject()
+        p.photos = Array(sharedPhotos.prefix(4)); p.selectStyle(style)
+        p.settings.columns = 1; p.settings.rows = 1; p.settings.margin = 40; p.settings.cutGuides = false
+        p.settings.title = "Nuestro verano"; p.settings.subtitle = "Tú y yo"; p.settings.caption = "qué buen día"
+        p.settings.song = "Nuestra canción"; p.settings.artist = "Artista"
+        p.settings.dateSource = .chosen; p.settings.chosenDate = Date(timeIntervalSince1970: 1_790_000_000)
+        p.settings.songURL = style.isMusic ? "https://open.spotify.com/track/ejemplo" : ""
+        p.placements = (0..<style.photosPerCard).map { PhotoPlacement(assetID: p.photos[$0 % p.photos.count].id) }
+        p.normalized()
+        let scale: CGFloat = 3
+        let image = PolarRenderer.preview(project: p, page: 0, scale: scale)
+        guard let cg = image.cgImage(forProposedRect: nil, context: nil, hints: nil), let card = PolarRenderer.cardRects(project: p, page: 0).first,
+              let cropped = cg.cropping(to: CGRect(x: card.minX * scale, y: card.minY * scale, width: card.width * scale, height: card.height * scale).integral) else { continue }
+        let file = outputDirectory.appendingPathComponent("\(name).png")
+        try? NSBitmapImageRep(cgImage: cropped).representation(using: .png, properties: [:])?.write(to: file)
+        print("capturada", file.lastPathComponent)
+    }
+
+    for dark in [false, true] {
+        // Catálogo por categoría (tiles de los diseños nuevos).
+        for category in ["Clásicos", "Música", "Libre", "Ocasiones"] {
+            let studio = makeStudio(root: root.appendingPathComponent("cat-\(category)-\(dark)"))
+            studio.designCategory = category
+            snapshot(PolarRootView(studio: studio), width: 1100, height: 720, dark: dark, name: "11-catalogo-\(category)")
+        }
+        // Mis moldes: vacío y con moldes guardados.
+        let empty = makeStudio(root: root.appendingPathComponent("moldes-vacio-\(dark)"))
+        empty.designCategory = "Mis moldes"
+        snapshot(PolarRootView(studio: empty), width: 1100, height: 720, dark: dark, name: "12-mis-moldes-vacio")
+        let filled = makeStudio(root: root.appendingPathComponent("moldes-\(dark)"))
+        for (file, label) in [("molde-rounded.png", "Tres recuerdos"), ("molde-circles.png", "Círculos"), ("molde-distinto-tira.png", "Tira de cuatro")] {
+            let regions = (try? TemplateImporter.read(url: fixtures.appendingPathComponent(file)).template.regions) ?? []
+            _ = try? filled.molds.save(imageURL: fixtures.appendingPathComponent(file), nombre: label, regiones: regions)
+        }
+        filled.refreshMolds(); filled.designCategory = "Mis moldes"
+        snapshot(PolarRootView(studio: filled), width: 1100, height: 720, dark: dark, name: "12-mis-moldes")
+        // Panel Texto con QR en un diseño musical nuevo.
+        let vinyl = makeStudio(root: root.appendingPathComponent("vinilo-\(dark)"), style: .vinyl)
+        vinyl.inspectorTab = 1; vinyl.project.settings.songURL = "https://open.spotify.com/track/ejemplo"; vinyl.refresh()
+        snapshot(PolarRootView(studio: vinyl), width: 1100, height: 720, dark: dark, name: "13-texto-vinilo")
+
+        // Asistente: paso 1, aviso de molde parecido, paso 2 (óvalos y redondeado), paso 3.
+        let wizard = makeStudio(root: root.appendingPathComponent("asistente-\(dark)"))
+        wizard.moldWizard = MoldWizardState()
+        snapshot(MoldWizardView(studio: wizard), width: 780, height: 640, dark: dark, name: "14-molde-paso1")
+        var circles = MoldWizardState()
+        circles.load(url: fixtures.appendingPathComponent("molde-circles.png"), library: wizard.molds)
+        wizard.moldWizard = circles
+        snapshot(MoldWizardView(studio: wizard), width: 780, height: 640, dark: dark, name: "14-molde-paso2-ovalos")
+        circles.setShape(1, .round); circles.select(1)
+        wizard.moldWizard = circles
+        snapshot(MoldWizardView(studio: wizard), width: 780, height: 640, dark: dark, name: "14-molde-paso2-redondeado")
+        circles.next(); circles.name = "Mis círculos"
+        wizard.moldWizard = circles
+        snapshot(MoldWizardView(studio: wizard), width: 780, height: 640, dark: dark, name: "14-molde-paso3")
+        let known = filled.savedMolds
+        if let first = known.first {
+            _ = try? wizard.molds.save(imageURL: fixtures.appendingPathComponent("molde-rects.png"), nombre: "Tres recuerdos", regiones: first.regiones)
+            var duplicate = MoldWizardState()
+            duplicate.load(url: fixtures.appendingPathComponent("molde-rects-50.png"), library: wizard.molds)
+            wizard.moldWizard = duplicate
+            snapshot(MoldWizardView(studio: wizard), width: 780, height: 640, dark: dark, name: "14-molde-aviso-parecido")
+        }
+    }
+}
+
+MainActor.assumeIsolated { if ProcessInfo.processInfo.environment["POLAR_SUB3_ONLY"] == nil { run() }; runSub3() }
