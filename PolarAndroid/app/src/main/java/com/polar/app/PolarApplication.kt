@@ -30,6 +30,7 @@ class PolarApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         container = AppContainer(this)
+        com.polar.app.engine.PolarRenderer.qrTooLongLabel = getString(R.string.qr_too_long_marker)
         container.store.purgeExpiredTrash() // lo borrado hace más de 7 días ya no se puede recuperar
     }
 }

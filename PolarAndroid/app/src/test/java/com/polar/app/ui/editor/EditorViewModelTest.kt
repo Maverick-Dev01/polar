@@ -88,7 +88,7 @@ class EditorViewModelTest {
         assertEquals(listOf(original.id), requested)
         assertEquals(before, v.state.value.project)
         assertEquals("original", File(original.path).readText())
-        assertTrue(v.state.value.backgroundError?.contains("Fallo simulado del motor") == true)
+        assertTrue(v.state.value.backgroundError?.args?.any { it.toString().contains("Fallo simulado del motor") } == true)
         assertFalse(v.state.value.busy)
 
         v.dismissBackgroundError()

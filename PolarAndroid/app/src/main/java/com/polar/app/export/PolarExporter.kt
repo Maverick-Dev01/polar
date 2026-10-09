@@ -82,6 +82,7 @@ object PolarExporter {
                 val success = bitmap.compress(format, quality, out)
                 if (!success) throw PolarException("No se pudo comprimir la imagen.")
             }
+            if (format == Bitmap.CompressFormat.PNG) PngDensity.write(tempFile, dpi)
             if (format == Bitmap.CompressFormat.JPEG) ExifInterface(tempFile).apply {
                 setAttribute(ExifInterface.TAG_X_RESOLUTION, "$dpi/1")
                 setAttribute(ExifInterface.TAG_Y_RESOLUTION, "$dpi/1")

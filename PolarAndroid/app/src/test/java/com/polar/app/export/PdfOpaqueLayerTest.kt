@@ -64,4 +64,24 @@ class PdfOpaqueLayerTest {
         for (i in a.indices) sum += Math.abs(Color.red(a[i]) - Color.red(b[i])) + Math.abs(Color.green(a[i]) - Color.green(b[i])) + Math.abs(Color.blue(a[i]) - Color.blue(b[i]))
         assertTrue("diferencia media ${sum / (a.size * 3.0)}", sum / (a.size * 3.0) <= 3.0)
     }
+
+    @Test fun grainDoesNotTouchTheOpaqueFillAroundALetterboxedPhoto() {
+        val bitmap = photograph()
+        val grainy = PhotoLook(grain = 1.0)
+        val asset = PhotoAsset(path = "fixture", pixelWidth = 900, pixelHeight = 1200)
+        val project = PolarProject(settings = PrintSettings(columns = 1, rows = 1, roundedPhotos = true, photoLook = grainy),
+            photos = listOf(asset), placements = listOf(PhotoPlacement(assetID = asset.id, zoom = 0.5)))
+        val layers = mutableListOf<Bitmap>()
+        PolarRenderer.drawPage(Canvas(Bitmap.createBitmap(612, 792, Bitmap.Config.ARGB_8888)), project, 0, false, 1f, { bitmap }, null,
+            pdfPhoto = { layers.add(it.copy(Bitmap.Config.ARGB_8888, false)) })
+        val layer = layers.single()
+        // Con zoom 0,5 la foto queda centrada y sobra una banda a cada lado: debe ser exactamente el blanco de la tarjeta.
+        for (y in listOf(0, layer.height / 2, layer.height - 1)) for (x in 0..3) assertEquals(Color.WHITE, layer.getPixel(x, y))
+        assertEquals(255, Color.alpha(layer.getPixel(layer.width / 2, layer.height / 2)))
+        // ...y el grano sí actúa sobre la foto.
+        val plain = mutableListOf<Bitmap>()
+        PolarRenderer.drawPage(Canvas(Bitmap.createBitmap(612, 792, Bitmap.Config.ARGB_8888)), project.copy(settings = project.settings.copy(photoLook = null)), 0, false, 1f, { bitmap }, null,
+            pdfPhoto = { plain.add(it.copy(Bitmap.Config.ARGB_8888, false)) })
+        assertNotEquals(plain.single().getPixel(layer.width / 2, layer.height / 2), layer.getPixel(layer.width / 2, layer.height / 2))
+    }
 }

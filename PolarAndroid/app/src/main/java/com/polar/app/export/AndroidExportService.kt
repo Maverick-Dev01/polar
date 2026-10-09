@@ -41,9 +41,11 @@ class AndroidExportService(
     }
 
     override suspend fun png(project: PolarProject, page: Int, template: Bitmap?, quality: ExportQuality): File = withContext(Dispatchers.IO) {
-        val sizes = requiredPhotoPixels(project, page, quality.dpi)
+        // El PNG es el formato sin pérdida: siempre a 300 ppp, sin importar la calidad elegida.
+        val dpi = ExportQuality.HIGH.dpi
+        val sizes = requiredPhotoPixels(project, page, dpi)
         File(dir(), fileName(project, "png").replace(".png", " · hoja ${page + 1}.png")).also {
-            PolarExporter.exportPng(project, page, it, quality.dpi, { a -> bitmaps.loadForPrint(a.path, sizes[a.id] ?: BitmapLoader.EXPORT_MAX) }, printTemplate(project, template, quality.dpi), fonts)
+            PolarExporter.exportPng(project, page, it, dpi, { a -> bitmaps.loadForPrint(a.path, sizes[a.id] ?: BitmapLoader.EXPORT_MAX) }, printTemplate(project, template, dpi), fonts)
         }
     }
 

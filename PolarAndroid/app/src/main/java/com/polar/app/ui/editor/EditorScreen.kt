@@ -42,6 +42,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.polar.app.AppContainer
 import com.polar.app.R
+import com.polar.app.ui.resolve
 import com.polar.app.export.FilePrintAdapter
 import com.polar.app.export.PrintMedia
 import com.polar.app.ui.LayoutKind
@@ -159,7 +160,7 @@ fun EditorScreen(vm: EditorViewModel, container: AppContainer, notice: String?, 
     }
 
     state.backgroundError?.let { error ->
-        AlertDialog(onDismissRequest = vm::dismissBackgroundError, title = { Text(stringResource(R.string.bg_change_failed)) }, text = { Text(error) }, confirmButton = { TextButton(vm::dismissBackgroundError) { Text(stringResource(R.string.action_accept)) } })
+        AlertDialog(onDismissRequest = vm::dismissBackgroundError, title = { Text(stringResource(R.string.bg_change_failed)) }, text = { Text(error.resolve()) }, confirmButton = { TextButton(vm::dismissBackgroundError) { Text(stringResource(R.string.action_accept)) } })
     }
     when (state.mode) {
         EditorMode.CHANGE_DESIGN -> CatalogContent(

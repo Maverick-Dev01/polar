@@ -107,11 +107,12 @@ fun PolarNavHost(container: AppContainer, startOnboarding: Boolean) {
             val updates: UpdateViewModel? = if (BuildConfig.GITHUB_UPDATES_ENABLED) viewModel(factory = viewModelFactory {
                 initializer { UpdateViewModel(container.updates) }
             }) else null
-            var trashCount by remember { mutableIntStateOf(container.store.trashCount()) }
+            var trashCount by remember { mutableIntStateOf(0) }
+            LaunchedEffect(Unit) { trashCount = withContext(Dispatchers.IO) { container.store.trashCount() } }
             SettingsScreen(
                 settings = settings,
                 trashCount = trashCount,
-                onEmptyTrash = { scope.launch { withContext(Dispatchers.IO) { container.store.emptyTrash() }; trashCount = container.store.trashCount() } },
+                onEmptyTrash = { scope.launch { trashCount = withContext(Dispatchers.IO) { container.store.emptyTrash(); container.store.trashCount() } } },
                 onTheme = { scope.launch { container.settings.setTheme(it) } },
                 onUnits = { scope.launch { container.settings.setUnits(it) } },
                 onPaper = { scope.launch { container.settings.setDefaultPaper(it) } },

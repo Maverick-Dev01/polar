@@ -479,13 +479,19 @@ object PolarRenderer {
             val layer = Bitmap.createBitmap(ceil(rect.width*rasterScale).toInt().coerceAtLeast(1), ceil(rect.height*rasterScale).toInt().coerceAtLeast(1), Bitmap.Config.ARGB_8888)
             try {
                 val layerCanvas = Canvas(layer)
-                // Bajo la foto sólo hay el color de la tarjeta: componer sobre él deja la capa opaca (JPEG en el PDF).
-                if (pdfPhoto != null && opaqueUnder != null) layerCanvas.drawColor(opaqueUnder)
                 if (pdfPhoto != null) layerCanvas.scale((layer.width / (rect.width * rasterScale)).toFloat(), (layer.height / (rect.height * rasterScale)).toFloat())
                 draw(layerCanvas, 0.0, 0.0,rasterScale)
                 PhotoFilters.grain(layer, look, PhotoFilters.seed(photo.id, cardIndex), rect.left-card.left, rect.top-card.top, rect.width/layer.width, rect.height/layer.height)
-                pdfPhoto?.invoke(layer)
-                canvas.drawBitmap(layer,null,rect.toAndroidRectF(scale),Paint(Paint.FILTER_BITMAP_FLAG))
+                // Bajo la foto sólo hay el color de la tarjeta: componer sobre él (después del grano) deja la capa opaca para el JPEG del PDF.
+                val opaque = if (pdfPhoto != null && opaqueUnder != null)
+                    Bitmap.createBitmap(layer.width, layer.height, Bitmap.Config.ARGB_8888).also { o ->
+                        Canvas(o).apply { drawColor(opaqueUnder); drawBitmap(layer, 0f, 0f, null) }
+                    } else null
+                try {
+                    val finalLayer = opaque ?: layer
+                    pdfPhoto?.invoke(finalLayer)
+                    canvas.drawBitmap(finalLayer,null,rect.toAndroidRectF(scale),Paint(Paint.FILTER_BITMAP_FLAG))
+                } finally { opaque?.recycle() }
             } finally { layer.recycle() }
         } else draw(canvas, rect.left, rect.top)
         canvas.restore()
@@ -650,34 +656,53 @@ object PolarRenderer {
         canvas.drawPath(playPath, btnPaint)
     }
 
+    /** Texto del marcador de enlace demasiado largo; la app lo asigna desde strings.xml. Vacío: sólo «!». */
+    @Volatile var qrTooLongLabel: String = ""
+
     private fun drawQR(canvas: Canvas, url: String, rect: PolarRect, scale: Float) {
         val sizePx = (min(rect.width, rect.height) * scale).toInt()
         val r = rect.toAndroidRectF(scale)
         when (val qr = QrGenerator.generate(url, sizePx)) {
             is QrResult.Ok -> canvas.drawBitmap(qr.bitmap, null, r, null)
-            QrResult.TooLong -> drawQrTooLong(canvas, r)
+            QrResult.TooLong -> drawQrTooLong(canvas, r, scale, qrTooLongLabel)
             QrResult.Empty -> Unit
         }
     }
 
     /** Marcador visible: el enlace no cabe en un QR y nunca debe desaparecer en silencio. */
-    private fun drawQrTooLong(canvas: Canvas, r: RectF) {
+    private fun drawQrTooLong(canvas: Canvas, r: RectF, scale: Float, label: String) {
+        val red = Color.rgb(179, 38, 30)
         canvas.drawRect(r, Paint().apply { color = Color.WHITE })
         val side = min(r.width(), r.height())
         canvas.drawRect(r, Paint().apply {
-            color = Color.rgb(179, 38, 30); style = Paint.Style.STROKE
+            color = red; style = Paint.Style.STROKE
             strokeWidth = max(1f, side * 0.03f); isAntiAlias = true
             pathEffect = DashPathEffect(floatArrayOf(side * 0.08f, side * 0.05f), 0f)
         })
-        val text = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.rgb(179, 38, 30); textSize = max(1f, side * 0.15f); typeface = Typeface.DEFAULT_BOLD }
+        val text = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { color = red; typeface = Typeface.DEFAULT_BOLD }
+        if (side / scale < QR_MARKER_TEXT_MIN_SIDE_PT || label.isBlank()) {
+            // Caja demasiado pequeña para leer texto: un signo grande.
+            text.textSize = side * 0.7f
+            text.textAlign = Paint.Align.CENTER
+            val fm = text.fontMetrics
+            canvas.drawText("!", r.centerX(), r.centerY() - (fm.ascent + fm.descent) / 2f, text)
+            return
+        }
+        text.textSize = max(7f * scale, side * 0.15f)
         val width = max(1, (r.width() * 0.84f).toInt())
-        val layout = android.text.StaticLayout.Builder.obtain(QrGenerator.TOO_LONG_LABEL, 0, QrGenerator.TOO_LONG_LABEL.length, text, width)
+        var layout = android.text.StaticLayout.Builder.obtain(label, 0, label.length, text, width)
             .setAlignment(android.text.Layout.Alignment.ALIGN_CENTER).build()
+        val lines = max(1, ((r.height() * 0.8f) / (layout.height.toFloat() / max(1, layout.lineCount))).toInt())
+        if (layout.lineCount > lines) layout = android.text.StaticLayout.Builder.obtain(label, 0, label.length, text, width)
+            .setAlignment(android.text.Layout.Alignment.ALIGN_CENTER)
+            .setEllipsize(android.text.TextUtils.TruncateAt.END).setMaxLines(lines).build()
         canvas.save()
         canvas.translate(r.centerX() - width / 2f, r.centerY() - layout.height / 2f)
         layout.draw(canvas)
         canvas.restore()
     }
+
+    private const val QR_MARKER_TEXT_MIN_SIDE_PT = 60f
 
     private fun drawCalendar(
         canvas: Canvas,

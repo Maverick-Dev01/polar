@@ -432,4 +432,8 @@
     <string name="editor_copy_limit">No se pudieron copiar más fotos. El límite es 2000.</string>
     <string name="editor_design_regroup">Este diseño agrupa otra cantidad de fotos. Elige «Colección» para reorganizar todas las hojas; tus fotos se conservarán.</string>
     <string name="editor_select_card_first">Selecciona una tarjeta primero.</string>
+    <string name="qr_too_long_marker">Enlace muy largo</string>
+    <string name="editor_bg_remove_failed">No se pudo quitar el fondo. La primera vez requiere Google Play Services actualizado y conexión para descargar el modelo. Se conserva tu original.\n%1$s</string>
+    <string name="editor_bg_remove_retry">Prueba de nuevo con otra fotografía.</string>
+    <string name="editor_bg_add_failed">No se pudo agregar el fondo.</string>
 </resources>

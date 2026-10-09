@@ -320,7 +320,7 @@ class EditorViewModel(private val projectId: String, private val deps: EditorDep
     fun setDateSource(source: DateSource) { val c = _state.value.editCard; edit { ProjectEdits.setDateSource(it, source, c) } }
     fun setChosenDate(epochMs: Long) { val c = _state.value.editCard; edit { ProjectEdits.setChosenDate(it, epochMs, c) } }
     fun setDateStyle(style: DateStyle) = edit { ProjectEdits.setDateStyle(it, style) }
-    fun setSongUrl(url: String) = edit { ProjectEdits.updateSettings(it) { s -> s.copy(songURL = url.trim().take(4000)) } }
+    fun setSongUrl(url: String) = edit { ProjectEdits.updateSettings(it) { s -> s.copy(songURL = url.trim()) } }
 
     // ---------- diseño ----------
 
@@ -489,7 +489,7 @@ class EditorViewModel(private val projectId: String, private val deps: EditorDep
             } catch (e: CancellationException) { throw e }
             catch (e: Exception) {
                 Log.w("Polar", "No se pudo quitar el fondo", e)
-                _state.update { it.copy(backgroundError = "No se pudo quitar el fondo. La primera vez requiere Google Play Services actualizado y conexión para descargar el modelo. Se conserva tu original.\n" + (e.message ?: "Prueba de nuevo con otra fotografía.")) }
+                _state.update { it.copy(backgroundError = UiText(R.string.editor_bg_remove_failed, listOf(e.message ?: UiText(R.string.editor_bg_remove_retry)))) }
             } finally { _state.update { it.copy(busy = false) } }
         }
     }
@@ -502,11 +502,11 @@ class EditorViewModel(private val projectId: String, private val deps: EditorDep
             _state.update { it.copy(busy = true) }
             try {
                 val result = deps.photos.import(projectId, listOf(uri))
-                val background = result.assets.firstOrNull() ?: throw IOException("No se pudo leer el fondo.")
+                val background = result.assets.firstOrNull() ?: run { _state.update { it.copy(backgroundError = UiText(R.string.editor_bg_add_failed)) }; return@launch }
                 edit { p -> if (p.placements.getOrNull(slot)?.assetID != foregroundID || p.photos.size >= ProjectEdits.MAX_PHOTOS) p else
                     ProjectEdits.editPlacement(p.copy(photos = p.photos + background.copy(isBackground = true)), slot) { it.copy(background = (it.background ?: PhotoBackground()).copy(imageID = background.id)) } }
             } catch (e: CancellationException) { throw e }
-            catch (e: Exception) { _state.update { it.copy(backgroundError = e.message ?: "No se pudo agregar el fondo.") } }
+            catch (e: Exception) { _state.update { it.copy(backgroundError = e.message?.let { m -> UiText(R.string.raw_text, listOf(m)) } ?: UiText(R.string.editor_bg_add_failed)) } }
             finally { _state.update { it.copy(busy = false) } }
         }
     }

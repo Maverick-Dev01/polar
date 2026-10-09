@@ -49,7 +49,7 @@ data class EditorUiState(
     val editingRegions: Boolean = false,
     val templateVersion: Int = 0,
     val busy: Boolean = false,
-    val backgroundError: String? = null,
+    val backgroundError: UiText? = null,
     val lastMood: MoodPreset = MoodPreset.COUPLE,
     val loadFailed: Boolean = false
 ) {

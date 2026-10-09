@@ -17,9 +17,6 @@ sealed interface QrResult {
 }
 
 object QrGenerator {
-    /** Texto que se imprime en lugar del QR cuando el enlace no cabe. */
-    const val TOO_LONG_LABEL = "Enlace muy largo"
-
     private val hints = mapOf(
         EncodeHintType.CHARACTER_SET to "UTF-8",
         EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.M,
