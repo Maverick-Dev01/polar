@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="588" height="477.94" viewBox="0 0 588 477.94">
+<rect width="100%" height="100%" fill="#E4DED5"/>
+<defs>
+<linearGradient id="g0" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F2B8A0"/><stop offset="1" stop-color="#7A293B"/></linearGradient>
+<linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#A9C6D8"/><stop offset="1" stop-color="#3C5A72"/></linearGradient>
+<linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4D58D"/><stop offset="1" stop-color="#C46A3D"/></linearGradient>
+<linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B9D4B0"/><stop offset="1" stop-color="#4C7A5A"/></linearGradient>
+<clipPath id="card"><rect x="24" y="24" width="540" height="429.94" rx="4.5"/></clipPath>
+<clipPath id="p0"><rect x="46.68" y="48.94" width="494.64" height="309.55" rx="0"/></clipPath>
+<filter id="sh" x="-5%" y="-5%" width="110%" height="110%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.18"/></filter></defs>
+<rect x="24" y="24" width="540" height="429.94" rx="4.5" fill="#FFFFFF" filter="url(#sh)"/>
+<g clip-path="url(#card)">
+<g clip-path="url(#p0)">
+<rect x="46.68" y="48.94" width="494.64" height="309.55" fill="url(#g0)"/>
+<circle cx="402.82" cy="141.8" r="34.05" fill="#FFFFFF" opacity="0.55"/>
+<path d="M71.41 358.49 L234.64 209.9 L402.82 358.49 Z" fill="#000" opacity="0.22"/>
+<path d="M269.27 358.49 L402.82 240.86 L541.32 358.49 Z" fill="#000" opacity="0.32"/>
+</g>
+<rect x="56.4" y="367.95" width="475.2" height="42.99" fill="none" stroke="#00A0FF" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.35" class="guide"/>
+<text x="294" y="389.45" text-anchor="middle" dominant-baseline="central" font-family="Caveat, 'Bradley Hand', 'Segoe Script', cursive" font-size="45" font-weight="400" fill="#2B2221">Playa, 2026</text>
+<rect x="56.4" y="413.09" width="302.4" height="25.8" fill="none" stroke="#00A0FF" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.35" class="guide"/>
+<text x="56.4" y="425.99" text-anchor="start" dominant-baseline="central" font-family="Gelasio, Georgia, serif" font-size="21" font-weight="400" fill="#6B5F5C">Tú y yo</text>
+<rect x="369.6" y="413.09" width="162" height="25.8" fill="none" stroke="#00A0FF" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.35" class="guide"/>
+<text x="531.6" y="425.99" text-anchor="end" dominant-baseline="central" font-family="-apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="19.5" font-weight="400" fill="#8A7F7A">8 oct 2026</text>
+</g></svg>

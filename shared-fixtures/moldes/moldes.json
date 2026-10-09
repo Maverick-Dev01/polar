@@ -1,0 +1,199 @@
+{
+  "imageSize": [
+    1200,
+    1600
+  ],
+  "notes": [
+    "Fondo opaco de color; los huecos son transparentes (alfa 0). La franja inferior rosa y la barra oscura son opacas y NO son huecos.",
+    "regions = [x, y, w, h] como fracción del ancho/alto de la imagen; radius = fracción del lado menor del hueco en px (20 % en 'round').",
+    "Con tolerancia 0.01 en las fracciones se espera que la detección devuelva estas regiones, en orden de lectura (arriba-abajo, izquierda-derecha) y con la forma indicada."
+  ],
+  "templates": {
+    "molde-rects.png": {
+      "shape": "rect",
+      "radius": 0.0,
+      "regions": [
+        {
+          "rect": [
+            0.08,
+            0.06,
+            0.84,
+            0.375
+          ],
+          "shape": "rect",
+          "radius": 0.0
+        },
+        {
+          "rect": [
+            0.08,
+            0.475,
+            0.4,
+            0.3125
+          ],
+          "shape": "rect",
+          "radius": 0.0
+        },
+        {
+          "rect": [
+            0.52,
+            0.475,
+            0.4,
+            0.3125
+          ],
+          "shape": "rect",
+          "radius": 0.0
+        }
+      ]
+    },
+    "molde-rounded.png": {
+      "shape": "round",
+      "radius": 0.2,
+      "regions": [
+        {
+          "rect": [
+            0.08,
+            0.06,
+            0.84,
+            0.375
+          ],
+          "shape": "round",
+          "radius": 0.2
+        },
+        {
+          "rect": [
+            0.08,
+            0.475,
+            0.4,
+            0.3125
+          ],
+          "shape": "round",
+          "radius": 0.2
+        },
+        {
+          "rect": [
+            0.52,
+            0.475,
+            0.4,
+            0.3125
+          ],
+          "shape": "round",
+          "radius": 0.2
+        }
+      ]
+    },
+    "molde-circles.png": {
+      "shape": "ellipse",
+      "radius": 0.0,
+      "regions": [
+        {
+          "rect": [
+            0.25,
+            0.0563,
+            0.5,
+            0.375
+          ],
+          "shape": "ellipse",
+          "radius": 0.0
+        },
+        {
+          "rect": [
+            0.075,
+            0.475,
+            0.4167,
+            0.3125
+          ],
+          "shape": "ellipse",
+          "radius": 0.0
+        },
+        {
+          "rect": [
+            0.5083,
+            0.475,
+            0.4167,
+            0.3125
+          ],
+          "shape": "ellipse",
+          "radius": 0.0
+        }
+      ]
+    },
+    "molde-rects-50.png": {
+      "sameAs": "molde-rects.png",
+      "imageSize": [
+        600,
+        800
+      ]
+    },
+    "molde-distinto-tira.png": {
+      "shape": "rect",
+      "radius": 0.0,
+      "regions": [
+        {
+          "rect": [
+            0.25,
+            0.0375,
+            0.5,
+            0.2125
+          ],
+          "shape": "rect",
+          "radius": 0.0
+        },
+        {
+          "rect": [
+            0.25,
+            0.2687,
+            0.5,
+            0.2125
+          ],
+          "shape": "rect",
+          "radius": 0.0
+        },
+        {
+          "rect": [
+            0.25,
+            0.5,
+            0.5,
+            0.2125
+          ],
+          "shape": "rect",
+          "radius": 0.0
+        },
+        {
+          "rect": [
+            0.25,
+            0.7312,
+            0.5,
+            0.2125
+          ],
+          "shape": "rect",
+          "radius": 0.0
+        }
+      ]
+    }
+  },
+  "dhash": {
+    "algorithm": "dHash 64 bits: componer sobre blanco, gris (0.299R+0.587G+0.114B), reducir a 9x8 por promedio de área exacto (límites fraccionarios), bit = celda[x] > celda[x+1] + 1.0 (tolerancia de 1 nivel de gris contra empates); primer bit = MSB, filas de arriba a abajo.",
+    "values": {
+      "molde-rects.png": "0101011111111180",
+      "molde-rects-50.png": "0101011111111180",
+      "molde-rounded.png": "0301013311113380",
+      "molde-circles.png": "0c06060e11113380",
+      "molde-distinto-tira.png": "0606060606060606"
+    },
+    "expected": {
+      "molde-rects.png vs molde-rects-50.png": {
+        "hamming": 0,
+        "rule": "<= 6 -> duplicado"
+      },
+      "molde-rects.png vs molde-distinto-tira.png": {
+        "hamming": 28,
+        "rule": "> 6 -> distinto"
+      },
+      "molde-rects.png vs molde-rounded.png": {
+        "hamming": 5,
+        "note": "misma plantilla con huecos redondeados: puede ser parecido (<= 6); el usuario decide"
+      }
+    },
+    "note": "Los valores son de referencia del script; una implementación con otro remuestreo (bilineal) puede diferir unos bits, por eso la regla es el umbral (<= 6), no igualdad exacta."
+  }
+}

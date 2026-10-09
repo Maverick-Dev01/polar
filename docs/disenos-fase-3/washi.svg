@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="688" viewBox="0 0 560 688">
+<rect width="100%" height="100%" fill="#E4DED5"/>
+<defs>
+<linearGradient id="g0" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F2B8A0"/><stop offset="1" stop-color="#7A293B"/></linearGradient>
+<linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#A9C6D8"/><stop offset="1" stop-color="#3C5A72"/></linearGradient>
+<linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4D58D"/><stop offset="1" stop-color="#C46A3D"/></linearGradient>
+<linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B9D4B0"/><stop offset="1" stop-color="#4C7A5A"/></linearGradient>
+<clipPath id="card"><rect x="24" y="24" width="512" height="640" rx="4.27"/></clipPath>
+<clipPath id="p0"><rect x="70.08" y="65.6" width="419.84" height="448" rx="0"/></clipPath>
+<filter id="sh" x="-5%" y="-5%" width="110%" height="110%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.18"/></filter></defs>
+<rect x="24" y="24" width="512" height="640" rx="4.27" fill="#F7F2EB" filter="url(#sh)"/>
+<g clip-path="url(#card)">
+<rect x="49.6" y="46.4" width="460.8" height="499.2" fill="#FFFFFF" opacity="1.0"/>
+<g clip-path="url(#p0)">
+<rect x="70.08" y="65.6" width="419.84" height="448" fill="url(#g0)"/>
+<circle cx="372.36" cy="200" r="46.18" fill="#FFFFFF" opacity="0.55"/>
+<path d="M91.07 513.6 L229.62 298.56 L372.36 513.6 Z" fill="#000" opacity="0.22"/>
+<path d="M259.01 513.6 L372.36 343.36 L489.92 513.6 Z" fill="#000" opacity="0.32"/>
+</g>
+<rect x="29.12" y="62.4" width="112.64" height="32" fill="#E7B9C3" opacity="0.85" transform="rotate(-30 85.44 78.4)"/>
+<g opacity="0.55" transform="rotate(-30 85.44 78.4)">
+<rect x="29.12" y="62.4" width="10.24" height="32" fill="#FFFFFF"/>
+<rect x="49.6" y="62.4" width="10.24" height="32" fill="#FFFFFF"/>
+<rect x="70.08" y="62.4" width="10.24" height="32" fill="#FFFFFF"/>
+<rect x="90.56" y="62.4" width="10.24" height="32" fill="#FFFFFF"/>
+<rect x="111.04" y="62.4" width="10.24" height="32" fill="#FFFFFF"/>
+<rect x="131.52" y="62.4" width="10.24" height="32" fill="#FFFFFF"/>
+</g>
+<rect x="418.24" y="497.6" width="112.64" height="32" fill="#7A293B" opacity="0.55" transform="rotate(-30 474.56 513.6)"/>
+<g opacity="0.35" transform="rotate(-30 474.56 513.6)">
+<rect x="418.24" y="497.6" width="10.24" height="32" fill="#FFFFFF"/>
+<rect x="438.72" y="497.6" width="10.24" height="32" fill="#FFFFFF"/>
+<rect x="459.2" y="497.6" width="10.24" height="32" fill="#FFFFFF"/>
+<rect x="479.68" y="497.6" width="10.24" height="32" fill="#FFFFFF"/>
+<rect x="500.16" y="497.6" width="10.24" height="32" fill="#FFFFFF"/>
+<rect x="520.64" y="497.6" width="10.24" height="32" fill="#FFFFFF"/>
+</g>
+<rect x="64.96" y="558.4" width="430.08" height="60.8" fill="none" stroke="#00A0FF" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.35" class="guide"/>
+<text x="280" y="588.8" text-anchor="middle" dominant-baseline="central" font-family="Caveat, 'Bradley Hand', 'Segoe Script', cursive" font-size="48.36" font-weight="400" fill="#2B2221">qué buen día</text>
+<rect x="64.96" y="622.4" width="430.08" height="25.6" fill="none" stroke="#00A0FF" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.35" class="guide"/>
+<text x="280" y="635.2" text-anchor="middle" dominant-baseline="central" font-family="-apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="18.49" font-weight="400" fill="#8A7F7A">8 oct 2026</text>
+</g></svg>

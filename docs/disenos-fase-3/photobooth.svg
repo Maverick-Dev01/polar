@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="688" viewBox="0 0 240 688">
+<rect width="100%" height="100%" fill="#E4DED5"/>
+<defs>
+<linearGradient id="g0" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F2B8A0"/><stop offset="1" stop-color="#7A293B"/></linearGradient>
+<linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#A9C6D8"/><stop offset="1" stop-color="#3C5A72"/></linearGradient>
+<linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4D58D"/><stop offset="1" stop-color="#C46A3D"/></linearGradient>
+<linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B9D4B0"/><stop offset="1" stop-color="#4C7A5A"/></linearGradient>
+<clipPath id="card"><rect x="24" y="24" width="192" height="640" rx="1.6"/></clipPath>
+<clipPath id="p0"><rect x="39.36" y="40" width="161.28" height="120.32" rx="0"/></clipPath>
+<clipPath id="p1"><rect x="39.36" y="168" width="161.28" height="120.32" rx="0"/></clipPath>
+<clipPath id="p2"><rect x="39.36" y="296" width="161.28" height="120.32" rx="0"/></clipPath>
+<clipPath id="p3"><rect x="39.36" y="424" width="161.28" height="120.32" rx="0"/></clipPath>
+<filter id="sh" x="-5%" y="-5%" width="110%" height="110%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.18"/></filter></defs>
+<rect x="24" y="24" width="192" height="640" rx="1.6" fill="#F7F2EB" filter="url(#sh)"/>
+<g clip-path="url(#card)">
+<rect x="96.96" y="551.36" width="46.08" height="0.96" fill="#7A293B" opacity="0.6"/>
+<g clip-path="url(#p0)">
+<rect x="39.36" y="40" width="161.28" height="120.32" fill="url(#g0)"/>
+<circle cx="155.48" cy="76.1" r="13.24" fill="#FFFFFF" opacity="0.55"/>
+<path d="M47.42 160.32 L100.65 102.57 L155.48 160.32 Z" fill="#000" opacity="0.22"/>
+<path d="M111.94 160.32 L155.48 114.6 L200.64 160.32 Z" fill="#000" opacity="0.32"/>
+</g>
+<g clip-path="url(#p1)">
+<rect x="39.36" y="168" width="161.28" height="120.32" fill="url(#g1)"/>
+<circle cx="155.48" cy="204.1" r="13.24" fill="#FFFFFF" opacity="0.55"/>
+<path d="M47.42 288.32 L100.65 230.57 L155.48 288.32 Z" fill="#000" opacity="0.22"/>
+<path d="M111.94 288.32 L155.48 242.6 L200.64 288.32 Z" fill="#000" opacity="0.32"/>
+</g>
+<g clip-path="url(#p2)">
+<rect x="39.36" y="296" width="161.28" height="120.32" fill="url(#g2)"/>
+<circle cx="155.48" cy="332.1" r="13.24" fill="#FFFFFF" opacity="0.55"/>
+<path d="M47.42 416.32 L100.65 358.57 L155.48 416.32 Z" fill="#000" opacity="0.22"/>
+<path d="M111.94 416.32 L155.48 370.6 L200.64 416.32 Z" fill="#000" opacity="0.32"/>
+</g>
+<g clip-path="url(#p3)">
+<rect x="39.36" y="424" width="161.28" height="120.32" fill="url(#g3)"/>
+<circle cx="155.48" cy="460.1" r="13.24" fill="#FFFFFF" opacity="0.55"/>
+<path d="M47.42 544.32 L100.65 486.57 L155.48 544.32 Z" fill="#000" opacity="0.22"/>
+<path d="M111.94 544.32 L155.48 498.6 L200.64 544.32 Z" fill="#000" opacity="0.32"/>
+</g>
+<rect x="39.36" y="556.48" width="161.28" height="25.6" fill="none" stroke="#00A0FF" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.35" class="guide"/>
+<text x="120" y="569.28" text-anchor="middle" dominant-baseline="central" font-family="Gelasio, Georgia, serif" font-size="10.67" font-weight="700" fill="#7A293B">FOTOMATÓN</text>
+<rect x="39.36" y="585.92" width="161.28" height="32" fill="none" stroke="#00A0FF" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.35" class="guide"/>
+<text x="120" y="601.92" text-anchor="middle" dominant-baseline="central" font-family="Caveat, 'Bradley Hand', 'Segoe Script', cursive" font-size="14.93" font-weight="400" fill="#2B2221">Una historia para guardar</text>
+<rect x="39.36" y="622.4" width="161.28" height="19.2" fill="none" stroke="#00A0FF" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.35" class="guide"/>
+<text x="120" y="632" text-anchor="middle" dominant-baseline="central" font-family="-apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="7.47" font-weight="400" fill="#8A7F7A">8 oct 2026</text>
+</g></svg>

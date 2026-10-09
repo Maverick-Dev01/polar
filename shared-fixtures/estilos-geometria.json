@@ -1,0 +1,808 @@
+{
+  "version": 1,
+  "referenceCardWidthPt": 180.0,
+  "notes": [
+    "Todas las x,y,w,h son fracciones del ancho (x,w) y del alto (y,h) de la tarjeta; no se vuelven a escalar.",
+    "cardAspect = ancho/alto. En puntos: alto = ancho / cardAspect.",
+    "defaultSizePt está a referenceCardWidthPt; se escala por anchoReal/referenceCardWidthPt.",
+    "radius de fotos y roundRect = fracción de min(ancho,alto) en puntos de la forma. shape ellipse en slot cuadrado en puntos = círculo.",
+    "Decoraciones: orden de dibujo = orden de la lista; layer below se dibuja antes de las fotos y above después. rotationDeg gira en sentido horario alrededor del centro del rectángulo, en puntos.",
+    "ring: sólo trazo; strokeW = fracción del ancho de la tarjeta. stripes: count franjas verticales (antes de rotar) de color, alternando con huecos iguales, dentro del rectángulo.",
+    "qrSlot: x,y = esquina superior izquierda (fracciones); size = lado como fracción del ancho (sizeBasis width). El QR sólo se dibuja si hay enlace.",
+    "textSlots: align left|center|right; defaultFont Gelasio y Caveat van incluidas, .System = fuente del sistema."
+  ],
+  "styles": {
+    "photobooth": {
+      "displayName": "Fotomatón",
+      "description": "Tira vertical de 4 fotos, como cabina",
+      "category": "CLASSIC",
+      "photosPerCard": 4,
+      "cardAspect": 0.3,
+      "defaultBackground": "#F7F2EB",
+      "supportsDate": true,
+      "textRoles": [
+        "TITLE",
+        "CAPTION",
+        "DATE"
+      ],
+      "photoSlots": [
+        {
+          "x": 0.08,
+          "y": 0.025,
+          "w": 0.84,
+          "h": 0.188,
+          "shape": "rect",
+          "radius": 0.0
+        },
+        {
+          "x": 0.08,
+          "y": 0.225,
+          "w": 0.84,
+          "h": 0.188,
+          "shape": "rect",
+          "radius": 0.0
+        },
+        {
+          "x": 0.08,
+          "y": 0.425,
+          "w": 0.84,
+          "h": 0.188,
+          "shape": "rect",
+          "radius": 0.0
+        },
+        {
+          "x": 0.08,
+          "y": 0.625,
+          "w": 0.84,
+          "h": 0.188,
+          "shape": "rect",
+          "radius": 0.0
+        }
+      ],
+      "textSlots": [
+        {
+          "role": "TITLE",
+          "x": 0.08,
+          "y": 0.832,
+          "w": 0.84,
+          "h": 0.04,
+          "align": "center",
+          "defaultFont": "Gelasio",
+          "defaultSizePt": 10,
+          "color": "#7A293B",
+          "bold": true
+        },
+        {
+          "role": "CAPTION",
+          "x": 0.08,
+          "y": 0.878,
+          "w": 0.84,
+          "h": 0.05,
+          "align": "center",
+          "defaultFont": "Caveat",
+          "defaultSizePt": 14,
+          "color": "#2B2221",
+          "bold": false
+        },
+        {
+          "role": "DATE",
+          "x": 0.08,
+          "y": 0.935,
+          "w": 0.84,
+          "h": 0.03,
+          "align": "center",
+          "defaultFont": ".System",
+          "defaultSizePt": 7,
+          "color": "#8A7F7A",
+          "bold": false
+        }
+      ],
+      "qrSlot": null,
+      "decorations": [
+        {
+          "type": "rect",
+          "x": 0.38,
+          "y": 0.824,
+          "w": 0.24,
+          "h": 0.0015,
+          "color": "#7A293B",
+          "opacity": 0.6,
+          "rotationDeg": 0.0,
+          "layer": "below"
+        }
+      ]
+    },
+    "instaxWide": {
+      "displayName": "Instantánea ancha",
+      "description": "Formato ancho con pie grueso",
+      "category": "CLASSIC",
+      "photosPerCard": 1,
+      "cardAspect": 1.256,
+      "defaultBackground": "#FFFFFF",
+      "supportsDate": true,
+      "textRoles": [
+        "TITLE",
+        "SUBTITLE",
+        "DATE"
+      ],
+      "photoSlots": [
+        {
+          "x": 0.042,
+          "y": 0.058,
+          "w": 0.916,
+          "h": 0.72,
+          "shape": "rect",
+          "radius": 0.0
+        }
+      ],
+      "textSlots": [
+        {
+          "role": "TITLE",
+          "x": 0.06,
+          "y": 0.8,
+          "w": 0.88,
+          "h": 0.1,
+          "align": "center",
+          "defaultFont": "Caveat",
+          "defaultSizePt": 15,
+          "color": "#2B2221",
+          "bold": false
+        },
+        {
+          "role": "SUBTITLE",
+          "x": 0.06,
+          "y": 0.905,
+          "w": 0.56,
+          "h": 0.06,
+          "align": "left",
+          "defaultFont": "Gelasio",
+          "defaultSizePt": 7,
+          "color": "#6B5F5C",
+          "bold": false
+        },
+        {
+          "role": "DATE",
+          "x": 0.64,
+          "y": 0.905,
+          "w": 0.3,
+          "h": 0.06,
+          "align": "right",
+          "defaultFont": ".System",
+          "defaultSizePt": 6.5,
+          "color": "#8A7F7A",
+          "bold": false
+        }
+      ],
+      "qrSlot": null,
+      "decorations": []
+    },
+    "vinyl": {
+      "displayName": "Vinilo",
+      "description": "Disco con tu foto de etiqueta",
+      "category": "MUSIC",
+      "photosPerCard": 1,
+      "cardAspect": 0.75,
+      "defaultBackground": "#F7F2EB",
+      "supportsDate": true,
+      "textRoles": [
+        "SONG",
+        "ARTIST",
+        "DATE"
+      ],
+      "photoSlots": [
+        {
+          "x": 0.3,
+          "y": 0.23,
+          "w": 0.4,
+          "h": 0.3,
+          "shape": "ellipse",
+          "radius": 0.0
+        }
+      ],
+      "textSlots": [
+        {
+          "role": "SONG",
+          "x": 0.07,
+          "y": 0.765,
+          "w": 0.64,
+          "h": 0.065,
+          "align": "left",
+          "defaultFont": "Gelasio",
+          "defaultSizePt": 11,
+          "color": "#2B2221",
+          "bold": true
+        },
+        {
+          "role": "ARTIST",
+          "x": 0.07,
+          "y": 0.833,
+          "w": 0.64,
+          "h": 0.05,
+          "align": "left",
+          "defaultFont": ".System",
+          "defaultSizePt": 8,
+          "color": "#6B5F5C",
+          "bold": false
+        },
+        {
+          "role": "DATE",
+          "x": 0.07,
+          "y": 0.893,
+          "w": 0.64,
+          "h": 0.04,
+          "align": "left",
+          "defaultFont": ".System",
+          "defaultSizePt": 6.5,
+          "color": "#8A7F7A",
+          "bold": false
+        }
+      ],
+      "qrSlot": {
+        "x": 0.75,
+        "y": 0.775,
+        "size": 0.2,
+        "sizeBasis": "width"
+      },
+      "decorations": [
+        {
+          "type": "ellipse",
+          "x": 0.06,
+          "y": 0.05,
+          "w": 0.88,
+          "h": 0.66,
+          "color": "#141011",
+          "opacity": 1.0,
+          "rotationDeg": 0.0,
+          "layer": "below"
+        },
+        {
+          "type": "ring",
+          "x": 0.08,
+          "y": 0.065,
+          "w": 0.84,
+          "h": 0.63,
+          "color": "#FFFFFF",
+          "opacity": 0.14,
+          "rotationDeg": 0.0,
+          "layer": "below",
+          "strokeW": 0.0018
+        },
+        {
+          "type": "ring",
+          "x": 0.11,
+          "y": 0.0875,
+          "w": 0.78,
+          "h": 0.585,
+          "color": "#FFFFFF",
+          "opacity": 0.14,
+          "rotationDeg": 0.0,
+          "layer": "below",
+          "strokeW": 0.0018
+        },
+        {
+          "type": "ring",
+          "x": 0.14,
+          "y": 0.11,
+          "w": 0.72,
+          "h": 0.54,
+          "color": "#FFFFFF",
+          "opacity": 0.14,
+          "rotationDeg": 0.0,
+          "layer": "below",
+          "strokeW": 0.0018
+        },
+        {
+          "type": "ring",
+          "x": 0.17,
+          "y": 0.1325,
+          "w": 0.66,
+          "h": 0.495,
+          "color": "#FFFFFF",
+          "opacity": 0.14,
+          "rotationDeg": 0.0,
+          "layer": "below",
+          "strokeW": 0.0018
+        },
+        {
+          "type": "ring",
+          "x": 0.2,
+          "y": 0.155,
+          "w": 0.6,
+          "h": 0.45,
+          "color": "#FFFFFF",
+          "opacity": 0.14,
+          "rotationDeg": 0.0,
+          "layer": "below",
+          "strokeW": 0.0018
+        },
+        {
+          "type": "ring",
+          "x": 0.23,
+          "y": 0.1775,
+          "w": 0.54,
+          "h": 0.405,
+          "color": "#FFFFFF",
+          "opacity": 0.14,
+          "rotationDeg": 0.0,
+          "layer": "below",
+          "strokeW": 0.0018
+        },
+        {
+          "type": "ring",
+          "x": 0.255,
+          "y": 0.1963,
+          "w": 0.49,
+          "h": 0.3675,
+          "color": "#FFFFFF",
+          "opacity": 0.14,
+          "rotationDeg": 0.0,
+          "layer": "below",
+          "strokeW": 0.0018
+        },
+        {
+          "type": "ring",
+          "x": 0.06,
+          "y": 0.05,
+          "w": 0.88,
+          "h": 0.66,
+          "color": "#FFFFFF",
+          "opacity": 0.25,
+          "rotationDeg": 0.0,
+          "layer": "below",
+          "strokeW": 0.004
+        },
+        {
+          "type": "ellipse",
+          "x": 0.27,
+          "y": 0.2075,
+          "w": 0.46,
+          "h": 0.345,
+          "color": "#F2DDE1",
+          "opacity": 1.0,
+          "rotationDeg": 0.0,
+          "layer": "below"
+        },
+        {
+          "type": "ring",
+          "x": 0.285,
+          "y": 0.2188,
+          "w": 0.43,
+          "h": 0.3225,
+          "color": "#7A293B",
+          "opacity": 0.9,
+          "rotationDeg": 0.0,
+          "layer": "below",
+          "strokeW": 0.006
+        },
+        {
+          "type": "ellipse",
+          "x": 0.4825,
+          "y": 0.3669,
+          "w": 0.035,
+          "h": 0.0263,
+          "color": "#F7F2EB",
+          "opacity": 1.0,
+          "rotationDeg": 0.0,
+          "layer": "above"
+        },
+        {
+          "type": "ring",
+          "x": 0.4825,
+          "y": 0.3669,
+          "w": 0.035,
+          "h": 0.0263,
+          "color": "#141011",
+          "opacity": 0.5,
+          "rotationDeg": 0.0,
+          "layer": "above",
+          "strokeW": 0.002
+        }
+      ]
+    },
+    "cassette": {
+      "displayName": "Casete",
+      "description": "Casete con tu foto en la etiqueta",
+      "category": "MUSIC",
+      "photosPerCard": 1,
+      "cardAspect": 1.6,
+      "defaultBackground": "#7A293B",
+      "supportsDate": true,
+      "textRoles": [
+        "SONG",
+        "ARTIST",
+        "DATE"
+      ],
+      "photoSlots": [
+        {
+          "x": 0.09,
+          "y": 0.12,
+          "w": 0.34,
+          "h": 0.48,
+          "shape": "round",
+          "radius": 0.08
+        }
+      ],
+      "textSlots": [
+        {
+          "role": "SONG",
+          "x": 0.46,
+          "y": 0.14,
+          "w": 0.44,
+          "h": 0.13,
+          "align": "left",
+          "defaultFont": "Gelasio",
+          "defaultSizePt": 9,
+          "color": "#2B2221",
+          "bold": true
+        },
+        {
+          "role": "ARTIST",
+          "x": 0.46,
+          "y": 0.28,
+          "w": 0.44,
+          "h": 0.1,
+          "align": "left",
+          "defaultFont": "Caveat",
+          "defaultSizePt": 13,
+          "color": "#7A293B",
+          "bold": false
+        },
+        {
+          "role": "DATE",
+          "x": 0.46,
+          "y": 0.4,
+          "w": 0.44,
+          "h": 0.08,
+          "align": "left",
+          "defaultFont": ".System",
+          "defaultSizePt": 6.5,
+          "color": "#6B5F5C",
+          "bold": false
+        }
+      ],
+      "qrSlot": {
+        "x": 0.82,
+        "y": 0.7,
+        "size": 0.13,
+        "sizeBasis": "width"
+      },
+      "decorations": [
+        {
+          "type": "roundRect",
+          "x": 0.06,
+          "y": 0.08,
+          "w": 0.88,
+          "h": 0.56,
+          "color": "#F7F2EB",
+          "opacity": 1.0,
+          "rotationDeg": 0.0,
+          "layer": "below",
+          "radius": 0.06
+        },
+        {
+          "type": "rect",
+          "x": 0.46,
+          "y": 0.545,
+          "w": 0.44,
+          "h": 0.0035,
+          "color": "#2B2221",
+          "opacity": 0.35,
+          "rotationDeg": 0.0,
+          "layer": "below"
+        },
+        {
+          "type": "rect",
+          "x": 0.46,
+          "y": 0.595,
+          "w": 0.44,
+          "h": 0.0035,
+          "color": "#2B2221",
+          "opacity": 0.35,
+          "rotationDeg": 0.0,
+          "layer": "below"
+        },
+        {
+          "type": "roundRect",
+          "x": 0.2,
+          "y": 0.69,
+          "w": 0.6,
+          "h": 0.24,
+          "color": "#161110",
+          "opacity": 1.0,
+          "rotationDeg": 0.0,
+          "layer": "below",
+          "radius": 0.3
+        },
+        {
+          "type": "ellipse",
+          "x": 0.255,
+          "y": 0.706,
+          "w": 0.13,
+          "h": 0.208,
+          "color": "#F7F2EB",
+          "opacity": 1.0,
+          "rotationDeg": 0.0,
+          "layer": "below"
+        },
+        {
+          "type": "ellipse",
+          "x": 0.29,
+          "y": 0.762,
+          "w": 0.06,
+          "h": 0.096,
+          "color": "#161110",
+          "opacity": 1.0,
+          "rotationDeg": 0.0,
+          "layer": "below"
+        },
+        {
+          "type": "ellipse",
+          "x": 0.615,
+          "y": 0.706,
+          "w": 0.13,
+          "h": 0.208,
+          "color": "#F7F2EB",
+          "opacity": 1.0,
+          "rotationDeg": 0.0,
+          "layer": "below"
+        },
+        {
+          "type": "ellipse",
+          "x": 0.65,
+          "y": 0.762,
+          "w": 0.06,
+          "h": 0.096,
+          "color": "#161110",
+          "opacity": 1.0,
+          "rotationDeg": 0.0,
+          "layer": "below"
+        },
+        {
+          "type": "ellipse",
+          "x": 0.024,
+          "y": 0.0324,
+          "w": 0.022,
+          "h": 0.0352,
+          "color": "#D9C7B0",
+          "opacity": 0.9,
+          "rotationDeg": 0.0,
+          "layer": "below"
+        },
+        {
+          "type": "ellipse",
+          "x": 0.954,
+          "y": 0.0324,
+          "w": 0.022,
+          "h": 0.0352,
+          "color": "#D9C7B0",
+          "opacity": 0.9,
+          "rotationDeg": 0.0,
+          "layer": "below"
+        },
+        {
+          "type": "ellipse",
+          "x": 0.024,
+          "y": 0.9324,
+          "w": 0.022,
+          "h": 0.0352,
+          "color": "#D9C7B0",
+          "opacity": 0.9,
+          "rotationDeg": 0.0,
+          "layer": "below"
+        },
+        {
+          "type": "ellipse",
+          "x": 0.954,
+          "y": 0.9324,
+          "w": 0.022,
+          "h": 0.0352,
+          "color": "#D9C7B0",
+          "opacity": 0.9,
+          "rotationDeg": 0.0,
+          "layer": "below"
+        }
+      ]
+    },
+    "collage": {
+      "displayName": "Collage",
+      "description": "Una foto grande y dos pequeñas",
+      "category": "FREE",
+      "photosPerCard": 3,
+      "cardAspect": 0.75,
+      "defaultBackground": "#FFFFFF",
+      "supportsDate": true,
+      "textRoles": [
+        "TITLE",
+        "CAPTION",
+        "DATE"
+      ],
+      "photoSlots": [
+        {
+          "x": 0.05,
+          "y": 0.04,
+          "w": 0.9,
+          "h": 0.52,
+          "shape": "rect",
+          "radius": 0.0
+        },
+        {
+          "x": 0.05,
+          "y": 0.575,
+          "w": 0.44,
+          "h": 0.22,
+          "shape": "rect",
+          "radius": 0.0
+        },
+        {
+          "x": 0.51,
+          "y": 0.575,
+          "w": 0.44,
+          "h": 0.22,
+          "shape": "rect",
+          "radius": 0.0
+        }
+      ],
+      "textSlots": [
+        {
+          "role": "TITLE",
+          "x": 0.07,
+          "y": 0.815,
+          "w": 0.86,
+          "h": 0.065,
+          "align": "center",
+          "defaultFont": "Gelasio",
+          "defaultSizePt": 11,
+          "color": "#7A293B",
+          "bold": true
+        },
+        {
+          "role": "CAPTION",
+          "x": 0.07,
+          "y": 0.88,
+          "w": 0.86,
+          "h": 0.05,
+          "align": "center",
+          "defaultFont": "Caveat",
+          "defaultSizePt": 12,
+          "color": "#2B2221",
+          "bold": false
+        },
+        {
+          "role": "DATE",
+          "x": 0.07,
+          "y": 0.935,
+          "w": 0.86,
+          "h": 0.04,
+          "align": "center",
+          "defaultFont": ".System",
+          "defaultSizePt": 6.5,
+          "color": "#8A7F7A",
+          "bold": false
+        }
+      ],
+      "qrSlot": null,
+      "decorations": [
+        {
+          "type": "rect",
+          "x": 0.35,
+          "y": 0.806,
+          "w": 0.3,
+          "h": 0.0015,
+          "color": "#7A293B",
+          "opacity": 0.6,
+          "rotationDeg": 0.0,
+          "layer": "below"
+        }
+      ]
+    },
+    "washi": {
+      "displayName": "Cinta washi",
+      "description": "Foto con cinta y pie manuscrito",
+      "category": "OCCASIONS",
+      "photosPerCard": 1,
+      "cardAspect": 0.8,
+      "defaultBackground": "#F7F2EB",
+      "supportsDate": true,
+      "textRoles": [
+        "CAPTION",
+        "DATE"
+      ],
+      "photoSlots": [
+        {
+          "x": 0.09,
+          "y": 0.065,
+          "w": 0.82,
+          "h": 0.7,
+          "shape": "rect",
+          "radius": 0.0
+        }
+      ],
+      "textSlots": [
+        {
+          "role": "CAPTION",
+          "x": 0.08,
+          "y": 0.835,
+          "w": 0.84,
+          "h": 0.095,
+          "align": "center",
+          "defaultFont": "Caveat",
+          "defaultSizePt": 17,
+          "color": "#2B2221",
+          "bold": false
+        },
+        {
+          "role": "DATE",
+          "x": 0.08,
+          "y": 0.935,
+          "w": 0.84,
+          "h": 0.04,
+          "align": "center",
+          "defaultFont": ".System",
+          "defaultSizePt": 6.5,
+          "color": "#8A7F7A",
+          "bold": false
+        }
+      ],
+      "qrSlot": null,
+      "decorations": [
+        {
+          "type": "rect",
+          "x": 0.05,
+          "y": 0.035,
+          "w": 0.9,
+          "h": 0.78,
+          "color": "#FFFFFF",
+          "opacity": 1.0,
+          "rotationDeg": 0.0,
+          "layer": "below"
+        },
+        {
+          "type": "rect",
+          "x": 0.01,
+          "y": 0.06,
+          "w": 0.22,
+          "h": 0.05,
+          "color": "#E7B9C3",
+          "opacity": 0.85,
+          "rotationDeg": -30,
+          "layer": "above"
+        },
+        {
+          "type": "stripes",
+          "x": 0.01,
+          "y": 0.06,
+          "w": 0.22,
+          "h": 0.05,
+          "color": "#FFFFFF",
+          "opacity": 0.55,
+          "rotationDeg": -30,
+          "layer": "above",
+          "count": 6
+        },
+        {
+          "type": "rect",
+          "x": 0.77,
+          "y": 0.74,
+          "w": 0.22,
+          "h": 0.05,
+          "color": "#7A293B",
+          "opacity": 0.55,
+          "rotationDeg": -30,
+          "layer": "above"
+        },
+        {
+          "type": "stripes",
+          "x": 0.77,
+          "y": 0.74,
+          "w": 0.22,
+          "h": 0.05,
+          "color": "#FFFFFF",
+          "opacity": 0.35,
+          "rotationDeg": -30,
+          "layer": "above",
+          "count": 6
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="528" height="688" viewBox="0 0 528 688">
+<rect width="100%" height="100%" fill="#E4DED5"/>
+<defs>
+<linearGradient id="g0" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F2B8A0"/><stop offset="1" stop-color="#7A293B"/></linearGradient>
+<linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#A9C6D8"/><stop offset="1" stop-color="#3C5A72"/></linearGradient>
+<linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4D58D"/><stop offset="1" stop-color="#C46A3D"/></linearGradient>
+<linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B9D4B0"/><stop offset="1" stop-color="#4C7A5A"/></linearGradient>
+<clipPath id="card"><rect x="24" y="24" width="480" height="640" rx="4"/></clipPath>
+<clipPath id="p0"><rect x="48" y="49.6" width="432" height="332.8" rx="0"/></clipPath>
+<clipPath id="p1"><rect x="48" y="392" width="211.2" height="140.8" rx="0"/></clipPath>
+<clipPath id="p2"><rect x="268.8" y="392" width="211.2" height="140.8" rx="0"/></clipPath>
+<filter id="sh" x="-5%" y="-5%" width="110%" height="110%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.18"/></filter></defs>
+<rect x="24" y="24" width="480" height="640" rx="4" fill="#FFFFFF" filter="url(#sh)"/>
+<g clip-path="url(#card)">
+<rect x="192" y="539.84" width="144" height="0.96" fill="#7A293B" opacity="0.6"/>
+<g clip-path="url(#p0)">
+<rect x="48" y="49.6" width="432" height="332.8" fill="url(#g0)"/>
+<circle cx="359.04" cy="149.44" r="36.61" fill="#FFFFFF" opacity="0.55"/>
+<path d="M69.6 382.4 L212.16 222.66 L359.04 382.4 Z" fill="#000" opacity="0.22"/>
+<path d="M242.4 382.4 L359.04 255.94 L480 382.4 Z" fill="#000" opacity="0.32"/>
+</g>
+<g clip-path="url(#p1)">
+<rect x="48" y="392" width="211.2" height="140.8" fill="url(#g1)"/>
+<circle cx="200.06" cy="434.24" r="15.49" fill="#FFFFFF" opacity="0.55"/>
+<path d="M58.56 532.8 L128.26 465.22 L200.06 532.8 Z" fill="#000" opacity="0.22"/>
+<path d="M143.04 532.8 L200.06 479.3 L259.2 532.8 Z" fill="#000" opacity="0.32"/>
+</g>
+<g clip-path="url(#p2)">
+<rect x="268.8" y="392" width="211.2" height="140.8" fill="url(#g2)"/>
+<circle cx="420.86" cy="434.24" r="15.49" fill="#FFFFFF" opacity="0.55"/>
+<path d="M279.36 532.8 L349.06 465.22 L420.86 532.8 Z" fill="#000" opacity="0.22"/>
+<path d="M363.84 532.8 L420.86 479.3 L480 532.8 Z" fill="#000" opacity="0.32"/>
+</g>
+<rect x="57.6" y="545.6" width="412.8" height="41.6" fill="none" stroke="#00A0FF" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.35" class="guide"/>
+<text x="264" y="566.4" text-anchor="middle" dominant-baseline="central" font-family="Gelasio, Georgia, serif" font-size="29.33" font-weight="700" fill="#7A293B">Fin de semana</text>
+<rect x="57.6" y="587.2" width="412.8" height="32" fill="none" stroke="#00A0FF" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.35" class="guide"/>
+<text x="264" y="603.2" text-anchor="middle" dominant-baseline="central" font-family="Caveat, 'Bradley Hand', 'Segoe Script', cursive" font-size="32" font-weight="400" fill="#2B2221">Una historia para guardar</text>
+<rect x="57.6" y="622.4" width="412.8" height="25.6" fill="none" stroke="#00A0FF" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.35" class="guide"/>
+<text x="264" y="635.2" text-anchor="middle" dominant-baseline="central" font-family="-apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="17.33" font-weight="400" fill="#8A7F7A">8 oct 2026</text>
+</g></svg>
