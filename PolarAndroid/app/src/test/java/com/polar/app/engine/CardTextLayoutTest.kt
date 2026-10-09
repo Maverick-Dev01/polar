@@ -70,4 +70,23 @@ class CardTextLayoutTest {
         val roles = items(project(TemplateStyle.INSTAGRAM), 0).mapNotNull { it.role }
         assertEquals(listOf(TextRole.TITLE, TextRole.CAPTION), roles)
     }
+
+    @Test
+    fun cardDesignOverrideDrivesItsOwnTextsOnOldDesigns() {
+        val base = project(TemplateStyle.POLAROID)
+        for ((style, roles) in listOf(
+            TemplateStyle.SPOTIFY to listOf(TextRole.SONG, TextRole.ARTIST),
+            TemplateStyle.TICKET to listOf(TextRole.TITLE, TextRole.SUBTITLE),
+            TemplateStyle.POLAROID to listOf(TextRole.TITLE, TextRole.SUBTITLE)
+        )) {
+            val p = ProjectEdits.setCardDesign(base, 1, style)
+            assertEquals(style, p.settingsForCard(1).style)
+            assertEquals(1, p.firstSlotOfCard(1))
+            assertEquals(roles, items(p, 1).mapNotNull { it.role })
+            assertEquals(listOf(TextRole.TITLE, TextRole.SUBTITLE), items(p, 0).map { it.role }) // la tarjeta 0 sigue siendo Polaroid
+        }
+        val ticket = items(ProjectEdits.setCardDesign(base, 1, TemplateStyle.TICKET), 1)
+        assertTrue(ticket.any { it.role == null && it.text == "POLAR" })
+        assertEquals("Nº 002", ticket.first { it.text.startsWith("Nº") }.text)
+    }
 }

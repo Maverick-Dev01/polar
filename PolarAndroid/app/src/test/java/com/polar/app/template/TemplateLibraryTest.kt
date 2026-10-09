@@ -87,4 +87,17 @@ class TemplateLibraryTest {
         assertEquals("Nuevo", library.get(a.id)!!.name)
         assertEquals(a.sha256, library.get(a.id)!!.sha256)
     }
+
+    @Test fun unknownExtensionIsStoredAsPngAndJpgIsKept() {
+        val load = analyze("molde-rects.png")
+        val odd = File(tmp.root, "x.exe").also { SharedFixtures.file("moldes/molde-rects.png").copyTo(it) }
+        val jpg = File(tmp.root, "y.JPG").also { SharedFixtures.file("moldes/molde-rects.png").copyTo(it) }
+        assertEquals("molde.png", library.save("a", odd, load.template.regions, load.fingerprint!!, 1, 1).fileName)
+        assertEquals("molde.jpg", library.save("b", jpg, load.template.regions, load.fingerprint!!, 1, 1).fileName)
+    }
+
+    @Test fun renameLeavesNoTemporaryFiles() {
+        val a = save("molde-rects.png"); library.rename(a.id, "Otro")
+        assertEquals(setOf("meta.json", "molde.png"), File(tmp.root, "templates/${a.id}").list()!!.toSet())
+    }
 }

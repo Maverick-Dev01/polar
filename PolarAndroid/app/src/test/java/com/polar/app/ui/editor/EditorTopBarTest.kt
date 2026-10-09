@@ -51,11 +51,11 @@ class EditorTopBarTest {
         show()
         compose.onNodeWithContentDescription("Volver a tus diseños").assertExists()
         compose.onNodeWithContentDescription("Más opciones").assertExists()
-        compose.onNodeWithText("Imprimir").assertExists()
+        compose.onNodeWithContentDescription("Imprimir").assertExists()
         assertNoOverlap(bounds("Volver a tus diseños"), bounds("Deshacer"), bounds("Rehacer"), bounds("Más opciones"),
-            compose.onNodeWithText("Imprimir").fetchSemanticsNode().boundsInRoot)
+            compose.onNodeWithContentDescription("Imprimir").fetchSemanticsNode().boundsInRoot)
         compose.onNodeWithContentDescription("Rehacer").performClick()
-        compose.onNodeWithText("Imprimir").performClick()
+        compose.onNodeWithContentDescription("Imprimir").performClick()
         assertEquals(listOf("rehacer", "imprimir"), log)
     }
 
@@ -64,7 +64,7 @@ class EditorTopBarTest {
     fun narrowBarWithLargeFontMovesRedoToMenuAndNothingOverlaps() {
         show(fontScale = 1.3f)
         compose.onNodeWithContentDescription("Rehacer").assertDoesNotExist()
-        val print = compose.onNodeWithText("Imprimir").fetchSemanticsNode().boundsInRoot
+        val print = compose.onNodeWithContentDescription("Imprimir").fetchSemanticsNode().boundsInRoot
         assertNoOverlap(bounds("Volver a tus diseños"), bounds("Deshacer"), bounds("Más opciones"), print)
         assertTrue("Imprimir debe caber en pantalla", print.right <= 360f * compose.density.density + 1f)
         compose.onNodeWithContentDescription("Guardado").assertExists()

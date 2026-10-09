@@ -32,6 +32,7 @@ data class TemplateMatch(val template: SavedTemplate, val distance: Int, val sam
  */
 class TemplateLibrary(root: File, private val clock: () -> Double = SwiftDate::now) {
     private val dir = File(root, "templates")
+    private companion object { val ALLOWED_EXTENSIONS = setOf("png", "jpg", "jpeg", "webp") }
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true; prettyPrint = true }
 
     fun imageFile(t: SavedTemplate): File = File(File(dir, t.id), t.fileName)
@@ -54,10 +55,11 @@ class TemplateLibrary(root: File, private val clock: () -> Double = SwiftDate::n
         val staging = File(dir, ".$id.tmp")
         try {
             staging.mkdirs()
-            val fileName = if (source.extension.lowercase() == "png") "molde.png" else "molde.${source.extension.lowercase().ifBlank { "img" }}"
+            val ext = source.extension.lowercase().takeIf { it in ALLOWED_EXTENSIONS } ?: "png" // la imagen se reconoce por su contenido
+            val fileName = "molde.$ext"
             source.copyTo(File(staging, fileName), overwrite = true)
             val meta = SavedTemplate(id, name.trim(), fingerprint.dhashHex, fingerprint.sha256, regions, clock(), fileName, pixelWidth, pixelHeight)
-            File(staging, "meta.json").writeText(json.encodeToString(SavedTemplate.serializer(), meta))
+            writeMeta(File(staging, "meta.json"), meta)
             if (!staging.renameTo(target)) throw IOException("No se pudo guardar el molde")
             return meta
         } finally {
@@ -68,7 +70,16 @@ class TemplateLibrary(root: File, private val clock: () -> Double = SwiftDate::n
     @Synchronized
     fun rename(id: String, name: String) {
         val t = get(id) ?: return
-        File(File(dir, id), "meta.json").writeText(json.encodeToString(SavedTemplate.serializer(), t.copy(name = name.trim())))
+        writeMeta(File(File(dir, id), "meta.json"), t.copy(name = name.trim()))
+    }
+
+    /** Escribe a un temporal y lo renombra: un corte a medias nunca deja un meta.json truncado. */
+    private fun writeMeta(target: File, meta: SavedTemplate) {
+        val tmp = File(target.parentFile, ".${target.name}.${System.nanoTime()}.tmp")
+        try {
+            tmp.writeText(json.encodeToString(SavedTemplate.serializer(), meta))
+            java.nio.file.Files.move(tmp.toPath(), target.toPath(), java.nio.file.StandardCopyOption.ATOMIC_MOVE, java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+        } finally { tmp.delete() }
     }
 
     @Synchronized

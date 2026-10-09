@@ -51,7 +51,7 @@ fun EditorTopBar(name: String, styleName: String, status: String, statusKind: Sa
             navigationIcon = { IconButton(onClick = actions.onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.editor_back)) } },
             title = {
                 Column(Modifier.clickable(onClick = actions.onRename)) {
-                    Text(name, style = MaterialTheme.typography.titleMedium, maxLines = if (narrow) 1 else 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.semantics { contentDescription = name })
+                    Text(name, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.semantics { contentDescription = name })
                     if (narrow) {
                         // Estrecho: el estado va como ícono (nunca «Guarda…»); el lector de pantalla lo dice completo.
                         Icon(
@@ -79,7 +79,9 @@ fun EditorTopBar(name: String, styleName: String, status: String, statusKind: Sa
                         DropdownMenuItem({ Text(stringResource(R.string.editor_rename)) }, { menu = false; actions.onRename() })
                     }
                 }
-                Button(onClick = actions.onPrint, contentPadding = PaddingValues(horizontal = 12.dp), modifier = Modifier.heightIn(min = 48.dp).padding(end = 8.dp)) {
+                if (narrow) FilledIconButton(onClick = actions.onPrint, modifier = Modifier.padding(end = 8.dp).size(48.dp)) {
+                    Icon(Icons.Outlined.Print, stringResource(R.string.editor_print))
+                } else Button(onClick = actions.onPrint, contentPadding = PaddingValues(horizontal = 12.dp), modifier = Modifier.heightIn(min = 48.dp).padding(end = 8.dp)) {
                     Icon(Icons.Outlined.Print, null, Modifier.size(20.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(R.string.editor_print), maxLines = 1)
