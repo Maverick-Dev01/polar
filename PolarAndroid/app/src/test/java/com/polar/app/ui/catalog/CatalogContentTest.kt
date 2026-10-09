@@ -30,7 +30,7 @@ class CatalogContentTest {
 
     @Test fun searchWithoutResultsShowsUsefulEmptyStateAndShowAllRecovers() {
         show()
-        compose.onNodeWithText("Buscar diseños").performTextInput("zzzqq")
+        compose.onNodeWithText("Buscar diseño").performTextInput("zzzqq")
         compose.onNodeWithText("No hay diseños con «zzzqq»").assertIsDisplayed()
         compose.onNodeWithText("Ver todos", useUnmergedTree = true).performClick()
         compose.onNodeWithText("Polaroid").assertIsDisplayed()

@@ -2,15 +2,40 @@
   "version": 1,
   "nota": "Contenido único de la guía de Polar (Android y Mac). Se copia al compilar. Tipografía: «comillas», sin jerga. Verbos neutros (elige, pulsa) para que sirvan en las dos apps.",
   "categorias": [
-    { "id": "empezar", "titulo": "Empezar" },
-    { "id": "fotos", "titulo": "Fotos" },
-    { "id": "texto", "titulo": "Texto" },
-    { "id": "diseno", "titulo": "Diseño y moldes" },
-    { "id": "imprimir", "titulo": "Imprimir" }
+    {
+      "id": "empezar",
+      "titulo": "Empezar"
+    },
+    {
+      "id": "fotos",
+      "titulo": "Fotos"
+    },
+    {
+      "id": "texto",
+      "titulo": "Texto"
+    },
+    {
+      "id": "diseno",
+      "titulo": "Diseño y moldes"
+    },
+    {
+      "id": "imprimir",
+      "titulo": "Imprimir"
+    }
   ],
   "destinos": [
-    "inicio", "catalogo", "editor.fotos", "editor.filtros", "editor.diseno", "editor.texto",
-    "editor.papel", "editor.encuadrar", "terminar", "ajustes", "moldes.asistente", "mis-moldes"
+    "inicio",
+    "catalogo",
+    "editor.fotos",
+    "editor.filtros",
+    "editor.diseno",
+    "editor.texto",
+    "editor.papel",
+    "editor.encuadrar",
+    "terminar",
+    "ajustes",
+    "moldes.asistente",
+    "mis-moldes"
   ],
   "destinosNota": "Cada destino debe poder abrirse en las dos apps. editor.* abre el diseño actual (o el más reciente) con ese panel; editor.encuadrar abre Encuadrar en la primera foto; terminar abre la pantalla Terminar; moldes.asistente abre el asistente de importación; mis-moldes abre la categoría «Mis moldes» del catálogo.",
   "animaciones": {
@@ -26,253 +51,669 @@
     "bg-remove": "Una persona sobre un fondo; el fondo se desvanece y queda un cuadro de tablero."
   },
   "recorrido": [
-    { "id": "fotos", "objetivo": "tool.fotos", "animacion": "tap", "titulo": "Pon tus fotos aquí", "texto": "En Fotos agregas fotos sueltas o una carpeta entera. Se acomodan solas en la hoja." },
-    { "id": "hoja", "objetivo": "hoja", "animacion": "swipe", "titulo": "Toca una tarjeta para editarla", "texto": "Elige una tarjeta de la hoja para cambiar su foto, encuadrarla o darle su propio texto." },
-    { "id": "texto", "objetivo": "tool.texto", "animacion": "text-type", "titulo": "Escribe tu texto", "texto": "En Texto cambias títulos, fechas y frases. Puedes hacerlo para todas las tarjetas o solo para una." },
-    { "id": "filtros", "objetivo": "tool.filtros", "animacion": "filter-swap", "titulo": "Dale un toque a tus fotos", "texto": "En Filtros pruebas blanco y negro, sepia y más. Mantén pulsada la hoja para comparar con el original." },
-    { "id": "imprimir", "objetivo": "top.imprimir", "animacion": "print", "titulo": "Imprime o comparte", "texto": "Imprimir te lleva a Terminar: revisa, elige la calidad y guarda el PDF o imprime a tamaño real." }
+    {
+      "id": "fotos",
+      "objetivo": "tool.fotos",
+      "animacion": "tap",
+      "titulo": "Pon tus fotos aquí",
+      "texto": "En Fotos agregas fotos sueltas o una carpeta entera. Se acomodan solas en la hoja."
+    },
+    {
+      "id": "hoja",
+      "objetivo": "hoja",
+      "animacion": "swipe",
+      "titulo": "Toca una tarjeta para editarla",
+      "texto": "Elige una tarjeta de la hoja para cambiar su foto, encuadrarla o darle su propio texto."
+    },
+    {
+      "id": "texto",
+      "objetivo": "tool.texto",
+      "animacion": "text-type",
+      "titulo": "Escribe tu texto",
+      "texto": "En Texto cambias títulos, fechas y frases. Puedes hacerlo para todas las tarjetas o solo para una."
+    },
+    {
+      "id": "filtros",
+      "objetivo": "tool.filtros",
+      "animacion": "filter-swap",
+      "titulo": "Dale un toque a tus fotos",
+      "texto": "En Filtros pruebas blanco y negro, sepia y más, y ves cómo queda en la hoja.",
+      "textoAndroid": "En Filtros pruebas blanco y negro, sepia y más. Mantén pulsada la hoja para comparar con el original.",
+      "textoMac": "En Filtros pruebas blanco y negro, sepia y más. Mantén presionado «Comparar» o la barra espaciadora para ver el original."
+    },
+    {
+      "id": "imprimir",
+      "objetivo": "top.imprimir",
+      "animacion": "print",
+      "titulo": "Imprime o comparte",
+      "texto": "Imprimir te lleva a Terminar: revisa, elige la calidad y guarda el PDF o imprime a tamaño real."
+    }
   ],
   "controles": [
-    { "id": "top.back", "titulo": "Volver", "texto": "Regresa a tus diseños. Todo se guarda solo." },
-    { "id": "top.nombre", "titulo": "Nombre del diseño", "texto": "Pulsa el nombre para cambiarlo. Debajo ves si ya se guardó." },
-    { "id": "top.deshacer", "titulo": "Deshacer", "texto": "Quita el último cambio. Puedes deshacer varios pasos seguidos." },
-    { "id": "top.rehacer", "titulo": "Rehacer", "texto": "Vuelve a poner el cambio que acabas de deshacer." },
-    { "id": "top.mas", "titulo": "Más opciones", "texto": "Seleccionar varias fotos, agregar, vaciar o quitar una hoja, cambiar el nombre y abrir esta ayuda." },
-    { "id": "top.imprimir", "titulo": "Imprimir", "texto": "Abre Terminar: revisa tu diseño, elige la calidad y guarda el PDF, la imagen o imprime." },
-    { "id": "tool.fotos", "titulo": "Fotos", "texto": "Agrega fotos sueltas o una carpeta, y rellena la hoja con un solo paso." },
-    { "id": "tool.filtros", "titulo": "Filtros", "texto": "Cambia el aspecto de las fotos: blanco y negro, sepia, luz, contraste y grano." },
-    { "id": "tool.diseno", "titulo": "Diseño", "texto": "Cambia el diseño, el color, cuántas tarjetas caben por hoja y la forma de cada tarjeta." },
-    { "id": "tool.texto", "titulo": "Texto", "texto": "Escribe o cambia los textos, elige letra y color, y usa frases listas." },
-    { "id": "tool.papel", "titulo": "Papel", "texto": "Elige el tamaño de la hoja, la orientación, el margen y las marcas de corte." },
-    { "id": "hoja", "titulo": "La hoja", "texto": "Así saldrá impresa. Toca una tarjeta para elegirla; desliza para ver las otras hojas." },
-    { "id": "hoja.paginas", "titulo": "Cambiar de hoja", "texto": "Pasa a la hoja anterior o a la siguiente. Los puntos muestran en cuál estás." },
-    { "id": "ctx", "titulo": "Acciones de la tarjeta", "texto": "Cambiar la foto, Encuadrar, Quitar fondo, Girar, darle su propio Texto o Quitar la foto. Solo afectan a la tarjeta elegida." },
-    { "id": "cta.fotos", "titulo": "Agregar fotos", "texto": "Elige las fotos de tu galería. Se acomodan solas en la hoja." },
-    { "id": "panel.fotos", "titulo": "Panel de Fotos", "texto": "Aquí ves todas tus fotos. Pulsa una para ponerla en la tarjeta elegida, o usa Rellenar todo." },
-    { "id": "panel.filtros", "titulo": "Panel de Filtros", "texto": "Elige un filtro y ajusta su intensidad. Puedes aplicarlo a todas las fotos, a una hoja o a una sola foto." },
-    { "id": "panel.diseno", "titulo": "Panel de Diseño", "texto": "Cambia de diseño, color y estilo rápido, y elige cuántas tarjetas van por hoja." },
-    { "id": "panel.texto", "titulo": "Panel de Texto", "texto": "Escribe los textos del diseño. Elige «Todas las tarjetas» o una sola, y ajusta letra, tamaño y color." },
-    { "id": "panel.papel", "titulo": "Panel de Papel", "texto": "Tamaño de hoja, orientación, margen, borde de las tarjetas y marcas de corte." }
+    {
+      "id": "top.back",
+      "titulo": "Volver",
+      "texto": "Regresa a tus diseños. Todo se guarda solo."
+    },
+    {
+      "id": "top.nombre",
+      "titulo": "Nombre del diseño",
+      "texto": "Elige el nombre para cambiarlo. Debajo ves si ya se guardó."
+    },
+    {
+      "id": "top.deshacer",
+      "titulo": "Deshacer",
+      "texto": "Quita el último cambio. Puedes deshacer varios pasos seguidos."
+    },
+    {
+      "id": "top.rehacer",
+      "titulo": "Rehacer",
+      "texto": "Vuelve a poner el cambio que acabas de deshacer."
+    },
+    {
+      "id": "top.mas",
+      "titulo": "Más opciones",
+      "texto": "Seleccionar varias fotos, agregar, vaciar o quitar una hoja, cambiar el nombre y abrir esta ayuda."
+    },
+    {
+      "id": "top.imprimir",
+      "titulo": "Imprimir",
+      "texto": "Abre Terminar: revisa tu diseño, elige la calidad y guarda el PDF, la imagen o imprime."
+    },
+    {
+      "id": "tool.fotos",
+      "titulo": "Fotos",
+      "texto": "Agrega fotos sueltas o una carpeta, y rellena la hoja con un solo paso."
+    },
+    {
+      "id": "tool.filtros",
+      "titulo": "Filtros",
+      "texto": "Cambia el aspecto de las fotos: blanco y negro, sepia, luz, contraste y grano."
+    },
+    {
+      "id": "tool.diseno",
+      "titulo": "Diseño",
+      "texto": "Cambia el diseño, el color, cuántas tarjetas caben por hoja y la forma de cada tarjeta."
+    },
+    {
+      "id": "tool.texto",
+      "titulo": "Texto",
+      "texto": "Escribe o cambia los textos, elige letra y color, y usa frases listas."
+    },
+    {
+      "id": "tool.papel",
+      "titulo": "Papel",
+      "texto": "Elige el tamaño de la hoja, la orientación, el margen y las marcas de corte."
+    },
+    {
+      "id": "hoja",
+      "titulo": "La hoja",
+      "texto": "Así saldrá impresa. Toca una tarjeta para elegirla; desliza para ver las otras hojas."
+    },
+    {
+      "id": "hoja.paginas",
+      "titulo": "Cambiar de hoja",
+      "texto": "Pasa a la hoja anterior o a la siguiente. Los puntos muestran en cuál estás."
+    },
+    {
+      "id": "ctx",
+      "titulo": "Acciones de la tarjeta",
+      "texto": "Cambiar la foto, Encuadrar, Quitar fondo, Girar, darle su propio Texto o Quitar la foto. Solo afectan a la tarjeta elegida."
+    },
+    {
+      "id": "cta.fotos",
+      "titulo": "Agregar fotos",
+      "texto": "Elige las fotos de tu galería. Se acomodan solas en la hoja."
+    },
+    {
+      "id": "panel.fotos",
+      "titulo": "Panel de Fotos",
+      "texto": "Aquí ves todas tus fotos. Elige una para ponerla en la tarjeta elegida, o usa Rellenar todo."
+    },
+    {
+      "id": "panel.filtros",
+      "titulo": "Panel de Filtros",
+      "texto": "Elige un filtro y ajusta su intensidad. Puedes aplicarlo a todas las fotos, a una hoja o a una sola foto."
+    },
+    {
+      "id": "panel.diseno",
+      "titulo": "Panel de Diseño",
+      "texto": "Cambia de diseño, color y estilo rápido, y elige cuántas tarjetas van por hoja."
+    },
+    {
+      "id": "panel.texto",
+      "titulo": "Panel de Texto",
+      "texto": "Escribe los textos del diseño. Elige «Todas las tarjetas» o una sola, y ajusta letra, tamaño y color."
+    },
+    {
+      "id": "panel.papel",
+      "titulo": "Panel de Papel",
+      "texto": "Tamaño de hoja, orientación, margen, borde de las tarjetas y marcas de corte."
+    }
   ],
   "articulos": [
     {
-      "id": "crear-diseno", "categoria": "empezar", "animacion": "tap", "destino": "catalogo",
+      "id": "crear-diseno",
+      "categoria": "empezar",
+      "animacion": "tap",
+      "destino": "catalogo",
       "titulo": "Crear un diseño",
       "resumen": "Elige un diseño y empieza con tus fotos en menos de un minuto.",
       "pasos": [
-        "En Inicio pulsa «Nuevo diseño».",
-        "Mira las categorías o escribe en «Buscar diseños». No importan los acentos ni las mayúsculas.",
-        "Pulsa el diseño que te guste: Polaroid, Fotomatón, Vinilo, Casete, Collage, Cinta washi y muchos más.",
+        "En Inicio elige «Nuevo diseño».",
+        "Mira las categorías o escribe en «Buscar diseño». No importan los acentos ni las mayúsculas.",
+        "Elige el diseño que te guste: Polaroid, Fotomatón, Vinilo, Casete, Collage, Cinta washi y muchos más.",
         "Se abre el editor. Si luego cambias de idea, usa «Cambiar diseño» en el panel Diseño: tus fotos y textos se conservan."
       ],
-      "palabras": ["nuevo", "plantilla", "empezar", "buscar", "catalogo", "molde", "estilo"]
+      "pasosMac": [
+        "Abre un proyecto o crea uno nuevo.",
+        "En la barra «Elige un diseño», selecciona el que te guste: Polaroid, Fotomatón, Vinilo, Casete, Collage, Cinta washi y muchos más.",
+        "Para encontrar uno rápido, escribe en «Buscar diseño». No importan los acentos ni las mayúsculas.",
+        "Puedes cambiar de diseño cuando quieras: tus fotos y textos se conservan."
+      ],
+      "palabras": [
+        "nuevo",
+        "plantilla",
+        "empezar",
+        "buscar",
+        "catalogo",
+        "molde",
+        "estilo"
+      ]
     },
     {
-      "id": "deshacer", "categoria": "empezar", "animacion": "tap", "destino": null,
+      "id": "deshacer",
+      "categoria": "empezar",
+      "animacion": "tap",
+      "destino": null,
       "titulo": "Deshacer y rehacer",
       "resumen": "Si algo no te gusta, regresa un paso. Y si te arrepientes, lo vuelves a poner.",
       "pasos": [
-        "Arriba, en el editor, pulsa la flecha «Deshacer» para quitar el último cambio.",
-        "Pulsa «Rehacer» para volver a ponerlo. En pantallas angostas, Rehacer está en «Más opciones».",
-        "Al borrar una foto o vaciar una hoja también aparece «Deshacer» en el aviso de abajo.",
+        "Arriba, en el editor, elige «Deshacer» para quitar el último cambio.",
+        "Elige «Rehacer» para volver a ponerlo.",
         "Los cambios continuos, como mover un control deslizante, cuentan como un solo paso."
       ],
-      "palabras": ["undo", "redo", "regresar", "borrar", "arrepentir", "atras"]
+      "pasosAndroid": [
+        "Arriba, en el editor, elige «Deshacer» para quitar el último cambio.",
+        "Elige «Rehacer» para volver a ponerlo. En pantallas angostas o con letra grande, «Rehacer» está en «Más opciones».",
+        "Al quitar una foto o vaciar una hoja también aparece «Deshacer» en el aviso de abajo.",
+        "Los cambios continuos, como mover un control deslizante, cuentan como un solo paso."
+      ],
+      "palabras": [
+        "undo",
+        "redo",
+        "regresar",
+        "borrar",
+        "arrepentir",
+        "atras"
+      ]
     },
     {
-      "id": "abrir-otra-plataforma", "categoria": "empezar", "animacion": "tap", "destino": "catalogo",
+      "id": "abrir-otra-plataforma",
+      "categoria": "empezar",
+      "animacion": "tap",
+      "destino": "inicio",
       "titulo": "Abrir un diseño de la Mac o del teléfono",
       "resumen": "Los diseños de Polar son los mismos en Mac y en Android.",
       "pasos": [
-        "En el otro dispositivo, comparte tu diseño como archivo «.polar» (ver «Compartir y guardar un archivo .polar»).",
+        "En el otro dispositivo, elige «Compartir archivo .polar» (mira el artículo sobre compartir y guardar un archivo .polar).",
         "Envíatelo por correo, mensaje o Drive.",
-        "En este dispositivo, ve a «Nuevo diseño» y pulsa «Abrir archivo .polar».",
-        "Verás tus fotos, textos y filtros como los dejaste. Si una fuente no existe aquí, Polar usa una parecida."
+        "En este dispositivo, en Inicio, elige «Abrir archivo .polar».",
+        "Verás tus fotos, textos y filtros como los dejaste. Si una fuente no existe en este dispositivo, Polar usa una parecida."
       ],
-      "palabras": ["mac", "android", "telefono", "compatibilidad", "sincronizar", "pasar", "polar", "otra plataforma"]
+      "palabras": [
+        "mac",
+        "android",
+        "telefono",
+        "compatibilidad",
+        "sincronizar",
+        "pasar",
+        "polar",
+        "otra plataforma"
+      ]
     },
     {
-      "id": "agregar-fotos", "categoria": "fotos", "animacion": "fill", "destino": "editor.fotos",
+      "id": "agregar-fotos",
+      "categoria": "fotos",
+      "animacion": "fill",
+      "destino": "editor.fotos",
       "titulo": "Agregar fotos y carpetas",
       "resumen": "Pon fotos sueltas o una carpeta completa y deja que Polar las acomode.",
       "pasos": [
         "Abre el panel «Fotos».",
-        "Pulsa «Agregar» para elegir fotos sueltas, o «Agregar carpeta» para traer todas las de una carpeta (hasta 500, ordenadas por nombre).",
-        "Al terminar, Polar te dice cuántas fotos agregó y cuántos archivos ignoró por no ser fotos.",
-        "Pulsa «Rellenar todo» para acomodarlas en la hoja. Si lo prefieres, elige una tarjeta y pulsa una foto."
+        "Elige «Agregar fotos» para fotos sueltas o «Agregar carpeta» para traer todas las de una carpeta.",
+        "Polar te dice cuántas fotos agregó y cuántas no se pudieron leer.",
+        "Elige «Rellenar todo» para acomodarlas en la hoja. Si lo prefieres, selecciona una tarjeta y elige una foto del panel."
       ],
-      "palabras": ["subir", "importar", "galeria", "carpeta", "rellenar", "acomodar", "seleccionar"]
+      "pasosAndroid": [
+        "Abre el panel «Fotos».",
+        "Elige «Agregar fotos» para fotos sueltas o «Agregar carpeta» para traer todas las de una carpeta (hasta 500, en orden por nombre).",
+        "Al terminar, Polar te dice cuántas fotos agregó y cuántas no se pudieron leer, y cuántos archivos ignoró por no ser fotos. Si la carpeta tiene más de 500, agrega las primeras y avisa que el resto se omitió; las fotos HEIC que este Android no abre se avisan aparte.",
+        "Elige «Rellenar todo» para acomodarlas en la hoja. Si lo prefieres, toca una tarjeta y elige una foto del panel."
+      ],
+      "pasosMac": [
+        "Abre el panel «Fotos».",
+        "Elige «Agregar fotos» para fotos sueltas o «Agregar carpeta» para traer todas las de una carpeta.",
+        "Polar te dice cuántas fotos agregó.",
+        "Elige «Rellenar todo» para acomodarlas en la hoja. Si lo prefieres, selecciona una tarjeta y elige una foto del panel."
+      ],
+      "palabras": [
+        "subir",
+        "importar",
+        "galeria",
+        "carpeta",
+        "rellenar",
+        "acomodar",
+        "seleccionar"
+      ]
     },
     {
-      "id": "cambiar-foto", "categoria": "fotos", "animacion": "tap", "destino": "editor.fotos",
+      "id": "cambiar-foto",
+      "categoria": "fotos",
+      "animacion": "tap",
+      "destino": "editor.fotos",
       "titulo": "Cambiar la foto de una tarjeta",
       "resumen": "Cambia una foto por otra, gírala o quítala sin tocar las demás.",
       "pasos": [
+        "Selecciona una tarjeta de la hoja.",
+        "Cambia su foto con el panel Fotos, gírala o quítala sin tocar las demás.",
+        "Si te arrepientes, elige «Deshacer»."
+      ],
+      "pasosAndroid": [
         "Toca una tarjeta de la hoja.",
         "Abajo aparecen sus acciones: «Cambiar», «Encuadrar», «Quitar fondo», «Girar», «Texto» y «Quitar».",
-        "Pulsa «Cambiar» y luego la foto nueva en el panel Fotos.",
-        "Para quitar la foto de una tarjeta pulsa «Quitar»; siempre puedes deshacerlo."
+        "Elige «Cambiar» y luego la foto nueva en el panel Fotos.",
+        "Para quitar la foto de una tarjeta elige «Quitar»; siempre puedes elegir «Deshacer»."
       ],
-      "palabras": ["reemplazar", "sustituir", "girar", "rotar", "quitar foto", "tarjeta"]
+      "palabras": [
+        "reemplazar",
+        "sustituir",
+        "girar",
+        "rotar",
+        "quitar foto",
+        "tarjeta"
+      ]
     },
     {
-      "id": "encuadrar", "categoria": "fotos", "animacion": "crop-ring", "destino": "editor.encuadrar",
+      "id": "encuadrar",
+      "categoria": "fotos",
+      "animacion": "crop-ring",
+      "destino": "editor.encuadrar",
       "titulo": "Encuadrar una foto",
       "resumen": "Elige qué parte de la foto se ve dentro de la tarjeta.",
       "pasos": [
-        "Toca la tarjeta y pulsa «Encuadrar».",
-        "Mueve la foto con el dedo o el cursor y usa «Acercar» para ampliar.",
+        "Selecciona la tarjeta y elige «Encuadrar».",
+        "Mueve la foto y usa «Acercar» para ampliar.",
         "Mira el aviso de calidad: te dice si la foto se imprimirá nítida o con poca resolución.",
-        "Pulsa «Restablecer» para volver al encuadre original y «Listo» para guardar."
+        "Elige «Restablecer» para volver al encuadre original y «Listo» para guardar."
       ],
-      "palabras": ["recortar", "zoom", "acercar", "mover", "centrar", "ajustar", "encuadre"]
+      "pasosAndroid": [
+        "Toca la tarjeta y elige «Encuadrar».",
+        "Mueve la foto con el dedo y usa «Acercar» para ampliar.",
+        "Mira el aviso de calidad: te dice si la foto se imprimirá nítida o con poca resolución.",
+        "Elige «Restablecer» para volver al encuadre original y «Listo» para guardar."
+      ],
+      "palabras": [
+        "recortar",
+        "zoom",
+        "acercar",
+        "mover",
+        "centrar",
+        "ajustar",
+        "encuadre"
+      ]
     },
     {
-      "id": "quitar-fondo", "categoria": "fotos", "animacion": "bg-remove", "destino": "editor.encuadrar",
+      "id": "quitar-fondo",
+      "categoria": "fotos",
+      "animacion": "bg-remove",
+      "destino": "editor.encuadrar",
       "titulo": "Quitar el fondo de una foto",
       "resumen": "Deja solo a la persona o el objeto y cambia lo que hay detrás.",
       "pasos": [
-        "Toca la tarjeta y pulsa «Quitar fondo». Se abre Encuadrar en la sección «Fondo de la foto».",
-        "Espera un momento. En Android, la primera vez necesita conexión para descargar el recorte.",
-        "Elige un fondo: blanco, negro, transparente, un color o incluso otra foto.",
+        "Selecciona la tarjeta y elige «Quitar fondo».",
+        "Espera un momento mientras Polar recorta la foto.",
+        "Elige cómo quedará el fondo: blanco, negro, transparente, un color o incluso otra foto.",
+        "Ajusta el borde y la sombra. Puedes volver al fondo original cuando quieras."
+      ],
+      "pasosAndroid": [
+        "Toca la tarjeta y elige «Quitar fondo». Se abre Encuadrar en la sección «Fondo de la foto».",
+        "Espera un momento. La primera vez, Android necesita conexión y Servicios de Google Play para descargar la herramienta de recorte.",
+        "Elige un fondo: «Blanco», «Negro», «Transparente», «Color de la foto», «Otro color» o «Agregar una foto de fondo».",
         "Ajusta «Suavizar borde» o «Sombra suave». Con «Restaurar fondo original» regresas a como estaba."
       ],
-      "palabras": ["recorte", "borrar fondo", "sin fondo", "transparente", "silueta", "persona", "sombra"]
+      "palabras": [
+        "recorte",
+        "borrar fondo",
+        "sin fondo",
+        "transparente",
+        "silueta",
+        "persona",
+        "sombra"
+      ]
     },
     {
-      "id": "filtros", "categoria": "fotos", "animacion": "filter-swap", "destino": "editor.filtros",
+      "id": "filtros",
+      "categoria": "fotos",
+      "animacion": "filter-swap",
+      "destino": "editor.filtros",
       "titulo": "Usar filtros",
       "resumen": "Dale a tus fotos un aire de película, sepia o blanco y negro.",
       "pasos": [
         "Abre el panel «Filtros».",
-        "Elige dónde aplicarlo: todas las fotos, esta hoja, varias hojas o una sola foto.",
-        "Pulsa un filtro y ajusta «Intensidad». En «Ajustes» cambias luz, contraste, calidez y grano.",
+        "Elige dónde aplicarlo: «Todo el proyecto», «Esta página», «Varias páginas» o «Esta foto».",
+        "Elige un filtro, por ejemplo «Blanco y negro» o «Sepia», y ajusta «Intensidad». En «Ajustes» cambias luz, contraste, calidez y grano.",
+        "«Quitar filtro» deja todo como estaba."
+      ],
+      "pasosAndroid": [
+        "Abre el panel «Filtros».",
+        "Elige dónde aplicarlo: «Todo el proyecto», «Esta página», «Varias páginas» o «Esta foto».",
+        "Elige un filtro, por ejemplo «Blanco y negro» o «Sepia», y ajusta «Intensidad». En «Ajustes» cambias luz, contraste, calidez y grano.",
         "Mantén pulsada la hoja para comparar con el original. «Quitar filtro» deja todo como estaba."
       ],
-      "palabras": ["efecto", "blanco y negro", "sepia", "pelicula", "grano", "vivo", "calido", "frio", "comparar"]
+      "pasosMac": [
+        "Abre el panel «Filtros».",
+        "Elige dónde aplicarlo: «Todo el proyecto», «Esta página», «Varias páginas» o «Esta foto».",
+        "Elige un filtro, por ejemplo «Blanco y negro» o «Sepia», y ajusta «Intensidad». En «Ajustes» cambias luz, contraste, calidez y grano.",
+        "Mantén presionado «Comparar» o la barra espaciadora para ver el original. «Quitar filtro» deja todo como estaba."
+      ],
+      "palabras": [
+        "efecto",
+        "blanco y negro",
+        "sepia",
+        "pelicula",
+        "grano",
+        "vivo",
+        "calido",
+        "frio",
+        "comparar"
+      ]
     },
     {
-      "id": "resolucion-fotos", "categoria": "fotos", "animacion": "crop-ring", "destino": "editor.fotos",
+      "id": "resolucion-fotos",
+      "categoria": "fotos",
+      "animacion": "crop-ring",
+      "destino": "editor.fotos",
       "titulo": "Avisos de poca resolución",
       "resumen": "Te avisamos cuando una foto es muy chica para verse nítida en papel.",
       "pasos": [
         "Una insignia «Aceptable» (ámbar) o «Baja» (roja) aparece en la foto y en la tarjeta.",
         "«Aceptable» se imprime bien pero sin la mejor nitidez. «Baja» puede verse borrosa.",
-        "Prueba una foto más grande, o pon el diseño en menos tarjetas por hoja para que cada una sea más grande.",
-        "En Terminar, pulsa «Revisar» para ir directo a la primera foto con aviso."
+        "Prueba una foto más grande, o elige menos tarjetas por hoja para que cada una sea más grande.",
+        "En Terminar, elige «Revisar» para ir directo a la primera foto con aviso."
       ],
-      "palabras": ["borrosa", "pixelada", "calidad", "baja", "aceptable", "ppp", "nitidez", "pixeles"]
+      "palabras": [
+        "borrosa",
+        "pixelada",
+        "calidad",
+        "baja",
+        "aceptable",
+        "ppp",
+        "nitidez",
+        "pixeles"
+      ]
     },
     {
-      "id": "texto-todas-o-una", "categoria": "texto", "animacion": "text-type", "destino": "editor.texto",
+      "id": "texto-todas-o-una",
+      "categoria": "texto",
+      "animacion": "text-type",
+      "destino": "editor.texto",
       "titulo": "Texto para todas las tarjetas o para una",
       "resumen": "Escribe una vez para todas, o dale a una tarjeta su propio texto.",
       "pasos": [
         "Abre el panel «Texto». Elige «Todas las tarjetas» y escribe: el cambio se ve en toda la hoja.",
-        "Para una sola, toca la tarjeta y elige «Solo tarjeta N», o pulsa «Texto» en sus acciones.",
-        "Las demás tarjetas siguen con el texto general. «Volver al texto general» deshace el texto propio.",
-        "Cambia letra, tamaño (Auto, Chica, Mediana, Grande) y color. «Mostrar este texto» lo oculta."
+        "Para una sola, selecciona la tarjeta y elige «Sólo tarjeta N».",
+        "Las demás tarjetas siguen con el texto general. «Volver al texto general» quita el texto propio.",
+        "Cambia letra, tamaño («Auto», «Chica», «Mediana» o «Grande») y color. «Mostrar este texto» lo oculta."
       ],
-      "palabras": ["titulo", "escribir", "letra", "fuente", "tipografia", "tamano", "color", "negrita", "cursiva", "alinear", "tarjeta"]
+      "pasosAndroid": [
+        "Abre el panel «Texto». Elige «Todas las tarjetas» y escribe: el cambio se ve en toda la hoja.",
+        "Para una sola, toca la tarjeta y elige «Sólo tarjeta N», o elige «Texto» en las acciones de la tarjeta.",
+        "Las demás tarjetas siguen con el texto general. «Volver al texto general» quita el texto propio.",
+        "Cambia letra, tamaño («Auto», «Chica», «Mediana» o «Grande») y color. «Mostrar este texto» lo oculta."
+      ],
+      "palabras": [
+        "titulo",
+        "escribir",
+        "letra",
+        "fuente",
+        "tipografia",
+        "tamano",
+        "color",
+        "negrita",
+        "cursiva",
+        "alinear",
+        "tarjeta"
+      ]
     },
     {
-      "id": "frases", "categoria": "texto", "animacion": "text-type", "destino": "editor.texto",
+      "id": "frases",
+      "categoria": "texto",
+      "animacion": "text-type",
+      "destino": "editor.texto",
       "titulo": "Usar frases listas",
-      "resumen": "Más de cien frases originales para tus recuerdos, listas para adaptar.",
+      "resumen": "120 frases originales para tus recuerdos, listas para adaptar.",
       "pasos": [
-        "En el panel «Texto» pulsa «Frases sugeridas».",
-        "Busca por tema o palabra, o recorre las categorías.",
-        "Elige una frase y edítala si quieres. Con «Usar selección» imprimes solo el fragmento que marcaste.",
+        "En el panel «Texto» elige «Frases sugeridas».",
+        "Busca por tema o palabra en «Buscar tema o palabras», o recorre las categorías.",
+        "Elige una frase y edítala si quieres. «Usar selección (N)» imprime solo el fragmento que marcaste; «Usar este texto» usa la frase completa.",
         "También puedes escribir la tuya con «Escribir mi propia frase»."
       ],
-      "palabras": ["frase", "dedicatoria", "mensaje", "cita", "sugerida", "ideas", "romantica"]
+      "palabras": [
+        "frase",
+        "dedicatoria",
+        "mensaje",
+        "cita",
+        "sugerida",
+        "ideas",
+        "romantica"
+      ]
     },
     {
-      "id": "fecha-foto", "categoria": "texto", "animacion": "text-type", "destino": "editor.texto",
+      "id": "fecha-foto",
+      "categoria": "texto",
+      "animacion": "text-type",
+      "destino": "editor.texto",
       "titulo": "La fecha de la foto",
       "resumen": "Muestra la fecha en que se tomó cada foto, o elige la que quieras.",
       "pasos": [
-        "En el panel «Texto» elige «Fecha» entre los textos del diseño.",
+        "En el panel «Texto» elige el texto de la fecha entre los textos del diseño.",
         "En «Qué fecha mostrar» elige «De la foto», «Elegir fecha» o «Sin fecha».",
         "Con «Formato» decides cómo se escribe: día, mes y año; solo números; o mes y año.",
-        "Para una sola tarjeta, elígela y escoge su propia fecha."
+        "Para una sola tarjeta, selecciónala y escoge su propia fecha."
       ],
-      "palabras": ["dia", "calendario", "formato", "cuando", "tomada", "ano", "mes"]
+      "palabras": [
+        "dia",
+        "calendario",
+        "formato",
+        "cuando",
+        "tomada",
+        "ano",
+        "mes"
+      ]
     },
     {
-      "id": "qr-cancion", "categoria": "texto", "animacion": "qr", "destino": "editor.texto",
+      "id": "qr-cancion",
+      "categoria": "texto",
+      "animacion": "qr",
+      "destino": "editor.texto",
       "titulo": "QR de una canción",
       "resumen": "Imprime un código QR que abre tu canción en el celular de quien lo escanee.",
       "pasos": [
         "Elige un diseño de música: Foto + canción, Reproductor rojo, Reproductor horizontal, Vinilo o Casete.",
         "En el panel «Texto», en la sección «Canción», escribe el título y el artista.",
-        "Pega el enlace de la canción en «Enlace para el QR». El QR aparece solo cuando hay un enlace.",
-        "Si el enlace es muy largo y no cabe en un QR, Polar te avisa: usa uno más corto."
+        "Pega el enlace de la canción en «Enlace para el QR (opcional)». El QR aparece solo cuando hay un enlace.",
+        "Si el enlace es muy largo y no cabe en un QR, Polar avisa: usa uno más corto."
       ],
-      "palabras": ["spotify", "musica", "cancion", "codigo", "enlace", "link", "vinilo", "casete", "reproductor", "escanear"]
+      "palabras": [
+        "spotify",
+        "musica",
+        "cancion",
+        "codigo",
+        "enlace",
+        "link",
+        "vinilo",
+        "casete",
+        "reproductor",
+        "escanear"
+      ]
     },
     {
-      "id": "disenos-por-hoja", "categoria": "diseno", "animacion": "fill", "destino": "editor.diseno",
+      "id": "disenos-por-hoja",
+      "categoria": "diseno",
+      "animacion": "fill",
+      "destino": "editor.diseno",
       "titulo": "Cuántas tarjetas van por hoja",
       "resumen": "Elige entre una gran tarjeta o varias pequeñas en cada hoja.",
       "pasos": [
         "Abre el panel «Diseño».",
-        "En «Por hoja» elige 1, 2, 4, 6, 8, 9, 12 o 16 tarjetas. Las fotos se acomodan de nuevo.",
-        "Más tarjetas por hoja significa tarjetas más chicas; revisa los avisos de resolución.",
-        "Con más opciones cambias columnas, filas, separación entre tarjetas y esquinas redondas."
+        "En «Fotos por hoja» elige 1, 2, 4, 6, 8, 9, 12 o 16. Las fotos se acomodan de nuevo.",
+        "Más tarjetas por hoja significa tarjetas más chicas; revisa los avisos de resolución. En las películas, cada tira reúne cinco fotos.",
+        "Con la forma de la tarjeta cambias columnas, filas, «Separación entre tarjetas» y esquinas redondas."
       ],
-      "palabras": ["cuantas", "columnas", "filas", "separacion", "grande", "chica", "mosaico", "hoja", "cuadricula"]
+      "palabras": [
+        "cuantas",
+        "columnas",
+        "filas",
+        "separacion",
+        "grande",
+        "chica",
+        "mosaico",
+        "hoja",
+        "cuadricula"
+      ]
     },
     {
-      "id": "colores-distribucion", "categoria": "diseno", "animacion": "tap", "destino": "editor.diseno",
+      "id": "colores-distribucion",
+      "categoria": "diseno",
+      "animacion": "tap",
+      "destino": "editor.diseno",
       "titulo": "Colores y estilo rápido",
       "resumen": "Cambia el color y la letra de todo el diseño con un solo toque.",
       "pasos": [
         "En el panel «Diseño» elige un «Color» de acento.",
-        "Prueba un «Estilo rápido»: cambia la letra y el color. Tus frases no se tocan.",
+        "Prueba un estilo en «Estilos de texto»: cambia la letra y el color. Tus frases no se tocan.",
         "Con «Forma de la tarjeta» eliges el tamaño y la proporción de cada tarjeta.",
         "Si no te convence, «Cambiar diseño» te deja elegir otro sin perder nada."
       ],
-      "palabras": ["color", "acento", "estilo", "forma", "proporcion", "tema", "paleta", "distribucion"]
+      "pasosMac": [
+        "En la barra «Elige un diseño», selecciona otro diseño: tus fotos y textos se conservan.",
+        "Elige un «Color» de acento.",
+        "Prueba un estilo en «Estilos de texto»: cambia la letra y el color. Tus frases no se tocan.",
+        "Con la forma de la tarjeta eliges el tamaño y la proporción de cada tarjeta."
+      ],
+      "palabras": [
+        "color",
+        "acento",
+        "estilo",
+        "forma",
+        "proporcion",
+        "tema",
+        "paleta",
+        "distribucion"
+      ]
     },
     {
-      "id": "importar-molde", "categoria": "diseno", "animacion": "mold-detect", "destino": "moldes.asistente",
+      "id": "importar-molde",
+      "categoria": "diseno",
+      "animacion": "mold-detect",
+      "destino": "moldes.asistente",
       "titulo": "Importar tu propio molde",
       "resumen": "Usa una imagen con huecos para tus fotos como diseño propio.",
       "pasos": [
         "Prepara una imagen donde los lugares de las fotos sean huecos transparentes o blancos.",
-        "Pulsa «Importar plantilla» y elige tu imagen: es el paso 1 de 3.",
-        "Paso 2: Polar encuentra los huecos. Muévelos o cámbiales el tamaño, la forma y el redondeo, o agrega los que falten.",
-        "Paso 3: ponle un nombre y pulsa «Guardar y usar»."
+        "En el catálogo elige «Importar molde» y luego «Elegir imagen»: es el paso 1 de 3.",
+        "Paso 2: Polar busca los espacios para las fotos. Muévelos, cambia su tamaño, la «Forma» y el «Redondeo», o agrega los que falten con «Agregar espacio».",
+        "Paso 3: escribe el «Nombre del molde» y elige «Guardar y usar»."
       ],
-      "palabras": ["molde", "plantilla", "propio", "huecos", "transparente", "importar", "asistente", "marco"]
+      "pasosMac": [
+        "Prepara una imagen donde los lugares de las fotos sean huecos transparentes o blancos.",
+        "Elige «Importar molde» y selecciona tu imagen: es el paso 1 de 3.",
+        "Paso 2: Polar busca los espacios para las fotos. Muévelos, cambia su tamaño y su forma, o agrega los que falten.",
+        "Paso 3: ponle nombre y elige «Guardar y usar»."
+      ],
+      "palabras": [
+        "molde",
+        "plantilla",
+        "propio",
+        "huecos",
+        "transparente",
+        "importar",
+        "asistente",
+        "marco"
+      ]
     },
     {
-      "id": "mis-moldes", "categoria": "diseno", "animacion": "mold-detect", "destino": "mis-moldes",
+      "id": "mis-moldes",
+      "categoria": "diseno",
+      "animacion": "mold-detect",
+      "destino": "mis-moldes",
       "titulo": "Mis moldes",
       "resumen": "Todos los moldes que importaste, guardados para usarlos otra vez.",
       "pasos": [
         "En el catálogo, abre la categoría «Mis moldes».",
-        "Pulsa un molde para crear un diseño nuevo con él. En un diseño abierto, «Usar mi molde» lo cambia sin perder tus fotos.",
-        "Si importas un molde que ya tienes o que es muy parecido, Polar te avisa y te deja elegir: usar el existente o guardar uno nuevo.",
-        "Para borrar un molde, usa su botón de borrar. Los diseños que ya lo usan no se afectan."
+        "Elige «Usar este molde» para crear un diseño con él. En un diseño abierto, «Usar mi molde» (panel Diseño) lo cambia sin perder tus fotos.",
+        "Si importas un molde que ya tienes o muy parecido, Polar avisa («Ya tienes uno parecido») y puedes elegir «Usar el existente» o «Guardar como nuevo».",
+        "Para quitar un molde, elige «Quitar de Mis moldes». Los diseños que ya lo usan no cambian."
       ],
-      "palabras": ["molde", "guardados", "biblioteca", "duplicado", "parecido", "repetido", "plantillas"]
+      "pasosMac": [
+        "Abre la categoría «Mis moldes».",
+        "Elige «Usar este molde» para crear un diseño con él.",
+        "Si importas un molde que ya tienes o muy parecido, Polar avisa y puedes elegir entre usar el existente o guardar uno nuevo.",
+        "Para quitar un molde, elige «Quitar de Mis moldes». Los diseños que ya lo usan no cambian."
+      ],
+      "palabras": [
+        "molde",
+        "guardados",
+        "biblioteca",
+        "duplicado",
+        "parecido",
+        "repetido",
+        "plantillas"
+      ]
     },
     {
-      "id": "papel-margenes", "categoria": "imprimir", "animacion": "print", "destino": "editor.papel",
+      "id": "papel-margenes",
+      "categoria": "imprimir",
+      "animacion": "print",
+      "destino": "editor.papel",
       "titulo": "Papel y márgenes",
       "resumen": "Elige el tamaño de la hoja y cuánto espacio queda en los bordes.",
       "pasos": [
         "Abre el panel «Papel».",
-        "Elige un tamaño (Carta, A4 y más) y la orientación, vertical u horizontal. También puedes poner medidas propias.",
-        "Ajusta el «Margen de la hoja»; se muestra en las unidades que elegiste en Ajustes (milímetros o pulgadas).",
-        "«Imprimir el borde de cada tarjeta» pone o quita el contorno de cada tarjeta."
+        "Elige el tamaño de la hoja y la orientación, vertical u horizontal. También puedes poner medidas propias.",
+        "Ajusta el margen; se muestra en las unidades que elegiste en Ajustes (milímetros o pulgadas).",
+        "«Imprimir borde de las tarjetas» pone o quita el contorno de cada tarjeta."
       ],
-      "palabras": ["carta", "a4", "tamano", "hoja", "orientacion", "margen", "milimetros", "pulgadas", "borde"]
+      "pasosAndroid": [
+        "Abre el panel «Papel».",
+        "En «Tamaño de hoja» elige Carta, A4 y más, y la «Orientación», vertical u horizontal. También puedes poner medidas propias y elegir «Aplicar medidas».",
+        "Ajusta el «Margen de la hoja»; se muestra en las unidades que elegiste en Ajustes (milímetros o pulgadas).",
+        "«Imprimir borde de las tarjetas» pone o quita el contorno de cada tarjeta."
+      ],
+      "pasosMac": [
+        "Abre el panel «Papel».",
+        "Elige el tamaño de la hoja y la orientación, vertical u horizontal. También puedes poner medidas propias.",
+        "Ajusta el «Margen»; se muestra en las unidades de Preferencias (milímetros o pulgadas).",
+        "«Imprimir borde de las tarjetas» pone o quita el contorno de cada tarjeta."
+      ],
+      "palabras": [
+        "carta",
+        "a4",
+        "tamano",
+        "hoja",
+        "orientacion",
+        "margen",
+        "milimetros",
+        "pulgadas",
+        "borde"
+      ]
     },
     {
-      "id": "guias-corte", "categoria": "imprimir", "animacion": "print", "destino": "editor.papel",
+      "id": "guias-corte",
+      "categoria": "imprimir",
+      "animacion": "print",
+      "destino": "editor.papel",
       "titulo": "Guías de corte",
       "resumen": "Marcas pequeñas que te muestran por dónde recortar cada tarjeta.",
       "pasos": [
@@ -281,43 +722,104 @@
         "Las marcas quedan fuera de las fotos y rodean toda la tarjeta, texto incluido.",
         "Imprime a tamaño real para que las marcas coincidan con la medida de cada tarjeta."
       ],
-      "palabras": ["recortar", "cortar", "marcas", "lineas", "esquinas", "tijeras", "guillotina"]
+      "palabras": [
+        "recortar",
+        "cortar",
+        "marcas",
+        "lineas",
+        "esquinas",
+        "tijeras",
+        "guillotina"
+      ]
     },
     {
-      "id": "calidad-exportacion", "categoria": "imprimir", "animacion": "print", "destino": "terminar",
+      "id": "calidad-exportacion",
+      "categoria": "imprimir",
+      "animacion": "print",
+      "destino": "terminar",
       "titulo": "Calidad de exportación",
       "resumen": "Elige entre un archivo ligero para enviar o la mejor calidad para imprimir.",
       "pasos": [
-        "Pulsa «Imprimir» arriba para abrir Terminar.",
-        "En «Calidad de exportación» elige una opción.",
-        "«Ligero»: fotos a 200 ppp, ideal para enviar por mensaje o correo.",
+        "Elige «Imprimir» arriba para abrir Terminar.",
+        "En «Calidad» elige una opción.",
+        "«Ligero»: fotos a 200 ppp (puntos por pulgada), ideal para enviar por mensaje o correo.",
         "«Alta»: 300 ppp, la mejor opción para imprimir. «Máxima»: 300 ppp sin recomprimir, el archivo más pesado y fiel."
       ],
-      "palabras": ["ligero", "alta", "maxima", "peso", "tamano del archivo", "pdf", "png", "jpg", "ppp", "dpi", "guardar", "exportar"]
+      "palabras": [
+        "ligero",
+        "alta",
+        "maxima",
+        "peso",
+        "tamano del archivo",
+        "pdf",
+        "png",
+        "jpg",
+        "ppp",
+        "dpi",
+        "guardar",
+        "exportar"
+      ]
     },
     {
-      "id": "imprimir-100", "categoria": "imprimir", "animacion": "print", "destino": "terminar",
+      "id": "imprimir-100",
+      "categoria": "imprimir",
+      "animacion": "print",
+      "destino": "terminar",
       "titulo": "Imprimir al 100 %",
       "resumen": "Para que cada tarjeta salga de su medida exacta, imprime sin escalar.",
       "pasos": [
         "En Terminar revisa el resumen: hojas, fotos y avisos.",
-        "Pulsa «Imprimir» (o guarda el PDF e imprímelo desde otra app).",
+        "Elige «Imprimir» (o guarda el PDF e imprímelo desde otra app).",
         "En el cuadro de impresión elige el mismo papel que usaste en Polar.",
-        "Escoge «Tamaño real» o escala 100 %. Evita «Ajustar a la página»."
+        "Escoge Tamaño real o escala 100 %. Evita ajustar a la página."
       ],
-      "palabras": ["imprimir", "impresora", "tamano real", "escala", "100", "ajustar a pagina", "papeleria", "pdf"]
+      "palabras": [
+        "imprimir",
+        "impresora",
+        "tamano real",
+        "escala",
+        "100",
+        "ajustar a pagina",
+        "papeleria",
+        "pdf"
+      ]
     },
     {
-      "id": "compartir-polar", "categoria": "imprimir", "animacion": "tap", "destino": "inicio",
+      "id": "compartir-polar",
+      "categoria": "imprimir",
+      "animacion": "tap",
+      "destino": "inicio",
       "titulo": "Compartir y guardar un archivo .polar",
       "resumen": "Guarda tu diseño completo en un archivo para respaldarlo o seguir en otro dispositivo.",
       "pasos": [
-        "En Inicio, abre las opciones del diseño (el botón con tres puntos).",
-        "Pulsa «Compartir archivo .polar».",
-        "Elige a dónde enviarlo o dónde guardarlo: correo, mensaje, Drive o la carpeta de tu equipo.",
-        "Para mandar el PDF terminado, usa «Compartir PDF» en Terminar."
+        "En las opciones del diseño, elige «Compartir archivo .polar».",
+        "Elige a dónde enviarlo o dónde guardarlo: correo, mensaje, Drive o una carpeta.",
+        "Para mandar el PDF ya terminado, usa Terminar."
       ],
-      "palabras": ["respaldo", "backup", "guardar", "archivo", "enviar", "duplicar", "pedido", "polar", "exportar"]
+      "pasosAndroid": [
+        "En Inicio, abre el menú ⋮ del diseño (el botón con tres puntos).",
+        "Elige «Compartir archivo .polar».",
+        "Elige a dónde enviarlo o dónde guardarlo: correo, mensaje, Drive o una carpeta.",
+        "Para mandar el PDF ya terminado, elige «Compartir PDF» en Terminar."
+      ],
+      "pasosMac": [
+        "Abre el diseño.",
+        "En el menú Proyecto, elige «Compartir archivo .polar».",
+        "Elige a dónde enviarlo o dónde guardarlo: correo, mensaje, Drive o una carpeta.",
+        "Para mandar el PDF ya terminado, usa Terminar."
+      ],
+      "palabras": [
+        "respaldo",
+        "backup",
+        "guardar",
+        "archivo",
+        "enviar",
+        "duplicar",
+        "pedido",
+        "polar",
+        "exportar"
+      ]
     }
-  ]
+  ],
+  "etiquetasNota": "Las etiquetas «entre comillas latinas» de pasos, pasosAndroid y pasosMac son textos reales de la pantalla y deben existir en la app. Cada app usa pasosAndroid / pasosMac si el artículo los trae y, si no, pasos (igual con textoAndroid / textoMac en el recorrido y los controles). Prueba Android: toda etiqueta de los pasos que ve Android existe en strings.xml (se normaliza «…», una «N» suelta vale cualquier número y un «＋ » inicial se ignora). Prueba Mac (equivalente): toda etiqueta de los pasos que ve la Mac (pasosMac si existe, si no pasos) debe aparecer como literal entre comillas en PolarMac/Sources/*.swift, con la misma normalización; las etiquetas canónicas están en .superpowers/sdd/2026-10-08-fase-3-sub1-exportacion-limpieza/etiquetas-canonicas.md."
 }

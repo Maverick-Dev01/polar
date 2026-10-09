@@ -134,12 +134,13 @@ private fun ArticleView(content: HelpContent, article: HelpArticle, onGo: (Strin
         }
         item { Text(article.resumen, style = MaterialTheme.typography.titleMedium) }
         item { Text(stringResource(R.string.help_article_steps), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() }) }
-        items(article.pasos.size) { i ->
-            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.grid), verticalAlignment = Alignment.Top) {
+        val pasos = article.pasosAqui
+        items(pasos.size) { i ->
+            Row(Modifier.semantics(mergeDescendants = true) { }, horizontalArrangement = Arrangement.spacedBy(Spacing.grid), verticalAlignment = Alignment.Top) {
                 Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.primaryContainer, modifier = Modifier.size(28.dp)) {
                     Box(contentAlignment = Alignment.Center) { Text("${i + 1}", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onPrimaryContainer) }
                 }
-                Text(article.pasos[i], Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+                Text(pasos[i], Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
             }
         }
         article.destino?.let { destino ->

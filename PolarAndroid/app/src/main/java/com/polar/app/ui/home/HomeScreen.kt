@@ -68,6 +68,16 @@ fun HomeScreen(
     val undoLabel = stringResource(R.string.action_undo)
     val shareUnavailable = stringResource(R.string.share_unavailable)
     val newDesignLabel = stringResource(R.string.home_new)
+    val openedName = stringResource(R.string.catalog_opened_name)
+    val pickPolar = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) scope.launch {
+            val name = context.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)
+                ?.use { c -> if (c.moveToFirst()) c.getString(0) else null } ?: openedName
+            val text = withContext(Dispatchers.IO) { runCatching { context.contentResolver.openInputStream(uri)?.use { it.bufferedReader().readText() } }.getOrNull() }
+            vm.openPolar(text ?: "", name, openedName)
+        }
+    }
+    val openPolar = { pickPolar.launch(arrayOf("*/*")) }
 
     LifecycleResumeEffect(Unit) { vm.refresh(); onPauseOrDispose { } }
     LaunchedEffect(vm) {
@@ -77,6 +87,7 @@ fun HomeScreen(
                     val r = snackbar.showSnackbar(deletedLabel.format(e.name), undoLabel, duration = SnackbarDuration.Long)
                     if (r == SnackbarResult.ActionPerformed) vm.undoDelete(e.id)
                 }
+                is HomeEvent.Opened -> onOpen(e.id)
                 is HomeEvent.Message -> scope.launch { snackbar.showSnackbar(e.text.resolve(context)) }
                 is HomeEvent.SharePolar -> if (!Share.file(context, e.file, "application/octet-stream", e.file.name)) {
                     scope.launch { snackbar.showSnackbar(shareUnavailable) }
@@ -113,10 +124,10 @@ fun HomeScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 item(span = { GridItemSpan(maxLineSpan) }) {
-                    Header(state, onSettings, vm::setQuery, vm::setSort)
+                    Header(state, onSettings, openPolar, vm::setQuery, vm::setSort)
                 }
                 if (state.loaded && state.all.isEmpty()) {
-                    item(span = { GridItemSpan(maxLineSpan) }) { EmptyLibrary(onNew) }
+                    item(span = { GridItemSpan(maxLineSpan) }) { EmptyLibrary(onNew, openPolar) }
                 } else if (state.loaded && state.visible.isEmpty()) {
                     item(span = { GridItemSpan(maxLineSpan) }) {
                         Text(
@@ -173,13 +184,14 @@ fun HomeScreen(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun Header(state: HomeUiState, onSettings: () -> Unit, onQuery: (String) -> Unit, onSort: (SortMode) -> Unit) {
+private fun Header(state: HomeUiState, onSettings: () -> Unit, onOpenPolar: () -> Unit, onQuery: (String) -> Unit, onSort: (SortMode) -> Unit) {
     Column(Modifier.padding(top = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(stringResource(R.string.app_name), style = BrandStyle, color = MaterialTheme.colorScheme.primary)
                 Text(stringResource(R.string.tagline), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
+            IconButton(onClick = onOpenPolar) { Icon(Icons.Outlined.FileOpen, stringResource(R.string.home_open_polar)) }
             IconButton(onClick = onSettings) { Icon(Icons.Outlined.Tune, stringResource(R.string.settings_title)) }
         }
         if (state.all.isNotEmpty()) {
@@ -236,7 +248,7 @@ private fun ProjectPolaroid(meta: ProjectMeta, thumb: File?, onOpen: () -> Unit,
 }
 
 @Composable
-private fun EmptyLibrary(onNew: () -> Unit) {
+private fun EmptyLibrary(onNew: () -> Unit, onOpenPolar: () -> Unit) {
     Column(Modifier.fillMaxWidth().padding(vertical = 40.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         PolaroidStack(caption = stringResource(R.string.app_name))
         Spacer(Modifier.height(24.dp))
@@ -248,5 +260,7 @@ private fun EmptyLibrary(onNew: () -> Unit) {
         )
         Spacer(Modifier.height(20.dp))
         Button(onClick = onNew) { Text(stringResource(R.string.home_new)) }
+        Spacer(Modifier.height(8.dp))
+        TextButton(onClick = onOpenPolar, Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.home_open_polar)) }
     }
 }

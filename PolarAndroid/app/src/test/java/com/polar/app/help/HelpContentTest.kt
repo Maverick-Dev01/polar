@@ -62,4 +62,46 @@ class HelpContentTest {
         assertNull(HelpContent.parseOrNull("{ no es json"))
         assertNull(HelpContent.parseOrNull("""{"version":99,"categorias":[],"destinos":[],"animaciones":{},"recorrido":[],"controles":[],"articulos":[]}"""))
     }
+
+    // ----- Etiquetas «entre comillas» = textos reales de la pantalla -----
+
+    private val stringsXml = java.io.File(SharedFixtures.root.parentFile, "PolarAndroid/app/src/main/res/values/strings.xml").readText()
+    private fun norm(t: String) = t.replace("…", "").replace("...", "").replace(Regex("^[^\\p{L}\\p{N}]+"), "").trim()
+    /** Cada texto de strings.xml como expresión regular (los %1$d y %1$s valen cualquier cosa). */
+    private val screenTexts: List<Regex> = Regex("<string name=\"[^\"]+\">(.*?)</string>", RegexOption.DOT_MATCHES_ALL).findAll(stringsXml).map { m ->
+        val raw = m.groupValues[1].replace("&amp;", "&").replace("\\'", "'").replace("&lt;", "<").replace("&gt;", ">")
+        val parts = raw.split(Regex("%\\d\\$[ds]|%%"))
+        Regex(parts.joinToString(".+") { Regex.escape(norm(it)) }.let { if (parts.sumOf { norm(it).length } < 4) "(?!)" else it })
+    }.toList()
+    private fun labelsIn(text: String) = Regex("«([^»]+)»").findAll(text).map { it.groupValues[1] }.toList()
+    private fun existsOnScreen(label: String): Boolean {
+        val l = norm(label).replace(Regex("\\bN\\b"), "1")
+        return screenTexts.any { it.matches(l) || it.matches(l.replace("1", "1")) } || stringsXml.contains(">" + label + "<") || screenTexts.any { it.pattern.contains(Regex.escape(l)) && it.matches(l) }
+    }
+
+    @Test fun everyQuotedLabelOfWhatAndroidShowsExistsInStringsXml() {
+        val missing = mutableListOf<String>()
+        fun check(where: String, text: String) = labelsIn(text).filterNot(::existsOnScreen).forEach { missing += "$where: «$it»" }
+        content.articulos.forEach { a ->
+            // Lo que ve Android: pasosAndroid si existe, si no pasos. (pasosMac no se prueba aquí: lo prueba la Mac.)
+            a.pasosAqui.forEach { check(a.id, it) }
+            check(a.id + " resumen", a.resumen)
+        }
+        content.recorrido.forEach { check("recorrido ${it.id}", it.textoAqui) }
+        content.controles.forEach { check("control ${it.id}", it.textoAqui) }
+        assertEquals("Etiquetas que no existen en strings.xml:\n" + missing.joinToString("\n"), emptyList<String>(), missing)
+    }
+
+    @Test fun theLabelCheckItselfCatchesInventedLabels() {
+        assertTrue(existsOnScreen("Guardar y usar")); assertTrue(existsOnScreen("Sólo tarjeta N")); assertTrue(existsOnScreen("Agregar espacio"))
+        assertFalse(existsOnScreen("Importar plantilla")); assertFalse(existsOnScreen("Estilo rápido")); assertFalse(existsOnScreen("Comparar"))
+    }
+
+    @Test fun platformVariantsAreUsedWhenPresentAndFallBackToSharedSteps() {
+        val withVariant = content.articulos.first { it.pasosAndroid != null }
+        assertEquals(withVariant.pasosAndroid, withVariant.pasosAqui)
+        val shared = content.articulos.first { it.pasosAndroid == null }
+        assertEquals(shared.pasos, shared.pasosAqui)
+        assertTrue(content.articulos.any { it.pasosMac != null })
+    }
 }

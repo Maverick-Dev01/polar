@@ -117,11 +117,13 @@ private fun BubbleCard(
  * Si el control de un paso no está a la vista, ese paso se salta; al acabar (o saltar) llama a `onFinish`.
  */
 @Composable
-fun TourOverlay(steps: List<TourStep>, targets: HelpTargets, onFinish: () -> Unit, modifier: Modifier = Modifier) {
+/** `onFinish(shownAny)`: `shownAny` es false si ningún paso llegó a mostrarse (entonces no cuenta como «visto»). */
+fun TourOverlay(steps: List<TourStep>, targets: HelpTargets, onFinish: (shownAny: Boolean) -> Unit, modifier: Modifier = Modifier) {
     val reduceMotion = rememberReduceMotion()
     val visible = targets.visible()
     var index by rememberSaveable { mutableIntStateOf(-1) }
     var settled by remember { mutableStateOf(false) }
+    var shownAny by rememberSaveable { mutableStateOf(false) }
     // Los controles se registran en el primer cuadro: se espera a que el editor termine de medirse.
     LaunchedEffect(Unit) { withFrameNanos { }; withFrameNanos { }; settled = true }
     val current = when {
@@ -130,7 +132,9 @@ fun TourOverlay(steps: List<TourStep>, targets: HelpTargets, onFinish: () -> Uni
         steps.getOrNull(index)?.objetivo in visible -> index
         else -> TourFlow.next(steps, index, visible) // el control desapareció (p. ej. giraron la pantalla): sigue o termina
     }
-    LaunchedEffect(settled, current) { if (settled && current == null) onFinish() else if (current != null && current != index) index = current }
+    LaunchedEffect(settled, current) {
+        if (settled && current == null) onFinish(shownAny) else if (current != null) { shownAny = true; if (current != index) index = current }
+    }
     if (current == null) { if (!settled) Box(modifier.fillMaxSize().blockTouches()); return }
     val step = steps[current]
     val target = targets.bounds[step.objetivo] ?: return
@@ -155,10 +159,10 @@ fun TourOverlay(steps: List<TourStep>, targets: HelpTargets, onFinish: () -> Uni
             drawRoundRect(ring, tl, sz, CornerRadius(14.dp.toPx()), style = Stroke(3.dp.toPx()))
         }
         AnchoredBubble(Rect(left, top, right, bottom), origin.value) {
-            BubbleCard(step.titulo, step.texto, step.animacion, reduceMotion, header = stringResource(R.string.tour_step, pos, count)) {
-                if (!isLast) TextButton(onClick = onFinish, Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.action_skip)) }
+            BubbleCard(step.titulo, step.textoAqui, step.animacion, reduceMotion, header = stringResource(R.string.tour_step, pos, count)) {
+                if (!isLast) TextButton(onClick = { onFinish(true) }, Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.action_skip)) }
                 Spacer(Modifier.width(8.dp))
-                Button(onClick = { TourFlow.next(steps, current, visible)?.let { index = it } ?: onFinish() }, Modifier.heightIn(min = 48.dp)) {
+                Button(onClick = { TourFlow.next(steps, current, visible)?.let { index = it } ?: onFinish(true) }, Modifier.heightIn(min = 48.dp)) {
                     Text(stringResource(if (isLast) R.string.tour_done else R.string.action_next))
                 }
             }
@@ -213,7 +217,7 @@ fun HelpModeOverlay(content: HelpContent, targets: HelpTargets, onDone: () -> Un
         }
         if (sel != null) Box(Modifier.zIndex(1001f)) {
             AnchoredBubble(sel.second, origin.value) {
-                BubbleCard(sel.third.titulo, sel.third.texto, null, reduceMotion) {
+                BubbleCard(sel.third.titulo, sel.third.textoAqui, null, reduceMotion) {
                     TextButton(onClick = { selected = null }, Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.help_bubble_close)) }
                 }
             }
