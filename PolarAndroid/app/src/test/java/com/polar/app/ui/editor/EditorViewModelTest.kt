@@ -466,6 +466,34 @@ class EditorViewModelTest {
         assertEquals(R.string.editor_save_failed, (v.events.first() as EditorEvent.Message).text.id)
     }
 
+    @Test
+    fun addFolderReportsAddedAndIgnoredIncludingUnreadable() = runTest(main.dispatcher) {
+        val v = vmWith(run { store = ProjectStore(tmp.root); store.create(PolarProject().normalized(), "Carpeta") }, object : PhotoSource {
+            override suspend fun listFolder(treeUri: String) = FolderListing(listOf("a", "b", "c"), 2)
+            override suspend fun import(projectId: String, uris: List<String>) = ImportResult(
+                uris.take(2).map { store.importPhoto(projectId, it.byteInputStream(), "jpg", PhotoInfo(3000, 3000, null)) }, 1
+            )
+        })
+        advanceUntilIdle()
+        v.addFolder("tree"); advanceUntilIdle()
+        val m = v.events.first { it is EditorEvent.Message } as EditorEvent.Message
+        assertEquals(R.string.editor_folder_summary, m.text.id)
+        assertEquals(R.string.editor_photos_added_many, (m.text.args[0] as com.polar.app.ui.UiText).id)
+        assertEquals(3, ((m.text.args[1] as com.polar.app.ui.UiText).args[0] as Int))
+        assertEquals(2, v.state.value.project.photos.size)
+    }
+
+    @Test
+    fun addFolderWithoutImagesSaysSo() = runTest(main.dispatcher) {
+        val v = vmWith(run { store = ProjectStore(tmp.root); store.create(PolarProject().normalized(), "Carpeta") }, object : PhotoSource {
+            override suspend fun listFolder(treeUri: String) = FolderListing(emptyList(), 0)
+            override suspend fun import(projectId: String, uris: List<String>) = ImportResult(emptyList(), 0)
+        })
+        advanceUntilIdle()
+        v.addFolder("tree"); advanceUntilIdle()
+        assertEquals(R.string.editor_folder_empty, (v.events.first { it is EditorEvent.Message } as EditorEvent.Message).text.id)
+    }
+
     private fun vmWith(projectId: String, photos: PhotoSource) = EditorViewModel(projectId, EditorDeps(store, photos, object : ExportService {
         override suspend fun pdf(project: PolarProject, template: Bitmap?, quality: ExportQuality) = File(tmp.root, "a.pdf")
         override suspend fun png(project: PolarProject, page: Int, template: Bitmap?, quality: ExportQuality) = File(tmp.root, "a.png")

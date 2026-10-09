@@ -34,4 +34,17 @@ class PhotosPanelTest {
         compose.onNodeWithContentDescription("Foto 2, poca resolución").performClick()
         assertEquals(photos[1].id, placed)
     }
+
+    @Test
+    fun addFolderButtonIsVisible() {
+        var folder = 0
+        compose.setContent {
+            PolarTheme(ThemeMode.LIGHT) {
+                PhotosPanel(photos, used = emptySet(), lowRes = emptySet(), missingPhotos = 0,
+                    thumbnail = { null }, onAdd = {}, onAddFolder = { folder++ }, onFill = {}, onPlace = {})
+            }
+        }
+        compose.onNodeWithText("Agregar carpeta").performClick()
+        assertEquals(1, folder)
+    }
 }

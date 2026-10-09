@@ -154,6 +154,11 @@
     <string name="text_title_card">Texto · tarjeta %1$d</string>
     <string name="photos_summary">%1$s · %2$d en la hoja</string>
     <string name="photos_add">Agregar</string>
+    <string name="photos_add_folder">Agregar carpeta</string>
+    <string name="editor_folder_empty">No se encontraron fotos para agregar</string>
+    <string name="editor_ignored_one">1 archivo ignorado</string>
+    <string name="editor_ignored_many">%1$d archivos ignorados</string>
+    <string name="editor_folder_summary">%1$s · %2$s</string>
     <string name="photos_fill">Rellenar todo</string>
     <string name="photos_tip">Toca una foto para ponerla en la tarjeta elegida. Si no eliges tarjeta, usa Rellenar todo.</string>
     <string name="photos_missing">Faltan %1$d fotos de este diseño. Agrégalas y colócalas de nuevo.</string>

@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.polar.app.R
+import com.polar.app.data.FolderListing
 import com.polar.app.core.edit.MoodPreset
 import com.polar.app.core.edit.ProjectEdits
 import com.polar.app.core.history.UndoStack
@@ -422,6 +423,41 @@ class EditorViewModel(private val projectId: String, private val deps: EditorDep
                 else -> UiText(R.string.editor_photos_added_many_failed, listOf(added, failed))
             }
             message(text, undoable = added > 0)
+        }
+    }
+
+    /** Importa las imágenes del nivel superior de una carpeta (tope 500, orden por nombre). */
+    fun addFolder(treeUri: String) {
+        if (locked) return
+        viewModelScope.launch {
+            _state.update { it.copy(busy = true) }
+            val listing: FolderListing
+            val result = try {
+                listing = deps.photos.listFolder(treeUri)
+                if (listing.uris.isEmpty()) null else deps.photos.import(projectId, listing.uris)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w("Polar", "Falló la importación de la carpeta", e)
+                message(UiText(R.string.action_failed))
+                return@launch
+            } finally {
+                _state.update { it.copy(busy = false) }
+            }
+            val added = result?.assets?.size ?: 0
+            if (result != null) addAssets(result.assets)
+            val ignored = listing.ignored + (result?.failed ?: 0)
+            val head = when (added) {
+                0 -> UiText(R.string.editor_folder_empty)
+                1 -> UiText(R.string.editor_photo_added_one)
+                else -> UiText(R.string.editor_photos_added_many, listOf(added))
+            }
+            val tail = when (ignored) {
+                0 -> null
+                1 -> UiText(R.string.editor_ignored_one)
+                else -> UiText(R.string.editor_ignored_many, listOf(ignored))
+            }
+            message(if (tail == null) head else UiText(R.string.editor_folder_summary, listOf(head, tail)), undoable = added > 0)
         }
     }
 

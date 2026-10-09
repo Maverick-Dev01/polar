@@ -40,6 +40,8 @@ fun ToolPanel(tool: Tool, state: EditorUiState, vm: EditorViewModel, container: 
     if (expandedText) TextEditDialog(state, container, vm::setText) { vm.endGesture(); expandedText = false }
     val photoPicker=rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia()) { uris->vm.addPhotos(uris.map { it.toString() }) }
     val addPhotos={ photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
+    val folderPicker=rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri->uri?.let { vm.addFolder(it.toString()) } }
+    val addFolder={ folderPicker.launch(null) }
     val title = when (tool) {
         Tool.PHOTOS -> stringResource(R.string.tool_photos)
         Tool.FILTERS -> stringResource(R.string.tool_filters)
@@ -64,7 +66,7 @@ fun ToolPanel(tool: Tool, state: EditorUiState, vm: EditorViewModel, container: 
                 }
             }
             if(compact && !state.trayExpanded) {
-                if(tool==Tool.FILTERS) FilterPresets(state,vm,container) else CompactTools(tool,state,vm,addPhotos)
+                if(tool==Tool.FILTERS) FilterPresets(state,vm,container) else CompactTools(tool,state,vm,addPhotos,addFolder)
                 return@Column
             }
             Box(Modifier.weight(1f)) {
@@ -84,6 +86,7 @@ fun ToolPanel(tool: Tool, state: EditorUiState, vm: EditorViewModel, container: 
                             missingPhotos = state.missingPhotos,
                             thumbnail = { a -> withContext(Dispatchers.IO) { container.bitmaps.load(a.path, 256)?.asImageBitmap() } },
                             onAdd = { picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+                            onAddFolder = addFolder,
                             onFill = vm::fillAll, onPlace = vm::placePhoto, onSelect = { vm.setMultiSelecting(true) }
                         )
                     }
@@ -122,9 +125,9 @@ fun ToolPanel(tool: Tool, state: EditorUiState, vm: EditorViewModel, container: 
 }
 
 @Composable
-private fun CompactTools(tool: Tool,state: EditorUiState,vm: EditorViewModel,onAdd: ()->Unit) {
+private fun CompactTools(tool: Tool,state: EditorUiState,vm: EditorViewModel,onAdd: ()->Unit,onAddFolder: ()->Unit) {
     val entries: List<Pair<String,()->Unit>> = when(tool) {
-        Tool.PHOTOS -> listOf(stringResource(R.string.editor_add_photos) to onAdd,stringResource(R.string.photos_fill) to vm::fillAll, "Seleccionar" to { vm.setMultiSelecting(true) })
+        Tool.PHOTOS -> listOf(stringResource(R.string.editor_add_photos) to onAdd,stringResource(R.string.photos_add_folder) to onAddFolder,stringResource(R.string.photos_fill) to vm::fillAll, "Seleccionar" to { vm.setMultiSelecting(true) })
         Tool.DESIGN -> listOf(1,2,4,9).map { stringResource(R.string.editor_layout_per_sheet,it) to { vm.applyLayout(it) } } + (stringResource(R.string.catalog_change) to { vm.setMode(EditorMode.CHANGE_DESIGN) })
         Tool.TEXT -> state.project.settings.style.textRoles.map { it.displayName to { vm.setTextRole(it); vm.setTrayExpanded(true) } }
         Tool.PAPER -> PaperSize.entries.map { it.displayName to { vm.setPaper(it) } }

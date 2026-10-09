@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -40,6 +41,7 @@ fun PhotosPanel(
     missingPhotos: Int,
     thumbnail: suspend (PhotoAsset) -> ImageBitmap?,
     onAdd: () -> Unit,
+    onAddFolder: () -> Unit = {},
     onFill: () -> Unit,
     onPlace: (String) -> Unit,
     onSelect: () -> Unit = {}
@@ -65,8 +67,9 @@ fun PhotosPanel(
                     Text(stringResource(R.string.photos_summary,pluralStringResource(R.plurals.photos_count,photos.size,photos.size),used.size),style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
                     SymmetricActions {
                         FilledTonalButton(onClick=onAdd,modifier=Modifier.weight(1f).heightIn(min=48.dp)) { Icon(Icons.Filled.Add,null,Modifier.size(20.dp));Spacer(Modifier.width(8.dp));Text(stringResource(R.string.photos_add)) }
-                        if(photos.isNotEmpty()) FilledTonalButton(onClick=onFill,modifier=Modifier.weight(1f).heightIn(min=48.dp)) { Icon(Icons.Filled.AutoAwesome,null,Modifier.size(20.dp));Spacer(Modifier.width(8.dp));Text(stringResource(R.string.photos_fill)) }
+                        FilledTonalButton(onClick=onAddFolder,modifier=Modifier.weight(1f).heightIn(min=48.dp)) { Icon(Icons.Filled.FolderOpen,null,Modifier.size(20.dp));Spacer(Modifier.width(8.dp));Text(stringResource(R.string.photos_add_folder)) }
                     }
+                    if(photos.isNotEmpty()) FilledTonalButton(onClick=onFill,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)) { Icon(Icons.Filled.AutoAwesome,null,Modifier.size(20.dp));Spacer(Modifier.width(8.dp));Text(stringResource(R.string.photos_fill)) }
                 }
             }
             itemsIndexed(photos, key = { _, p -> p.id }) { i, photo ->
