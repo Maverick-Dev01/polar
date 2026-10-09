@@ -33,9 +33,9 @@ extension TemplateStyle {
                     if let image = studio.thumbnail(style) { Image(nsImage: image).resizable().scaledToFit() }
                     else { Image(systemName: style.symbol).font(.title).foregroundStyle(polarInk) }
                 }.background(polarCream, in: RoundedRectangle(cornerRadius: PolarRadius.small)).clipped()
-                Text(style.name).font(.caption.bold()).lineLimit(1, reservesSpace: true)
-                Text(style.designDescription).font(.system(size: 10)).foregroundStyle(.secondary).lineLimit(2, reservesSpace: true)
-            }.padding(Spacing.m).frame(maxWidth: .infinity)
+                Text(style.name).font(.caption.bold()).lineLimit(2, reservesSpace: true).fixedSize(horizontal: false, vertical: true)
+                Text(style.designDescription).font(.system(size: 10)).foregroundStyle(.secondary).lineLimit(3, reservesSpace: true)
+            }.padding(Spacing.s).frame(maxWidth: .infinity)
                 .background(polarSurface, in: RoundedRectangle(cornerRadius: PolarRadius.card))
                 .overlay(RoundedRectangle(cornerRadius: PolarRadius.card).stroke(selected ? polarInk : Color.secondary.opacity(0.25), lineWidth: selected ? 2 : 1))
                 .overlay(alignment: .topTrailing) { if selected { Image(systemName: "checkmark.circle.fill").foregroundStyle(polarInk).padding(Spacing.xs) } }

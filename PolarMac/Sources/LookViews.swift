@@ -16,6 +16,60 @@ struct PolarButtonStyle: ButtonStyle {
     }
 }
 
+/// Selector segmentado de opciones del mismo ancho (los segmentados nativos no siempre ocupan todo el ancho).
+struct EqualChoice<Value: Hashable>: View {
+    let title: String
+    let options: [(Value, String)]
+    @Binding var selection: Value?
+    var body: some View {
+        HStack(spacing: Spacing.xs) {
+            ForEach(Array(options.enumerated()), id: \.offset) { _, option in
+                let selected = selection == option.0
+                Button { selection = option.0 } label: {
+                    Text(option.1).font(.system(size: 13, weight: selected ? .semibold : .regular)).lineLimit(1).minimumScaleFactor(0.8)
+                        .frame(maxWidth: .infinity, minHeight: 40)
+                        .foregroundStyle(selected ? polarInk : .primary)
+                        .background(selected ? polarInk.opacity(0.14) : polarSurface, in: RoundedRectangle(cornerRadius: PolarRadius.small))
+                        .overlay(RoundedRectangle(cornerRadius: PolarRadius.small).stroke(selected ? polarInk : Color.secondary.opacity(0.25), lineWidth: selected ? 2 : 1))
+                        .contentShape(RoundedRectangle(cornerRadius: PolarRadius.small))
+                }.buttonStyle(.plain).accessibilityLabel(option.1).accessibilityAddTraits(selected ? .isSelected : [])
+            }
+        }.accessibilityElement(children: .contain).accessibilityLabel(title)
+    }
+}
+
+/// Interruptor en forma de botón del mismo ancho que sus vecinos (Negrita, Cursiva).
+struct ToggleChip: View {
+    let title: String
+    @Binding var isOn: Bool
+    var body: some View {
+        Button { isOn.toggle() } label: {
+            Text(title).font(.system(size: 13, weight: isOn ? .semibold : .regular)).lineLimit(1)
+                .frame(maxWidth: .infinity, minHeight: 48)
+                .foregroundStyle(isOn ? polarInk : .primary)
+                .background(isOn ? polarInk.opacity(0.14) : polarSurface, in: RoundedRectangle(cornerRadius: PolarRadius.small))
+                .overlay(RoundedRectangle(cornerRadius: PolarRadius.small).stroke(isOn ? polarInk : Color.secondary.opacity(0.25), lineWidth: isOn ? 2 : 1))
+                .contentShape(RoundedRectangle(cornerRadius: PolarRadius.small))
+        }.buttonStyle(.plain).accessibilityLabel(title).accessibilityAddTraits(isOn ? .isSelected : [])
+    }
+}
+
+/// Misma apariencia que ActionTile para menús, de modo que las filas de acciones queden del mismo tamaño.
+struct ActionTileLabel: View {
+    let title: String
+    let icon: String
+    var body: some View {
+        VStack(spacing: Spacing.s) {
+            Image(systemName: icon).font(.system(size: 24)).frame(width: 24, height: 24)
+            Text(title).font(.callout).lineLimit(1)
+        }.frame(maxWidth: .infinity, minHeight: 64).padding(Spacing.s)
+            .foregroundStyle(.primary)
+            .background(polarSurface, in: RoundedRectangle(cornerRadius: PolarRadius.card))
+            .overlay(RoundedRectangle(cornerRadius: PolarRadius.card).stroke(Color.secondary.opacity(0.25), lineWidth: 1))
+            .contentShape(RoundedRectangle(cornerRadius: PolarRadius.card))
+    }
+}
+
 struct ActionTile: View {
     let title: String
     let icon: String
@@ -115,10 +169,13 @@ struct LensRing: View {
                 ActionTile(title: "Rellenar", icon: "sparkles") { studio.fillAll() }.disabled(studio.project.photos.isEmpty)
                 ActionTile(title: "Encuadrar", icon: "crop") { studio.openCrop() }.disabled(selected == nil)
                 ActionTile(title: "Filtros", icon: "camera.filters") { studio.lookScope = 3; studio.inspectorTab = 4 }.disabled(selected == nil)
+                ActionTile(title: "Quitar fondo", icon: "person.crop.circle.badge.minus") { studio.removeBackground() }.disabled(selected == nil || studio.busy)
+                ActionTile(title: "Girar 90°", icon: "rotate.right") { studio.editPlacement { $0.quarterTurns = ($0.quarterTurns + 1) % 4 } }.disabled(selected == nil)
             }
+            if studio.busy { ProgressView("Preparando el recorte…").controlSize(.small) }
             if let photo = selected {
                 Text(photo.name).font(.headline).lineLimit(1).accessibilityLabel(photo.name)
-                RenderedCard(studio: studio).frame(height: 190)
+                RenderedCard(studio: studio).frame(height: 190).frame(maxWidth: .infinity)
                 Text("Toca Encuadrar para mover y acercar la foto dentro de su marco.").foregroundStyle(.secondary)
                 Button("Quitar foto", role: .destructive) { studio.change { $0.placements[studio.selectedSlot] = nil } }.frame(maxWidth: .infinity, minHeight: 48)
             } else {

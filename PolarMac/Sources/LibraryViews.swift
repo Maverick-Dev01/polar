@@ -98,9 +98,9 @@ extension TemplateStyle {
         VStack(alignment: .leading, spacing: Spacing.l) {
             HStack { Text("Ajustes").font(.title.bold()); Spacer(); Button("Listo") { NSApp.keyWindow?.close() }.frame(minHeight: 48) }
             Form {
-                Picker("Tema", selection: $studio.preferences.theme) { ForEach(AppTheme.allCases) { Text($0.name).tag($0) } }
-                Picker("Unidades", selection: $studio.preferences.units) { ForEach(AppUnits.allCases) { Text($0.name).tag($0) } }
-                Picker("Papel para nuevos diseños", selection: $studio.preferences.defaultPaper) { ForEach(PaperSize.allCases) { Text($0.name).tag($0) } }
+                FixedMenu(title: "Tema", selection: $studio.preferences.theme, options: AppTheme.allCases.map { ($0, $0.name) })
+                FixedMenu(title: "Unidades", selection: $studio.preferences.units, options: AppUnits.allCases.map { ($0, $0.name) })
+                FixedMenu(title: "Papel para nuevos diseños", selection: $studio.preferences.defaultPaper, options: PaperSize.allCases.map { ($0, $0.name) })
             }
             HStack {
                 Text("Papelera: \(studio.trashCount) \(studio.trashCount == 1 ? "diseño" : "diseños"). Se vacía sola tras 7 días.").foregroundStyle(.secondary)
@@ -187,7 +187,7 @@ extension TemplateStyle {
             VStack(alignment: .leading, spacing: Spacing.s) {
                 Picker("Calidad", selection: $studio.preferences.exportQuality) {
                     ForEach(ExportQuality.allCases) { Text($0.title).tag($0) }
-                }.pickerStyle(.segmented).frame(maxWidth: 420).disabled(studio.busy)
+                }.pickerStyle(.segmented).frame(maxWidth: 480, alignment: .leading).disabled(studio.busy)
                 Text(studio.preferences.exportQuality.help).font(.callout).foregroundStyle(.secondary)
             }
             if studio.busy { ProgressView("Preparando archivo…") }
@@ -201,13 +201,19 @@ extension TemplateStyle {
     }
     @ViewBuilder private var finishActions: some View {
         ActionTile(title: "Imprimir", icon: "printer") { studio.printDesign() }.disabled(studio.printPDF == nil || studio.busy)
-        Menu {
-            Button("PDF · todas las hojas") { studio.export(.pdf) }
-        } label: { Label("Guardar PDF", systemImage: "doc").padding(Spacing.m) }.disabled(studio.busy)
-        Menu {
-            Button("JPG · esta hoja") { studio.export(.jpeg) }
-            Button("PNG · sin pérdida · más peso") { studio.export(.png) }
-        } label: { Label("Guardar imagen", systemImage: "photo").padding(Spacing.m) }.disabled(studio.busy)
+        ActionTileLabel(title: "Guardar PDF", icon: "doc").opacity(studio.busy ? 0.4 : 1).overlay {
+            Menu {
+                Button("PDF · todas las hojas") { studio.export(.pdf) }
+            } label: { Color.clear.frame(maxWidth: .infinity, maxHeight: .infinity).contentShape(Rectangle()) }
+                .menuStyle(.borderlessButton).menuIndicator(.hidden).disabled(studio.busy).accessibilityLabel("Guardar PDF")
+        }
+        ActionTileLabel(title: "Guardar imagen", icon: "photo").opacity(studio.busy ? 0.4 : 1).overlay {
+            Menu {
+                Button("JPG · esta hoja") { studio.export(.jpeg) }
+                Button("PNG · sin pérdida · más peso") { studio.export(.png) }
+            } label: { Color.clear.frame(maxWidth: .infinity, maxHeight: .infinity).contentShape(Rectangle()) }
+                .menuStyle(.borderlessButton).menuIndicator(.hidden).disabled(studio.busy).accessibilityLabel("Guardar imagen")
+        }
         ActionTile(title: "Compartir PDF", icon: "square.and.arrow.up") { if let url = studio.printPDF { studio.share(url) } }.disabled(studio.printPDF == nil || studio.busy)
     }
 }
@@ -222,8 +228,8 @@ extension TemplateStyle {
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.m) {
             Button { studio.openDesign(item.id) } label: {
-                Color.white.aspectRatio(1, contentMode: .fit).overlay {
-                    if let image = NSImage(contentsOf: item.thumbnail) { Image(nsImage: image).resizable().scaledToFit().padding(Spacing.m) }
+                Color.white.aspectRatio(1.5, contentMode: .fit).overlay {
+                    if let image = NSImage(contentsOf: item.thumbnail) { Image(nsImage: image).resizable().scaledToFit().padding(Spacing.xs) }
                     else { Image(systemName: item.style.symbol).font(.system(size: 54)).foregroundStyle(polarInk) }
                 }.clipped()
             }.buttonStyle(.plain).accessibilityLabel("Abrir \(item.name)")
@@ -255,4 +261,24 @@ extension TemplateStyle {
         }
     }
     private func save() { studio.renameDesign(item.id, to: name); renaming = false }
+}
+
+/// Selector en menú con el mismo ancho en todas las filas de Ajustes.
+struct FixedMenu<Value: Hashable>: View {
+    let title: String
+    @Binding var selection: Value
+    let options: [(Value, String)]
+    var body: some View {
+        LabeledContent(title) {
+            HStack { Text(options.first { $0.0 == selection }?.1 ?? ""); Spacer(); Image(systemName: "chevron.up.chevron.down").font(.system(size: 10)) }
+                .padding(.horizontal, Spacing.m).frame(width: 220, height: 40)
+                .background(polarSurface, in: RoundedRectangle(cornerRadius: PolarRadius.small))
+                .overlay {
+                    Menu {
+                        ForEach(Array(options.enumerated()), id: \.offset) { _, option in Button(option.1) { selection = option.0 } }
+                    } label: { Color.clear.frame(maxWidth: .infinity, maxHeight: .infinity).contentShape(Rectangle()) }
+                        .menuStyle(.borderlessButton).menuIndicator(.hidden).accessibilityLabel(title)
+                }
+        }
+    }
 }
