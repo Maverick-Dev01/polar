@@ -31,6 +31,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.polar.app.AppContainer
 import com.polar.app.R
+import com.polar.app.help.HelpIds
+import com.polar.app.ui.help.helpTarget
 
 @Composable
 fun ToolPanel(tool: Tool, state: EditorUiState, vm: EditorViewModel, container: AppContainer, compact: Boolean, onClose: () -> Unit, modifier: Modifier = Modifier) {
@@ -50,7 +52,7 @@ fun ToolPanel(tool: Tool, state: EditorUiState, vm: EditorViewModel, container: 
         Tool.PAPER -> stringResource(R.string.tool_paper)
     }
     Surface(
-        modifier = modifier,
+        modifier = modifier.helpTarget(HelpIds.panel(tools.first { it.tool == tool }.helpId.removePrefix("tool."))),
         shape = RoundedCornerShape(0.dp),
         tonalElevation = 0.dp, shadowElevation = 0.dp
     ) {

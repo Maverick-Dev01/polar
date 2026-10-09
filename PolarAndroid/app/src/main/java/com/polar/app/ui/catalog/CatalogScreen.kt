@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun CatalogScreen(container: AppContainer, onCreated: (id: String, notice: String?) -> Unit, onBack: () -> Unit) {
+fun CatalogScreen(container: AppContainer, onCreated: (id: String, notice: String?) -> Unit, onBack: () -> Unit, landing: String? = null) {
     val context = LocalContext.current
     val newName = stringResource(R.string.catalog_new)
     val templateName = stringResource(R.string.catalog_template_name)
@@ -64,7 +64,7 @@ fun CatalogScreen(container: AppContainer, onCreated: (id: String, notice: Strin
             }
         }
     }
-    var importing by rememberSaveable { mutableStateOf(false) }
+    var importing by rememberSaveable { mutableStateOf(landing == "moldes.asistente") }
     val library = rememberMyTemplates(container)
     if (importing) {
         ImportWizardScreen(container, onDone = { saved -> importing = false; library.refresh(); vm.createFromSavedTemplate(saved) }, onExit = { importing = false })
@@ -75,6 +75,7 @@ fun CatalogScreen(container: AppContainer, onCreated: (id: String, notice: Strin
         current = null,
         thumbnails = container.thumbnails,
         showImport = true,
+        initialMine = landing == "mis-moldes",
         onPick = vm::createFromStyle,
         onImportTemplate = { importing = true },
         templates = library.templates,

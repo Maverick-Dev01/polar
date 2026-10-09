@@ -14,6 +14,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.polar.app.R
+import com.polar.app.help.HelpIds
+import com.polar.app.ui.help.helpTarget
 
 private val MinActionWidth = 60.dp
 
@@ -21,7 +23,7 @@ private val MinActionWidth = 60.dp
 fun ContextBar(hasPhoto: Boolean, onChange: () -> Unit, onCrop: () -> Unit, onRemoveBackground: () -> Unit, onRotate: () -> Unit, onText: () -> Unit, onRemove: () -> Unit) {
     Surface(
         shape = MaterialTheme.shapes.medium,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+        modifier = Modifier.fillMaxWidth().helpTarget(HelpIds.CARD_ACTIONS).padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         if (hasPhoto) {
             val actions = listOf(

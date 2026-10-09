@@ -503,4 +503,34 @@
     <string name="design_use_mine">Usar mi molde</string>
     <string name="design_shape">Forma del espacio</string>
     <string name="editor_template_applied">Molde «%1$s» aplicado. Tus fotos y frases siguen igual.</string>
+    <!-- Guía de uso (el contenido de los artículos, el recorrido y las explicaciones viene de help.json) -->
+    <string name="help_title">Ayuda</string>
+    <string name="settings_help">Ayuda y guía de uso</string>
+    <string name="help_search">Buscar en la ayuda</string>
+    <string name="help_search_clear">Borrar búsqueda</string>
+    <string name="help_all">Todas</string>
+    <string name="help_categories">Categorías</string>
+    <string name="help_no_results">No encontramos nada con «%1$s»</string>
+    <string name="help_no_results_hint">Prueba con otra palabra, por ejemplo «foto», «texto» o «imprimir».</string>
+    <string name="help_show_all">Ver todos los temas</string>
+    <string name="help_unavailable">No pudimos abrir la guía. Vuelve a abrir la app.</string>
+    <string name="help_tour_again">Ver el recorrido otra vez</string>
+    <string name="help_tour_again_hint">Un paseo de 5 pasos por el editor</string>
+    <string name="help_article_steps">Paso a paso</string>
+    <string name="help_step_n">Paso %1$d</string>
+    <string name="help_go">Llévame ahí</string>
+    <string name="help_back_to_list">Volver a los temas</string>
+    <string name="help_animation_hidden">Ilustración animada</string>
+    <string name="help_need_design">Primero crea un diseño; luego vuelve a pulsar «Llévame ahí».</string>
+    <string name="help_need_photo">Agrega una foto para poder encuadrarla.</string>
+    <plurals name="help_count"><item quantity="one">%1$d tema</item><item quantity="other">%1$d temas</item></plurals>
+    <string name="editor_help_mode">¿Qué hace cada botón?</string>
+    <string name="editor_help_center">Ayuda</string>
+    <string name="help_mode_banner">Toca un botón para saber qué hace. No se ejecutará.</string>
+    <string name="help_mode_done">Listo</string>
+    <string name="help_mode_on">Modo ayuda activado. Toca un botón para saber qué hace.</string>
+    <string name="help_mode_open_hint">Ver qué hace</string>
+    <string name="help_bubble_close">Cerrar explicación</string>
+    <string name="tour_step">Paso %1$d de %2$d</string>
+    <string name="tour_done">Listo</string>
 </resources>

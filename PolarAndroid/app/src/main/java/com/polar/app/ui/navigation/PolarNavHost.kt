@@ -2,6 +2,7 @@ package com.polar.app.ui.navigation
 
 import androidx.compose.animation.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -19,6 +20,11 @@ import com.polar.app.ui.catalog.CatalogScreen
 import com.polar.app.ui.editor.*
 import com.polar.app.ui.home.*
 import com.polar.app.ui.onboarding.OnboardingScreen
+import com.polar.app.help.HelpContent
+import com.polar.app.help.HelpNav
+import com.polar.app.help.HelpDestination
+import com.polar.app.help.HelpTarget
+import com.polar.app.ui.help.HelpScreen
 import com.polar.app.ui.rememberReduceMotion
 import com.polar.app.ui.settings.SettingsScreen
 import com.polar.app.ui.settings.UpdateViewModel
@@ -59,13 +65,14 @@ fun PolarNavHost(container: AppContainer, startOnboarding: Boolean) {
                 vm = vm,
                 thumbnailFile = container.store::thumbnailFile,
                 onOpen = { nav.navigate(EditorRoute(it)) { launchSingleTop = true } },
-                onNew = { nav.navigate(CatalogRoute) },
+                onNew = { nav.navigate(CatalogRoute()) },
                 onSettings = { nav.navigate(SettingsRoute) { launchSingleTop = true } }
             )
         }
-        composable<CatalogRoute> {
+        composable<CatalogRoute> { entry ->
             CatalogScreen(
                 container = container,
+                landing = entry.toRoute<CatalogRoute>().landing,
                 onCreated = { id, notice -> nav.navigate(EditorRoute(id, notice)) { popUpTo<HomeRoute>() } },
                 onBack = { nav.popBackStack() }
             )
@@ -93,7 +100,13 @@ fun PolarNavHost(container: AppContainer, startOnboarding: Boolean) {
                 }
             })
             var leaving by remember { mutableStateOf(false) }
-            EditorScreen(vm, container, route.notice, onBack = {
+            val pendingLanding by entry.savedStateHandle.getStateFlow<String?>("helpLanding", null).collectAsStateWithLifecycle()
+            var routeLandingDone by rememberSaveable { mutableStateOf(false) }
+            EditorScreen(vm, container, route.notice,
+                landing = pendingLanding ?: route.landing.takeIf { !routeLandingDone },
+                onLandingConsumed = { entry.savedStateHandle["helpLanding"] = null; routeLandingDone = true },
+                onOpenHelp = { nav.navigate(HelpRoute(route.projectId)) { launchSingleTop = true } },
+                onBack = {
                 if (!leaving) {
                     leaving = true
                     scope.launch {
@@ -102,6 +115,29 @@ fun PolarNavHost(container: AppContainer, startOnboarding: Boolean) {
                     }
                 }
             })
+        }
+        composable<HelpRoute> { entry ->
+            val route = entry.toRoute<HelpRoute>()
+            val context = LocalContext.current
+            val content = remember { HelpContent.load(context) }
+            // «Llévame ahí»: con un diseño abierto se vuelve a él y se le pasa el destino; si no, se abre el más reciente.
+            fun go(destino: String) {
+                val projectId = route.projectId
+                when (val target = HelpNav.resolve(destino, projectId)) {
+                    HelpTarget.Home -> if (projectId != null) {
+                        nav.previousBackStackEntry?.savedStateHandle?.set("helpLanding", destino); nav.popBackStack()
+                    } else if (!nav.popBackStack<HomeRoute>(inclusive = false)) nav.navigate(HomeRoute)
+                    HelpTarget.Settings -> if (!nav.popBackStack<SettingsRoute>(inclusive = false)) nav.navigate(SettingsRoute)
+                    is HelpTarget.Catalog -> nav.navigate(CatalogRoute(target.landing))
+                    is HelpTarget.Editor -> if (projectId != null) {
+                        nav.previousBackStackEntry?.savedStateHandle?.set("helpLanding", target.landing); nav.popBackStack()
+                    } else scope.launch {
+                        val latest = withContext(Dispatchers.IO) { container.store.list().firstOrNull() }
+                        nav.navigate(if (latest != null) EditorRoute(latest.id, landing = target.landing) else CatalogRoute())
+                    }
+                }
+            }
+            HelpScreen(content, onBack = { nav.popBackStack() }, onGo = ::go, onTour = { go(HelpDestination.TOUR_ID) })
         }
         composable<SettingsRoute> {
             val settings by container.settings.settings.collectAsStateWithLifecycle(initialValue = AppSettings())
@@ -118,6 +154,7 @@ fun PolarNavHost(container: AppContainer, startOnboarding: Boolean) {
                 onUnits = { scope.launch { container.settings.setUnits(it) } },
                 onPaper = { scope.launch { container.settings.setDefaultPaper(it) } },
                 onShowOnboarding = { nav.navigate(OnboardingRoute) },
+                onHelp = { nav.navigate(HelpRoute()) { launchSingleTop = true } },
                 onBack = { nav.popBackStack() },
                 updates = updates
             )

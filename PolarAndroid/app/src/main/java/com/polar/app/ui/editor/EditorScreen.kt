@@ -16,6 +16,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.FastOutSlowInEasing
 import com.polar.app.ui.rememberReduceMotion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -53,6 +54,15 @@ import com.polar.app.ui.catalog.rememberMyTemplates
 import com.polar.app.ui.importer.ImportWizardScreen
 import com.polar.app.ui.theme.PolarColors
 import com.polar.app.model.suggestedPhotoPreset
+import com.polar.app.help.EditorLanding
+import com.polar.app.help.HelpContent
+import com.polar.app.help.HelpIds
+import com.polar.app.help.TourFlow
+import com.polar.app.ui.help.HelpModeOverlay
+import com.polar.app.ui.help.HelpTargets
+import com.polar.app.ui.help.LocalHelpTargets
+import com.polar.app.ui.help.TourOverlay
+import com.polar.app.ui.help.helpTarget
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -60,7 +70,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun EditorScreen(vm: EditorViewModel, container: AppContainer, notice: String?, onBack: () -> Unit) {
+fun EditorScreen(
+    vm: EditorViewModel, container: AppContainer, notice: String?, onBack: () -> Unit,
+    /** Adónde llegó desde Ayuda («Llévame ahí»): un destino de help.json o «recorrido». */
+    landing: String? = null, onLandingConsumed: () -> Unit = {}, onOpenHelp: () -> Unit = {}
+) {
     val state by vm.state.collectAsStateWithLifecycle()
     val focus = androidx.compose.ui.platform.LocalFocusManager.current
     val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
@@ -156,6 +170,46 @@ fun EditorScreen(vm: EditorViewModel, container: AppContainer, notice: String?, 
     BackHandler(enabled = state.mode == EditorMode.EDIT && state.selectedSlot != null && (state.tool == null || expandedLayout)) { vm.clearSelection() }
     BackHandler(enabled = state.mode == EditorMode.EDIT && state.editingRegions) { vm.setEditingRegions(false) }
 
+    // Guía: recorrido inicial, modo «?» y destinos de «Llévame ahí».
+    val helpContent = remember { HelpContent.load(context) }
+    val helpTargets = remember { HelpTargets() }
+    val tourSeen by remember { container.settings.settings.map { it.tourSeen } }.collectAsState(initial = null as Boolean?)
+    var tourActive by rememberSaveable { mutableStateOf(false) }
+    var tourStarted by rememberSaveable { mutableStateOf(false) }
+    var helpMode by rememberSaveable { mutableStateOf(false) }
+    val editing = state.mode == EditorMode.EDIT
+    LaunchedEffect(tourSeen, state.loading, editing) {
+        if (helpContent != null && !tourStarted && TourFlow.shouldAutoStart(tourSeen, state.loading, editing)) { tourStarted = true; tourActive = true }
+    }
+    val needPhotoMessage = stringResource(R.string.help_need_photo)
+    LaunchedEffect(landing, state.loading, editing) {
+        if (landing == null || state.loading || !editing) return@LaunchedEffect
+        helpMode = false
+        when (EditorLanding.of(landing)) {
+            EditorLanding.TOOL_PHOTOS -> vm.setTool(Tool.PHOTOS)
+            EditorLanding.TOOL_FILTERS -> vm.setTool(Tool.FILTERS)
+            EditorLanding.TOOL_DESIGN -> vm.setTool(Tool.DESIGN)
+            EditorLanding.TOOL_TEXT -> vm.setTool(Tool.TEXT)
+            EditorLanding.TOOL_PAPER -> vm.setTool(Tool.PAPER)
+            EditorLanding.CROP -> {
+                val slot = state.project.placements.indexOfFirst { it != null }
+                if (slot >= 0) { vm.selectSlot(slot); vm.setMode(EditorMode.CROP) } else { vm.setTool(Tool.PHOTOS); showMessage(needPhotoMessage) }
+            }
+            EditorLanding.FINISH -> vm.setMode(EditorMode.FINISH)
+            EditorLanding.IMPORT -> vm.setMode(EditorMode.IMPORT_TEMPLATE)
+            EditorLanding.MY_TEMPLATES -> vm.openMyTemplates()
+            EditorLanding.TOUR -> { tourStarted = true; tourActive = true }
+            EditorLanding.HOME -> onBack()
+            EditorLanding.NONE -> Unit
+        }
+        onLandingConsumed()
+    }
+    val overlayOn = (tourActive || helpMode) && editing && helpContent != null
+    // Al final de los demás: Atrás cierra primero el recorrido o el modo «?».
+    BackHandler(enabled = overlayOn) {
+        if (tourActive) { tourActive = false; scope.launch { container.settings.setTourSeen(true) } } else helpMode = false
+    }
+
     if (state.loadFailed) {
         LoadFailed(onBack)
         return
@@ -164,6 +218,10 @@ fun EditorScreen(vm: EditorViewModel, container: AppContainer, notice: String?, 
     state.backgroundError?.let { error ->
         AlertDialog(onDismissRequest = vm::dismissBackgroundError, title = { Text(stringResource(R.string.bg_change_failed)) }, text = { Text(error.resolve()) }, confirmButton = { TextButton(vm::dismissBackgroundError) { Text(stringResource(R.string.action_accept)) } })
     }
+    CompositionLocalProvider(LocalHelpTargets provides helpTargets) {
+    Box(Modifier.fillMaxSize()) {
+    // Con la guía encima, TalkBack sólo recorre la guía (el editor queda oculto para él).
+    Box(Modifier.fillMaxSize().then(if (overlayOn) Modifier.clearAndSetSemantics { } else Modifier)) {
     when (state.mode) {
         EditorMode.CHANGE_DESIGN -> {
             val library = rememberMyTemplates(container)
@@ -190,7 +248,14 @@ fun EditorScreen(vm: EditorViewModel, container: AppContainer, notice: String?, 
                 }
             }
         }
-        else -> EditorLayout(state, vm, container, snackbar, onBack)
+        else -> EditorLayout(state, vm, container, snackbar, onBack, onHelpMode = { helpMode = true }, onHelpCenter = onOpenHelp)
+    }
+    }
+    if (editing && helpContent != null) {
+        if (tourActive) TourOverlay(helpContent.recorrido, helpTargets, onFinish = { tourActive = false; scope.launch { container.settings.setTourSeen(true) } })
+        else if (helpMode) HelpModeOverlay(helpContent, helpTargets, onDone = { helpMode = false })
+    }
+    }
     }
 }
 
@@ -208,7 +273,7 @@ private fun LoadFailed(onBack: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun EditorLayout(state: EditorUiState, vm: EditorViewModel, container: AppContainer, snackbar: SnackbarHostState, onBack: () -> Unit) {
+private fun EditorLayout(state: EditorUiState, vm: EditorViewModel, container: AppContainer, snackbar: SnackbarHostState, onBack: () -> Unit, onHelpMode: () -> Unit, onHelpCenter: () -> Unit) {
     val expanded = LocalLayout.current == LayoutKind.EXPANDED
     val reduceMotion = rememberReduceMotion()
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia()) { uris ->
@@ -244,7 +309,8 @@ private fun EditorLayout(state: EditorUiState, vm: EditorViewModel, container: A
                 actions = EditorTopBarActions(
                     onBack = onBack, onRename = { renaming = true }, onUndo = vm::undo, onRedo = vm::redo,
                     onPrint = { vm.setMode(EditorMode.FINISH) }, onSelectMany = { vm.setMultiSelecting(true) },
-                    onAddPage = vm::addPage, onClearPage = vm::clearPage, onRemovePage = vm::removePage
+                    onAddPage = vm::addPage, onClearPage = vm::clearPage, onRemovePage = vm::removePage,
+                    onHelpMode = onHelpMode, onHelpCenter = onHelpCenter
                 )
             )
         }
@@ -326,7 +392,7 @@ private fun Hint() {
 
 @Composable
 private fun EmptyPhotosCta(onAdd: () -> Unit) {
-    Card(Modifier.fillMaxWidth().padding(12.dp), elevation = CardDefaults.cardElevation(4.dp)) {
+    Card(Modifier.fillMaxWidth().helpTarget(HelpIds.ADD_PHOTOS).padding(12.dp), elevation = CardDefaults.cardElevation(4.dp)) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(stringResource(R.string.editor_empty_title), style = MaterialTheme.typography.titleMedium)

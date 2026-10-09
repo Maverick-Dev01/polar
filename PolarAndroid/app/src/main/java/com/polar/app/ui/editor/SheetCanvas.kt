@@ -48,6 +48,8 @@ import com.polar.app.ui.theme.PolarColors
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import com.polar.app.help.HelpIds
+import com.polar.app.ui.help.helpTarget
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
@@ -65,17 +67,17 @@ fun SheetArea(state: EditorUiState, vm: EditorViewModel, container: AppContainer
         HorizontalPager(
             state = pager,
             userScrollEnabled = !zoomed && !state.editingRegions,
-            modifier = Modifier.weight(1f).fillMaxWidth()
+            modifier = Modifier.weight(1f).fillMaxWidth().helpTarget(HelpIds.SHEET)
         ) { page ->
             SheetPage(state, page, vm, container, zoomed = zoomed && page == state.page, onToggleZoom = { zoomed = !zoomed })
         }
-        PagerRow(state.page, count, onPrev = { vm.setPage(state.page - 1) }, onNext = { vm.setPage(state.page + 1) })
+        PagerRow(Modifier.helpTarget(HelpIds.PAGES), state.page, count, onPrev = { vm.setPage(state.page - 1) }, onNext = { vm.setPage(state.page + 1) })
     }
 }
 
 @Composable
-private fun PagerRow(page: Int, count: Int, onPrev: () -> Unit, onNext: () -> Unit) {
-    Row(Modifier.fillMaxWidth().heightIn(min=48.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+private fun PagerRow(modifier: Modifier, page: Int, count: Int, onPrev: () -> Unit, onNext: () -> Unit) {
+    Row(modifier.fillMaxWidth().heightIn(min=48.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onPrev, enabled = page > 0) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, stringResource(R.string.editor_prev_page)) }
         Row(horizontalArrangement = Arrangement.spacedBy(5.dp), modifier = Modifier.clearAndSetSemantics { }) {
             repeat(minOf(count, 8)) { i ->

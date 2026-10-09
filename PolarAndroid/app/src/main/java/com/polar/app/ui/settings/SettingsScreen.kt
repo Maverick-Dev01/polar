@@ -34,7 +34,8 @@ fun SettingsScreen(
     onPaper: (PaperSize) -> Unit,
     onShowOnboarding: () -> Unit,
     onBack: () -> Unit,
-    updates: UpdateViewModel? = null
+    updates: UpdateViewModel? = null,
+    onHelp: () -> Unit = {}
 ) {
     var dialog by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
@@ -82,6 +83,8 @@ fun SettingsScreen(
             else Text(stringResource(R.string.updates_play), style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             OutlinedCard {
+                RowItem(stringResource(R.string.settings_help), onHelp)
+                HorizontalDivider()
                 RowItem(stringResource(R.string.settings_show_onboarding), onShowOnboarding)
                 HorizontalDivider()
                 RowItem(stringResource(R.string.settings_how_print)) { dialog = "print" }
