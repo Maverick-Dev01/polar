@@ -126,12 +126,7 @@ struct FontChoice: Identifiable {
             guard let font = NSFont(name: name, size: 12) else { return nil }
             return FontChoice(id: name, name: font.displayName ?? name)
         }
-        let folder = Bundle.main.bundleURL.deletingLastPathComponent().appendingPathComponent("Fotitos/Mejoradas")
-        if storageRoot == nil, FileManager.default.fileExists(atPath: folder.path) {
-            project.photos = PhotoImporter.read(urls: [folder]).photos
-            project.placements = project.photos.prefix(project.settings.capacity).map { PhotoPlacement(assetID: $0.id) }
-            if !project.photos.isEmpty { status = "\(project.photos.count) \(project.photos.count == 1 ? "foto de Mejoradas lista" : "fotos de Mejoradas listas"). Puedes cambiarlas." }
-        }
+        library.purgeTrash()
         project.normalized()
         project.name = "Nuevo diseño"
         libraryItems = library.list()
@@ -576,21 +571,6 @@ struct FontChoice: Identifiable {
         }
     }
 
-    func loadFotitos(_ name: String) {
-        let folder = Bundle.main.bundleURL.deletingLastPathComponent().appendingPathComponent("Fotitos").appendingPathComponent(name)
-        guard FileManager.default.fileExists(atPath: folder.path) else {
-            errorMessage = "No encuentro Fotitos junto a la app. Usa Agregar fotos y elige la carpeta."
-            return
-        }
-        let panel = NSOpenPanel()
-        panel.title = "Agregar fotos de \(name)"
-        panel.prompt = "Agregar"
-        panel.canChooseDirectories = true
-        panel.canChooseFiles = false
-        panel.directoryURL = folder
-        if runPanel(panel) == .OK { importURLs(panel.urls, fill: false) }
-    }
-
     @discardableResult func saveProject(asNew: Bool = false) -> Bool {
         guard flush() else { return false }
         var target = projectURL
@@ -665,7 +645,7 @@ struct FontChoice: Identifiable {
         }
     }
 
-    enum ExportFormat { case pdf, pdfLossless, png, jpeg }
+    enum ExportFormat { case pdf, png, jpeg }
 
     func export(_ format: ExportFormat) {
         guard !busy, project.placedCount > 0 else { return }
@@ -675,18 +655,18 @@ struct FontChoice: Identifiable {
         panel.allowedContentTypes = [image ? (format == .jpeg ? .jpeg : .png) : .pdf]
         panel.nameFieldStringValue = image ? "Polar hoja \(page + 1).\(format == .jpeg ? "jpg" : "png")" : "Polar para imprimir.pdf"
         guard runPanel(panel) == .OK, let url = panel.url else { return }
-        let snapshot = project, selectedPage = page
+        let snapshot = project, selectedPage = page, quality = preferences.exportQuality
         busy = true; status = "Preparando \(image ? "imagen" : "PDF")…"
         DispatchQueue.global(qos: .userInitiated).async {
             do {
                 switch format {
-                case .png: try PolarRenderer.writePNG(project: snapshot, page: selectedPage, to: url)
-                case .jpeg: try PolarRenderer.writeJPEG(project: snapshot, page: selectedPage, to: url)
-                case .pdf, .pdfLossless: try PolarRenderer.writePDF(project: snapshot, to: url, optimizePhotos: format == .pdf)
+                case .png: try PolarRenderer.writePNG(project: snapshot, page: selectedPage, to: url, quality: quality)
+                case .jpeg: try PolarRenderer.writeJPEG(project: snapshot, page: selectedPage, to: url, quality: quality)
+                case .pdf: try PolarRenderer.writePDF(project: snapshot, to: url, quality: quality)
                 }
                 DispatchQueue.main.async {
                     self.busy = false; self.lastExport = url
-                    self.status = image ? "Imagen lista: \(snapshot.settings.paperSize.name) a 300 ppp." : "PDF listo: \(snapshot.pageCount) hojas \(snapshot.settings.paperSize.name). Imprime al 100 %."
+                    self.status = image ? "Imagen lista: \(snapshot.settings.paperSize.name) a \(Int(quality.dpi)) ppp." : "PDF listo (\(quality.title)): \(snapshot.pageCount) hojas \(snapshot.settings.paperSize.name). Imprime al 100 %."
                 }
             } catch {
                 DispatchQueue.main.async { self.busy = false; self.errorMessage = error.localizedDescription; self.status = "No se guardó la exportación." }
@@ -772,6 +752,19 @@ struct FontChoice: Identifiable {
             libraryItems = library.list()
         } catch { errorMessage = error.localizedDescription }
     }
+    /// Resolution tier of a gallery photo at its first placed slot; nil when it is not placed.
+    func placedQuality(of photo: PhotoAsset) -> PhotoQuality? {
+        guard let slot = project.placements.firstIndex(where: { $0?.assetID == photo.id }),
+              let geometry = PolarRenderer.cropGeometry(project: project, slot: slot),
+              let dpi = project.effectiveDPI(slot: slot, rect: geometry.photo) else { return nil }
+        return PhotoQuality.of(dpi: dpi)
+    }
+    var trashCount: Int { library.trashCount() }
+    /// Permanently removes the trash, keeping the design that can still be undone.
+    func emptyTrash() {
+        library.emptyTrash(keeping: deletedID)
+        objectWillChange.send()
+    }
     func restoreDeletedDesign() {
         guard let id = deletedID else { return }
         do { try library.restore(id); deletedID = nil; libraryItems = library.list() }
@@ -824,10 +817,12 @@ struct FontChoice: Identifiable {
         return String(format: "%@ · %.2f × %.2f %@ · %@", project.settings.paperSize.name,
                       size.width / unit.pointsPerUnit, size.height / unit.pointsPerUnit, unit.abbreviation, project.settings.orientation.name)
     }
+    /// Slots whose photo resolution is low (< 150 ppp) or only fair (< 220 ppp) at the printed size.
     var lowQualitySlots: [Int] {
         project.placements.indices.filter { slot in
-            guard let geometry = PolarRenderer.cropGeometry(project: project, slot: slot) else { return false }
-            return project.effectiveDPI(slot: slot, rect: geometry.photo).map { $0 < 150 } == true
+            guard let geometry = PolarRenderer.cropGeometry(project: project, slot: slot),
+                  let dpi = project.effectiveDPI(slot: slot, rect: geometry.photo) else { return false }
+            return PhotoQuality.of(dpi: dpi) != .good
         }
     }
     var currentLook: PhotoLook { LookResolver.resolve(project: project, slot: selectedSlot) }

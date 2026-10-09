@@ -68,7 +68,6 @@ private let cream = polarCream
                 Button("Exportar PDF…") { studio.export(.pdf) }.keyboardShortcut("e")
                 Button("Exportar JPG de esta hoja…") { studio.export(.jpeg) }
                 Button("Exportar PNG sin pérdida…") { studio.export(.png) }
-                Button("Exportar PDF sin compresión JPEG…") { studio.export(.pdfLossless) }
             }
             CommandGroup(replacing: .help) {
                 Button("Descargar última versión…") {
@@ -166,7 +165,6 @@ private let cream = polarCream
                     Button("PDF · todas las hojas") { studio.export(.pdf) }
                     Button("JPG · esta hoja · más ligero") { studio.export(.jpeg) }
                     Button("PNG · esta hoja · sin pérdida") { studio.export(.png) }
-                    Button("PDF sin compresión JPEG · más peso") { studio.export(.pdfLossless) }
                 } label: { Label("Exportar", systemImage: "square.and.arrow.up") }
                     .menuStyle(.borderedButton).disabled(studio.busy || studio.project.placedCount == 0)
                 Button { studio.finish() } label: { Label("Imprimir", systemImage: "printer") }.buttonStyle(PolarButtonStyle(primary: true)).disabled(studio.busy || studio.project.placedCount == 0)
@@ -283,10 +281,6 @@ private let cream = polarCream
                 Text("Tus fotos").font(.system(size: 13, weight: .semibold))
                 Text("\(studio.project.photos.count)").font(.system(size: 11)).foregroundStyle(.secondary)
                 Spacer()
-                Menu("Fotitos") {
-                    Button("Agregar Mejoradas") { studio.loadFotitos("Mejoradas") }
-                    Button("Agregar Version IA") { studio.loadFotitos("Version IA") }
-                }.menuStyle(.borderlessButton).fixedSize()
                 Button("Rellenar todo") { studio.fillAll() }
                     .disabled(studio.project.photos.isEmpty).buttonStyle(.borderless)
             }.font(.system(size: 11)).frame(minHeight: 48)
@@ -326,10 +320,16 @@ private let cream = polarCream
                                             Image(systemName: "checkmark.circle.fill").foregroundStyle(.white, ink)
                                                 .font(.system(size: 14)).padding(3)
                                         }
+                                        if let badge = studio.placedQuality(of: photo)?.badge {
+                                            Text(badge).font(.system(size: 9, weight: .bold)).foregroundStyle(.white)
+                                                .padding(.horizontal, 4).padding(.vertical, 1)
+                                                .background(badge == "Baja" ? Color.red : Color.orange, in: Capsule())
+                                                .padding(3).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                                        }
                                     }.clipShape(RoundedRectangle(cornerRadius: PolarRadius.small))
                                     Text(photo.name).font(.system(size: 10)).lineLimit(1).frame(width: 76)
                                 }
-                            }.buttonStyle(.plain).accessibilityLabel("Colocar \(photo.name)")
+                            }.buttonStyle(.plain).accessibilityLabel("Colocar \(photo.name)" + (studio.placedQuality(of: photo)?.badge.map { ". Resolución \($0.lowercased())" } ?? ""))
                         }
                     }
                 }.scrollIndicators(.hidden)
@@ -504,7 +504,12 @@ private let cream = polarCream
                 if studio.project.settings.style == .spotify {
                     Divider()
                     field("Enlace de la canción (opcional)", \.songURL)
-                    Text("Incluye un QR que abre ese enlace.").font(.system(size: 11)).foregroundStyle(.secondary)
+                    if PolarRenderer.qrState(studio.project.settings.songURL) == .tooLong {
+                        Label("Enlace muy largo para un QR. Usa uno más corto; en la hoja aparecerá un aviso en su lugar.", systemImage: "exclamationmark.triangle")
+                            .font(.system(size: 11)).foregroundStyle(.orange)
+                    } else {
+                        Text("Incluye un QR que abre ese enlace.").font(.system(size: 11)).foregroundStyle(.secondary)
+                    }
                 }
             }
         }.font(.system(size: 13)).textFieldStyle(.roundedBorder)
@@ -549,7 +554,7 @@ private let cream = polarCream
             section("Para imprimir")
             Text("Elige este mismo tamaño de papel en la impresora y usa Tamaño real o escala 100 %.")
                 .font(.system(size: 12)).foregroundStyle(.secondary).lineSpacing(3)
-            Text("PDF y JPG con fotos a 300 ppp y compresión de alta calidad. PNG o PDF sin compresión JPEG conservan los píxeles renderizados y pesan más.").font(.system(size: 11)).foregroundStyle(.secondary)
+            Text("La calidad de PDF y JPG se elige en Terminar: \(studio.preferences.exportQuality.title). PNG conserva los píxeles renderizados y pesa más.").font(.system(size: 11)).foregroundStyle(.secondary)
         }.font(.system(size: 13)).textFieldStyle(.roundedBorder)
     }
 

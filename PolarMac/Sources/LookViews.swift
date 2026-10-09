@@ -228,8 +228,13 @@ private let presetImageCache: NSCache<NSString, NSImage> = { let cache = NSCache
                     ring("Grano", look.grain, 0...1) { studio.adjustLook(look.replacing(grain: $0)) }
                 }.padding(.top, Spacing.m)
             }.disabled(!canApply)
-            Button("Comparar · mantener pulsado") { }.frame(maxWidth: .infinity, minHeight: 48)
-                .onLongPressGesture(minimumDuration: 0.01, pressing: studio.setComparing, perform: {})
+            // Not a Button: a Button's own (empty) action would swallow the press-and-hold gesture.
+            // DragGesture(minimumDistance: 0) reports touch-down and release reliably.
+            Label("Comparar · mantener pulsado", systemImage: "eye").frame(maxWidth: .infinity, minHeight: 48)
+                .background(polarInk.opacity(studio.comparing ? 0.18 : 0.08), in: RoundedRectangle(cornerRadius: PolarRadius.small))
+                .foregroundStyle(polarInk).contentShape(RoundedRectangle(cornerRadius: PolarRadius.small))
+                .gesture(DragGesture(minimumDistance: 0).onChanged { _ in studio.setComparing(true) }.onEnded { _ in studio.setComparing(false) })
+                .accessibilityAddTraits(.isButton)
                 .accessibilityHint("Mantén pulsado o mantén la tecla espacio para ver el original")
             ViewThatFits(in: .horizontal) {
                 HStack { removeButton; allButton }
@@ -350,8 +355,10 @@ private let presetImageCache: NSCache<NSString, NSImage> = { let cache = NSCache
                 }
             }.frame(maxWidth: 800)
             if let geometry, let dpi = studio.project.effectiveDPI(slot: studio.selectedSlot, rect: geometry.photo) {
-                Label(dpi < 150 ? "Poca resolución para este tamaño" : "Resolución suficiente · \(Int(dpi)) ppp", systemImage: dpi < 150 ? "exclamationmark.triangle" : "checkmark.circle")
-                    .foregroundStyle(dpi < 150 ? polarInk : .secondary)
+                let quality = PhotoQuality.of(dpi: dpi)
+                Label(quality == .low ? "Resolución baja · \(Int(dpi)) ppp" : quality == .fair ? "Resolución aceptable · \(Int(dpi)) ppp" : "Resolución suficiente · \(Int(dpi)) ppp",
+                      systemImage: quality == .good ? "checkmark.circle" : "exclamationmark.triangle")
+                    .foregroundStyle(quality == .low ? Color.red : quality == .fair ? Color.orange : Color.secondary)
             }
         }.padding(Spacing.l) }.background(polarCream).tint(polarInk).buttonStyle(PolarButtonStyle())
             .background(PhotoKeys(compare: studio.setComparing, zoom: zoom, nudge: nudge, begin: studio.beginEditing, end: studio.endEditing).frame(width: 0, height: 0))

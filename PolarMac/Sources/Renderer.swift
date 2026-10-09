@@ -141,7 +141,7 @@ enum PolarRenderer {
         return NSImage(cgImage: image, size: viewport.size)
     }
 
-    static func writePDF(project: PolarProject, to url: URL, optimizePhotos: Bool = true) throws {
+    static func writePDF(project: PolarProject, to url: URL, quality: ExportQuality = .high) throws {
         try validateExport(project, to: url)
         let paper = paperRect(project.settings)
         try atomicWrite(to: url) { temporary in
@@ -157,7 +157,7 @@ enum PolarRenderer {
                 context.translateBy(x: 0, y: paper.height)
                 context.scaleBy(x: 1, y: -1)
                 do {
-                    try drawPage(project: project, page: page, context: context, isPreview: false, isPDF: true, optimizePhotos: optimizePhotos)
+                    try drawPage(project: project, page: page, context: context, isPreview: false, isPDF: true, quality: quality)
                     context.restoreGState()
                     context.endPDFPage()
                 } catch {
@@ -169,36 +169,47 @@ enum PolarRenderer {
         }
     }
 
-    static func writePNG(project: PolarProject, page: Int, to url: URL) throws {
-        try writeImage(project: project, page: page, to: url, jpeg: false)
+    static func writePNG(project: PolarProject, page: Int, to url: URL, quality: ExportQuality = .high) throws {
+        // PNG is lossless by definition: always 300 ppp, whatever the quality preference.
+        try writeImage(project: project, page: page, to: url, jpeg: false, quality: .high)
     }
 
-    static func writeJPEG(project: PolarProject, page: Int, to url: URL) throws {
-        try writeImage(project: project, page: page, to: url, jpeg: true)
+    static func writeJPEG(project: PolarProject, page: Int, to url: URL, quality: ExportQuality = .high) throws {
+        try writeImage(project: project, page: page, to: url, jpeg: true, quality: quality)
     }
 
-    private static func writeImage(project: PolarProject, page: Int, to url: URL, jpeg: Bool) throws {
+    private static func writeImage(project: PolarProject, page: Int, to url: URL, jpeg: Bool, quality: ExportQuality) throws {
         try validateExport(project, to: url, page: page)
         let paper = paperRect(project.settings)
-        let width = max(1, Int((paper.width * 300 / 72).rounded())), height = max(1, Int((paper.height * 300 / 72).rounded()))
+        let width = max(1, Int((paper.width * quality.dpi / 72).rounded())), height = max(1, Int((paper.height * quality.dpi / 72).rounded()))
         try atomicWrite(to: url) { temporary in
             guard let context = bitmap(width: width, height: height) else { throw PolarError.exportFailed }
             context.translateBy(x: 0, y: CGFloat(height))
             context.scaleBy(x: CGFloat(width) / paper.width, y: -CGFloat(height) / paper.height)
-            try drawPage(project: project, page: page, context: context, isPreview: false)
+            try drawPage(project: project, page: page, context: context, isPreview: false, quality: quality)
             guard let image = context.makeImage(),
                   let destination = CGImageDestinationCreateWithURL(temporary as CFURL, (jpeg ? "public.jpeg" : "public.png") as CFString, 1, nil)
             else { throw PolarError.exportFailed }
-            var properties: [CFString: Any] = [kCGImagePropertyDPIWidth: 300, kCGImagePropertyDPIHeight: 300]
-            if jpeg { properties[kCGImageDestinationLossyCompressionQuality] = 0.94 }
+            var properties: [CFString: Any] = [kCGImagePropertyDPIWidth: Int(quality.dpi), kCGImagePropertyDPIHeight: Int(quality.dpi)]
+            if jpeg { properties[kCGImageDestinationLossyCompressionQuality] = quality.imageJPEGQuality }
             CGImageDestinationAddImage(destination, image, properties as CFDictionary)
             guard CGImageDestinationFinalize(destination) else { throw PolarError.exportFailed }
         }
     }
 
-    private static func bitmap(width: Int, height: Int) -> CGContext? {
-        CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
-                  space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+    // Every intermediate layer resamples with high-quality interpolation so shrinking photos does not alias.
+    static func bitmap(width: Int, height: Int) -> CGContext? {
+        let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+                                space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        context?.interpolationQuality = .high
+        return context
+    }
+
+    static func opaqueSRGBContext(width: Int, height: Int) -> CGContext? {
+        let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+                                space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)
+        context?.interpolationQuality = .high
+        return context
     }
 
     private static func validateExport(_ project: PolarProject, to destination: URL, page: Int? = nil) throws {
@@ -234,7 +245,7 @@ enum PolarRenderer {
         guard result == 0 else { throw PolarError.exportFailed }
     }
 
-    private static func drawPage(project: PolarProject, page: Int, context: CGContext, isPreview: Bool, isPDF: Bool = false, optimizePhotos: Bool = true) throws {
+    private static func drawPage(project: PolarProject, page: Int, context: CGContext, isPreview: Bool, isPDF: Bool = false, quality: ExportQuality = .high) throws {
         let paper = paperRect(project.settings)
         let previous = NSGraphicsContext.current
         NSGraphicsContext.current = NSGraphicsContext(cgContext: context, flipped: true)
@@ -244,7 +255,7 @@ enum PolarRenderer {
         context.setShouldAntialias(true)
         context.interpolationQuality = .high
         if project.settings.style == .imported, project.settings.importedTemplate != nil {
-            try drawImported(project: project, page: page, context: context, isPreview: isPreview, isPDF: isPDF, optimizePhotos: optimizePhotos)
+            try drawImported(project: project, page: page, context: context, isPreview: isPreview, isPDF: isPDF, quality: quality)
             return
         }
         let cards = cardRects(project: project, page: page)
@@ -253,12 +264,12 @@ enum PolarRenderer {
             defer { context.restoreGState() }
             let firstSlot = page * project.settings.capacity + index * project.settings.style.photosPerCard
             if !isPreview && (firstSlot >= project.placements.count || project.placements[firstSlot..<min(project.placements.count, firstSlot + project.settings.style.photosPerCard)].allSatisfy({ $0 == nil })) { continue }
-            try drawCard(card, project: project, firstSlot: firstSlot, context: context, isPreview: isPreview, isPDF: isPDF, optimizePhotos: optimizePhotos)
+            try drawCard(card, project: project, firstSlot: firstSlot, context: context, isPreview: isPreview, isPDF: isPDF, quality: quality)
             if project.settings.cutGuides { drawGuides(card, style: project.settings.cutStyle, paper: paper, excluding: cards, context: context) }
         }
     }
 
-    private static func drawCard(_ card: CGRect, project: PolarProject, firstSlot: Int, context: CGContext, isPreview: Bool, isPDF: Bool, optimizePhotos: Bool = true) throws {
+    private static func drawCard(_ card: CGRect, project: PolarProject, firstSlot: Int, context: CGContext, isPreview: Bool, isPDF: Bool, quality: ExportQuality = .high) throws {
         let s = project.settingsForCard(firstSlot / project.settings.style.photosPerCard), style = s.style, accent = color(s.accentHex)
         func r(_ x: CGFloat, _ y: CGFloat, _ w: CGFloat, _ h: CGFloat) -> CGRect {
             CGRect(x: card.minX + x * card.width, y: card.minY + y * card.height, width: w * card.width, height: h * card.height)
@@ -292,7 +303,7 @@ enum PolarRenderer {
             let rounded = s.roundedPhotos || style == .playerGray || style == .playerRed || style == .pets
             if style == .heart { context.addPath(heartPath(in: rect)); context.clip() }
             try drawPhoto(photo, placement: placement, in: rect, radius: rounded ? min(rect.width, rect.height) * 0.045 : 0,
-                          accent: accent, background: background, context: context, isPreview: isPreview, isPDF: isPDF, optimizePhotos: optimizePhotos,
+                          accent: accent, background: background, context: context, isPreview: isPreview, isPDF: isPDF, quality: quality,
                           look: LookResolver.resolve(project: project, slot: slot), card: card, cardIndex: firstSlot / style.photosPerCard, backgroundPhoto: placement?.background?.imageID.flatMap { id in project.photos.first { $0.id == id } })
         }
         func userText(_ role: TextRole, in rect: CGRect, size: CGFloat, color: NSColor = .black,
@@ -436,7 +447,7 @@ enum PolarRenderer {
         return path
     }
 
-    private static func drawImported(project: PolarProject, page: Int, context: CGContext, isPreview: Bool, isPDF: Bool, optimizePhotos: Bool = true) throws {
+    private static func drawImported(project: PolarProject, page: Int, context: CGContext, isPreview: Bool, isPDF: Bool, quality: ExportQuality = .high) throws {
         guard let template = project.settings.importedTemplate else { return }
         let frame = templateRect(settings: project.settings), cards = cardRects(settings: project.settings)
         func photo(_ index: Int) throws {
@@ -444,15 +455,15 @@ enum PolarRenderer {
             let placement = project.placements.indices.contains(slot) ? project.placements[slot] : nil
             if !isPreview && placement == nil { return }
             try drawPhoto(project.asset(for: placement), placement: placement, in: cards[index], radius: 0,
-                          accent: color(project.settings.accentHex), background: .white, context: context, isPreview: isPreview, isPDF: isPDF, optimizePhotos: optimizePhotos,
+                          accent: color(project.settings.accentHex), background: .white, context: context, isPreview: isPreview, isPDF: isPDF, quality: quality,
                           look: LookResolver.resolve(project: project, slot: slot), card: cards[index], cardIndex: slot, backgroundPhoto: placement?.background?.imageID.flatMap { id in project.photos.first { $0.id == id } })
         }
         for index in template.regions.indices where template.regions[index].isTransparent { try photo(index) }
-        let maximum = max(1, Int((max(frame.width, frame.height) * (isPreview ? 2 : 300 / 72)).rounded(.up)))
+        let maximum = max(1, Int((max(frame.width, frame.height) * (isPreview ? 2 : quality.dpi / 72)).rounded(.up)))
         if let source = CGImageSourceCreateWithURL(URL(fileURLWithPath: template.path) as CFURL, nil),
            var image = CGImageSourceCreateThumbnailAtIndex(source, 0, [kCGImageSourceCreateThumbnailFromImageAlways: true,
                 kCGImageSourceCreateThumbnailWithTransform: true, kCGImageSourceThumbnailMaxPixelSize: maximum] as CFDictionary) {
-            if isPDF && optimizePhotos && !template.regions.contains(where: \.isTransparent) { image = try jpegForPDF(image, background: .white) }
+            if isPDF && quality.jpegQuality != nil && !template.regions.contains(where: \.isTransparent) { image = try jpegForPDF(image, background: .white, quality: quality.jpegQuality ?? 0.94) }
             context.saveGState()
             context.translateBy(x: frame.minX, y: frame.maxY); context.scaleBy(x: 1, y: -1)
             context.draw(image, in: CGRect(origin: .zero, size: frame.size)); context.restoreGState()
@@ -467,7 +478,7 @@ enum PolarRenderer {
     }
 
     private static func drawPhoto(_ photo: PhotoAsset?, placement: PhotoPlacement?, in rect: CGRect, radius: CGFloat,
-                                  accent: NSColor, background: NSColor, context: CGContext, isPreview: Bool, isPDF: Bool, optimizePhotos: Bool = true,
+                                  accent: NSColor, background: NSColor, context: CGContext, isPreview: Bool, isPDF: Bool, quality: ExportQuality = .high,
                                   look: PhotoLook, card: CGRect, cardIndex: Int, clipPhoto: Bool = true, backgroundPhoto: PhotoAsset? = nil) throws {
         context.saveGState()
         defer { context.restoreGState() }
@@ -490,7 +501,7 @@ enum PolarRenderer {
         var sourceHeight = CGFloat((properties?[kCGImagePropertyPixelHeight] as? NSNumber)?.doubleValue ?? Double(photo.pixelHeight))
         if (5...8).contains(properties?[kCGImagePropertyOrientation] as? Int ?? 1) { swap(&sourceWidth, &sourceHeight) }
         let rotated = placement.quarterTurns % 2 != 0
-        let density: CGFloat = isPreview ? 2 : 300 / 72
+        let density: CGFloat = isPreview ? 2 : quality.dpi / 72
         let requiredScale = max(rect.width / (rotated ? sourceHeight : sourceWidth),
                                 rect.height / (rotated ? sourceWidth : sourceHeight)) * CGFloat(placement.zoom) * density
         let longest = max(sourceWidth, sourceHeight)
@@ -509,7 +520,7 @@ enum PolarRenderer {
         let fit = PhotoFit.compute(box: rect.size, source: CGSize(width: width, height: height), placement: placement)
         if !look.isNeutral || isPDF || placement.background != nil {
             // Render in card coordinates before adding grain, so zoom and output resolution never change its seed/grid.
-            let density: CGFloat = isPreview ? 2 : 300 / 72
+            let density: CGFloat = isPreview ? 2 : quality.dpi / 72
             let w = max(1, Int(ceil(rect.width * density))), h = max(1, Int(ceil(rect.height * density)))
             guard let filtered = bitmap(width: w, height: h) else { throw PolarError.exportFailed }
             filtered.translateBy(x: 0, y: CGFloat(h)); filtered.scaleBy(x: CGFloat(w) / rect.width, y: -CGFloat(h) / rect.height)
@@ -531,7 +542,7 @@ enum PolarRenderer {
             }
             image = try PhotoFilters.apply(cropped, look: look, seed: PhotoFilters.seed(assetID: photo.id.uuidString, card: cardIndex),
                                            origin: CGPoint(x: rect.minX - card.minX, y: rect.minY - card.minY), pointsPerPixel: CGSize(width: rect.width / CGFloat(w), height: rect.height / CGFloat(h)))
-            if isPDF && optimizePhotos { image = try jpegForPDF(image, background: background) }
+            if isPDF, let jpeg = quality.jpegQuality { image = try jpegForPDF(image, background: background, quality: jpeg) }
             context.translateBy(x: rect.minX, y: rect.maxY); context.scaleBy(x: 1, y: -1)
             context.draw(image, in: CGRect(origin: .zero, size: rect.size))
             return
@@ -542,11 +553,9 @@ enum PolarRenderer {
         context.draw(image, in: CGRect(x: -width / 2, y: -height / 2, width: width, height: height))
     }
 
-    private static func jpegForPDF(_ image: CGImage, background: NSColor) throws -> CGImage {
+    private static func jpegForPDF(_ image: CGImage, background: NSColor, quality: Double) throws -> CGImage {
         // Composite alpha against the card and convert to sRGB before JPEG's opaque encoding.
-        guard let context = CGContext(data: nil, width: image.width, height: image.height, bitsPerComponent: 8,
-                                      bytesPerRow: 0, space: CGColorSpace(name: CGColorSpace.sRGB)!,
-                                      bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue) else { throw PolarError.exportFailed }
+        guard let context = opaqueSRGBContext(width: image.width, height: image.height) else { throw PolarError.exportFailed }
         let bounds = CGRect(x: 0, y: 0, width: image.width, height: image.height)
         context.setFillColor(background.cgColor)
         context.fill(bounds)
@@ -555,7 +564,7 @@ enum PolarRenderer {
         guard let opaque = context.makeImage(),
               let destination = CGImageDestinationCreateWithData(data, "public.jpeg" as CFString, 1, nil)
         else { throw PolarError.exportFailed }
-        CGImageDestinationAddImage(destination, opaque, [kCGImageDestinationLossyCompressionQuality: 0.94] as CFDictionary)
+        CGImageDestinationAddImage(destination, opaque, [kCGImageDestinationLossyCompressionQuality: quality] as CFDictionary)
         guard CGImageDestinationFinalize(destination), let provider = CGDataProvider(data: data),
               let compressed = CGImage(jpegDataProviderSource: provider, decode: nil, shouldInterpolate: true, intent: .defaultIntent)
         else { throw PolarError.exportFailed }
@@ -621,15 +630,33 @@ enum PolarRenderer {
         }
     }
 
-    private static func drawQR(_ value: String, in rect: CGRect, context: CGContext, isPreview: Bool) throws {
-        guard let filter = CIFilter(name: "CIQRCodeGenerator") else { throw PolarError.exportFailed }
+    enum QRState: Equatable { case empty, ok, tooLong }
+    /// Largest payload a version-40 QR holds at correction level M (binary mode).
+    static let maxQRBytes = 2331
+    static func qrState(_ value: String) -> QRState {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty { return .empty }
+        return trimmed.utf8.count > maxQRBytes ? .tooLong : .ok  // byte count only: cheap enough for UI bodies
+    }
+    private static let qrContext = CIContext()
+    private static func qrImage(_ value: String) -> CGImage? {
+        guard let filter = CIFilter(name: "CIQRCodeGenerator") else { return nil }
         filter.setValue(Data(value.utf8), forKey: "inputMessage")
         filter.setValue("M", forKey: "inputCorrectionLevel")
-        guard let output = filter.outputImage else {
-            if isPreview { return }
-            throw PolarError.invalidProject("El enlace de la canción es demasiado largo para el QR.")
+        guard let output = filter.outputImage else { return nil }
+        return qrContext.createCGImage(output, from: output.extent)
+    }
+
+    private static func drawQR(_ value: String, in rect: CGRect, context: CGContext, isPreview: Bool) throws {
+        let link = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard qrState(link) == .ok, let image = qrImage(link) else {  // image built once; nil also means marker
+            // Too long for a QR: leave a visible marker instead of failing the whole export or vanishing silently.
+            fill(rect, color: .white, context: context)
+            stroke(rect, color: NSColor(white: 0.35, alpha: 1), width: 0.8, context: context)
+            text("Enlace muy largo", in: rect.insetBy(dx: rect.width * 0.08, dy: rect.height * 0.30), size: max(5, rect.width * 0.11),
+                 color: NSColor(white: 0.2, alpha: 1), weight: .semibold)
+            return
         }
-        guard let image = CIContext().createCGImage(output, from: output.extent) else { throw PolarError.exportFailed }
         fill(rect, color: .white, context: context)
         let inset = rect.width * 0.10
         let target = rect.insetBy(dx: inset, dy: inset)
