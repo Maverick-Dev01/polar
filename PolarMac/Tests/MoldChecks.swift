@@ -102,6 +102,17 @@ import UniformTypeIdentifiers
         let jpgData = try Data(contentsOf: jpg)
         check(second.sha256 == ImageFingerprint.sha256(jpgData), "sha256 del archivo original")
         check(library.list().count == 2, "dos moldes guardados")
+        // Un JPG con extensión .png se vuelve a codificar como PNG real (Android lo lee).
+        let disguised = work.appendingPathComponent("disfrazado.png")
+        try jpgData.write(to: disguised)
+        let third = try library.save(imageURL: disguised, nombre: "Disfrazado", regiones: regions)
+        let thirdData = try Data(contentsOf: library.imageURL(third.id))
+        check(thirdData.prefix(4) == Data([0x89, 0x50, 0x4E, 0x47]),"un JPG con extensión .png se guarda como PNG real")
+        // Guardar otra vez con el mismo id reemplaza sin perder nada y sin dejar temporales.
+        let again = try library.save(imageURL: fixture("molde-circles.png"), nombre: "Reemplazo", regiones: regions, id: third.id)
+        check(library.list().first { $0.id == third.id }?.nombre == "Reemplazo" && again.dhash != third.dhash, "reemplazar un molde conserva un solo molde con ese id")
+        check(!((try? FileManager.default.contentsOfDirectory(atPath: root.appendingPathComponent("templates").path)) ?? []).contains { $0.hasPrefix(".") }, "sin carpetas temporales")
+        try library.delete(third.id)
 
         // Borrado.
         try library.delete(saved.id)

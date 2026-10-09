@@ -124,12 +124,13 @@ struct MoldLibrary: Sendable {
         let staging = root.appendingPathComponent(".\(id).\(UUID().uuidString).tmp", isDirectory: true)
         try fm.createDirectory(at: staging, withIntermediateDirectories: true)
         defer { try? fm.removeItem(at: staging) }
-        if source.pathExtension.lowercased() == "png" { try data.write(to: staging.appendingPathComponent("molde.png")) }
+        let isPNG = data.prefix(8) == Data([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])  // por contenido, no por extensión
+        if isPNG { try data.write(to: staging.appendingPathComponent("molde.png")) }
         else { try writePNG(of: data, to: staging.appendingPathComponent("molde.png")) }
         let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         try encoder.encode(mold).write(to: staging.appendingPathComponent("meta.json"), options: .atomic)
-        try? fm.removeItem(at: directory(id))
-        try fm.moveItem(at: staging, to: directory(id))
+        if fm.fileExists(atPath: directory(id).path) { _ = try fm.replaceItemAt(directory(id), withItemAt: staging) }  // atómico: si falla, queda el molde anterior
+        else { try fm.moveItem(at: staging, to: directory(id)) }
         return mold
     }
 
