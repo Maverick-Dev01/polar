@@ -2,6 +2,8 @@ package com.polar.app
 
 import android.app.Application
 import android.content.Context
+import com.polar.app.core.billing.AllUnlocked
+import com.polar.app.core.billing.Entitlements
 import com.polar.app.data.AndroidFontProvider
 import com.polar.app.data.BitmapLoader
 import com.polar.app.data.PhotoImporter
@@ -23,6 +25,8 @@ class AppContainer(context: Context) {
     val settings = SettingsRepository(context)
     val updates by lazy { UpdateRepository(context.applicationContext) }
     val thumbnails = Thumbnailer(fonts)
+    /** Hoy todo está desbloqueado; no se usa para bloquear nada (docs/monetizacion.md). */
+    val entitlements: Entitlements = AllUnlocked
 }
 
 class PolarApplication : Application() {
