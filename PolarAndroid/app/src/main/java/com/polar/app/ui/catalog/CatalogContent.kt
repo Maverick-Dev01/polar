@@ -86,7 +86,7 @@ fun CatalogContent(
             val columns = when { maxWidth >= 1000.dp -> 5; maxWidth >= 700.dp -> 4; maxWidth >= 540.dp -> 3; else -> 2 }
             LazyVerticalGrid(
                 columns = GridCells.Fixed(columns),
-                contentPadding = PaddingValues(start = if(maxWidth>=840.dp) Spacing.l else Spacing.m, end = if(maxWidth>=840.dp) Spacing.l else Spacing.m, bottom = Spacing.xl),
+                contentPadding = PaddingValues(start = if(maxWidth>=840.dp) Spacing.l else Spacing.m, end = if(maxWidth>=840.dp) Spacing.l else Spacing.m, top = Spacing.s, bottom = Spacing.xl),
                 horizontalArrangement = Arrangement.spacedBy(Spacing.grid),
                 verticalArrangement = Arrangement.spacedBy(Spacing.grid)
             ) {
@@ -101,7 +101,7 @@ fun CatalogContent(
                         },
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                         keyboardActions = KeyboardActions(onSearch = { focus.clearFocus() }),
-                        shape = MaterialTheme.shapes.medium
+                        shape = MaterialTheme.shapes.extraLarge
                     )
                 }
                 item(span = { GridItemSpan(maxLineSpan) }) {
