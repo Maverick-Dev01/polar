@@ -18,6 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.polar.app.R
+import com.polar.app.BuildConfig
 import com.polar.app.data.AppSettings
 import com.polar.app.data.ThemeMode
 import com.polar.app.data.Units
@@ -34,7 +35,7 @@ fun SettingsScreen(
     onPaper: (PaperSize) -> Unit,
     onShowOnboarding: () -> Unit,
     onBack: () -> Unit,
-    updates: UpdateViewModel? = null,
+    updates: (@Composable () -> Unit)? = null,
     onHelp: () -> Unit = {}
 ) {
     var dialog by remember { mutableStateOf<String?>(null) }
@@ -79,7 +80,7 @@ fun SettingsScreen(
                     }
                 }
             }
-            if (updates != null) UpdateSection(updates)
+            if (updates != null) updates()
             else Text(stringResource(R.string.updates_play), style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             OutlinedCard {
@@ -107,6 +108,11 @@ fun SettingsScreen(
             Text(
                 stringResource(R.string.settings_version, version), style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+            Text(
+                stringResource(if (BuildConfig.GITHUB_UPDATES_ENABLED) R.string.distribution_github else R.string.distribution_play),
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             )
         }
         }

@@ -390,6 +390,8 @@
     <string name="updates_install_unavailable">No se pudo abrir el instalador. Puedes intentarlo de nuevo.</string>
     <string name="updates_debug">Esta es la versión de desarrollo. Para instalar actualizaciones utiliza la versión release de GitHub.</string>
     <string name="updates_play">Esta versión recibe sus actualizaciones desde Google Play.</string>
+    <string name="distribution_github">Distribución GitHub · Actualizaciones desde Polar</string>
+    <string name="distribution_play">Distribución Google Play · Actualizaciones desde la tienda</string>
     <string name="phrase_title">Frases para tus recuerdos</string>
     <string name="phrase_intro">120 frases originales de Polar. Puedes adaptar cualquiera o escribir la tuya.</string>
     <string name="phrase_search">Buscar tema o palabras</string>

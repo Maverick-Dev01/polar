@@ -65,7 +65,7 @@ object ImportWizard {
 
     private fun edit(state: ImportWizardState, index: Int, change: (TemplateRegion) -> TemplateRegion): ImportWizardState {
         if (index !in state.regions.indices) return state
-        val regions = state.regions.toMutableList().also { it[index] = change(it[index]).clamped() }
+        val regions = state.regions.toMutableList().also { it[index] = change(it[index]).clamped().copy(isTransparent = false) }
         return state.copy(regions = regions)
     }
 

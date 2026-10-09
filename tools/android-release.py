@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Genera/conserva la firma privada local y prepara los assets de GitHub. Sin dependencias."""
+"""Conserva la firma privada y prepara APK GitHub y AAB Play. Sin dependencias."""
+import argparse
 import json
 import os
 from pathlib import Path
@@ -7,6 +8,11 @@ import secrets
 import shutil
 import subprocess
 import sys
+
+parser = argparse.ArgumentParser(description="Preparar las distribuciones Android firmadas de Polar.")
+parser.add_argument("--channel", choices=("both", "github", "play"), default="both",
+                    help="Canal de distribución (por defecto: ambos). Los demás argumentos pasan a Gradle.")
+options, gradle_args = parser.parse_known_args()
 
 root = Path(__file__).resolve().parent.parent
 private = root / ".polar-signing"
@@ -42,5 +48,7 @@ if not keystore.exists():
 environment.update(POLAR_STORE_FILE=str(keystore), POLAR_STORE_PASSWORD=configuration["password"],
     POLAR_KEY_ALIAS=configuration["alias"], POLAR_KEY_PASSWORD=configuration["password"])
 wrapper = root / "PolarAndroid" / ("gradlew.bat" if os.name == "nt" else "gradlew")
-subprocess.run([str(wrapper), "prepareGithubRelease", *sys.argv[1:]], cwd=wrapper.parent, env=environment, check=True)
+tasks = {"both": ["prepareGithubRelease", "preparePlayRelease"],
+         "github": ["prepareGithubRelease"], "play": ["preparePlayRelease"]}[options.channel]
+subprocess.run([str(wrapper), *tasks, *gradle_args], cwd=wrapper.parent, env=environment, check=True)
 print("Assets listos en release-assets/. La firma privada permanece en .polar-signing/; conserva ambos archivos de firma para otros equipos.")

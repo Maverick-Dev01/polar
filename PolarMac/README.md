@@ -1,6 +1,6 @@
 # Polar para Mac
 
-Abre **Polar.app** en la carpeta Polar. Versión **2.2.0**; macOS 14 o posterior, Mac con Apple Silicon. Si ya estaba abierta, ciérrala y vuelve a abrirla para cargar esta actualización. [Descarga el ZIP de la app](https://github.com/Maverick-Dev01/polar/releases/download/android-v2.2.0/Polar-Mac-2.2.0.zip) o compila al clonar. En Ayuda → Descargar última versión puedes abrir las publicaciones. La app tiene firma local, sin notarización de Apple; macOS puede pedir habilitar su apertura desde Privacidad y seguridad.
+Abre **Polar.app** en la carpeta Polar. Versión **2.3.0**; macOS 14 o posterior, Mac con Apple Silicon. Si ya estaba abierta, ciérrala y vuelve a abrirla para cargar esta actualización. [Descarga el ZIP de la app](https://github.com/Maverick-Dev01/polar/releases/download/android-v2.3.0/Polar-Mac-2.3.0.zip) o compila al clonar. En Ayuda → Descargar última versión puedes abrir las publicaciones. La app tiene firma local, sin notarización de Apple; macOS puede pedir habilitar su apertura desde Privacidad y seguridad.
 
 En **Tus diseños** puedes buscar, ordenar, cambiar nombres, duplicar para otro pedido, compartir un .polar y borrar con **Deshacer**. Usa **Nuevo diseño** para empezar. La app guarda automáticamente aproximadamente un segundo después de editar y antes de cambiar de diseño o cerrar. **Guardando…**, **Guardado** y **Sin guardar** muestran el estado; si falla la escritura se mantiene abierto el editor.
 

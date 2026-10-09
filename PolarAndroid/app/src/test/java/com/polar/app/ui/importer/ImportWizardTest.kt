@@ -77,6 +77,20 @@ class ImportWizardTest {
         assertEquals(0.0, m.x, 1e-9); assertEquals(1.0 - 0.3, m.y, 1e-9)
     }
 
+    @Test fun editingDetectedTransparentSpaceKeepsPhotoVisibleOverOpaqueArtwork() {
+        val state = review.copy(regions = listOf(TemplateRegion(x = 0.1, y = 0.1,
+            width = 0.2, height = 0.2, isTransparent = true)))
+        val edited = listOf(
+            ImportWizard.move(state, 0, 0.5, 0.0),
+            ImportWizard.resize(state, 0, Corner.BOTTOM_RIGHT, 0.1, 0.1),
+            ImportWizard.grow(state, 0, 0.1, 0.1),
+            ImportWizard.setShape(state, 0, RegionShape.ELLIPSE),
+            ImportWizard.setRadius(state, 0, 0.2)
+        )
+        edited.forEach { assertFalse(it.regions[0].isTransparent) }
+        assertTrue(state.regions[0].isTransparent)
+    }
+
     @Test fun resizingACornerKeepsTheOppositeOneFixed() {
         val r = ImportWizard.resize(review, 0, Corner.BOTTOM_RIGHT, 0.1, 0.05).regions[0]
         assertEquals(0.1, r.x, 1e-9); assertEquals(0.1, r.y, 1e-9); assertEquals(0.4, r.width, 1e-9); assertEquals(0.35, r.height, 1e-9)

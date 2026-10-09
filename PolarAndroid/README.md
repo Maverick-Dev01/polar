@@ -32,6 +32,8 @@ El APK se genera en `app/build/outputs/apk/debug/app-debug.apk`. Los compilados 
 
 Para publicar, sigue `../docs/play-store.md`.
 
+Desde la raíz, `python3 tools/android-release.py` genera ambas distribuciones firmadas en `release-assets/`: **Polar-2.3.0.apk** (`release`, con actualizador GitHub) y **Polar-2.3.0-play.aab** (`play`, sin instalador propio, para Play Console). Usa `--channel github` o `--channel play` para preparar una sola. En Windows usa `python` con Python 3 instalado. No copies la llave al repositorio: recupera `.polar-signing/` por un medio privado.
+
 ## Cómo está hecho
 
 - `model/`: proyecto `.polar` inmutable con las mismas claves que la Mac.
@@ -46,4 +48,4 @@ Diseño completo: `../docs/superpowers/specs/2026-10-02-polar-android-rediseno-d
 
 ## Exportación ligera
 
-En Terminar, PDF exporta todas las hojas con fotos visibles a 300 ppp y JPEG 94, conservando texto, guías y QR. JPG exporta la hoja seleccionada a 300 ppp con menos peso que PNG en fotografías. PDF sin compresión JPEG y PNG conservan los píxeles renderizados sin pérdidas adicionales de compresión; pueden pesar más. [Detalles y verificaciones](../docs/exportaciones-compactas.md).
+En Terminar, PDF exporta todas las hojas; JPG y PNG exportan la hoja seleccionada. Calidad **Ligero**: 200 ppp/JPEG 85; **Alta**: 300 ppp/JPEG 94; **Máxima**: PDF sin recompresión JPEG. Texto, guías y QR se conservan. PNG no añade compresión con pérdida. [Detalles y verificaciones](../docs/exportaciones-compactas.md).

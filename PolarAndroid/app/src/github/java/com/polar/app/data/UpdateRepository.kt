@@ -36,6 +36,7 @@ class UpdateRepository(private val context: Context) {
     val canUpdate: Boolean get() = BuildConfig.GITHUB_UPDATES_ENABLED && context.packageName == UpdateInfo.PACKAGE
 
     suspend fun latest(): UpdateInfo? = withContext(Dispatchers.IO) {
+        check(BuildConfig.GITHUB_UPDATES_ENABLED) { "Las actualizaciones de esta versión las gestiona Google Play." }
         var url = URL(UpdateInfo.LATEST)
         repeat(6) {
             require(url.protocol == "https" && url.host in setOf("github.com", "release-assets.githubusercontent.com", "objects.githubusercontent.com") && url.userInfo == null)
@@ -78,6 +79,7 @@ class UpdateRepository(private val context: Context) {
     }
 
     suspend fun resume(): PendingUpdate? = withContext(Dispatchers.IO) {
+        if (!BuildConfig.GITHUB_UPDATES_ENABLED) return@withContext null
         mutex.withLock {
             pending()?.takeIf { if (it.info.versionCode <= version) { discard(it); false } else true }
         }

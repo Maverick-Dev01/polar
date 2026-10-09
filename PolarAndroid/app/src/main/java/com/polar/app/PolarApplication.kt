@@ -9,7 +9,6 @@ import com.polar.app.data.BitmapLoader
 import com.polar.app.data.PhotoImporter
 import com.polar.app.data.ProjectStore
 import com.polar.app.data.SettingsRepository
-import com.polar.app.data.UpdateRepository
 import com.polar.app.engine.Thumbnailer
 import com.polar.app.export.AndroidExportService
 import com.polar.app.template.TemplateLibrary
@@ -23,7 +22,6 @@ class AppContainer(context: Context) {
     val backgrounds = com.polar.app.data.BackgroundRemover(context.applicationContext, bitmaps)
     val photos = PhotoImporter(context, store, bitmaps)
     val settings = SettingsRepository(context)
-    val updates by lazy { UpdateRepository(context.applicationContext) }
     val thumbnails = Thumbnailer(fonts)
     /** Hoy todo está desbloqueado; no se usa para bloquear nada (docs/monetizacion.md). */
     val entitlements: Entitlements = AllUnlocked

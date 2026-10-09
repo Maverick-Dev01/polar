@@ -17,8 +17,8 @@ android {
         applicationId = "io.github.maverickdev01.polar"
         minSdk = 26
         targetSdk = 36
-        versionCode = providers.gradleProperty("POLAR_VERSION_CODE").getOrElse("6").toInt()
-        versionName = providers.gradleProperty("POLAR_VERSION_NAME").getOrElse("2.2.0")
+        versionCode = providers.gradleProperty("POLAR_VERSION_CODE").getOrElse("7").toInt()
+        versionName = providers.gradleProperty("POLAR_VERSION_NAME").getOrElse("2.3.0")
         buildConfigField("boolean", "GITHUB_UPDATES_ENABLED", "true")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
@@ -69,6 +69,9 @@ android {
     // La geometría de los diseños es la misma que usa la Mac: se copia de shared-fixtures/ al compilar.
     sourceSets.getByName("main").resources.srcDir(layout.buildDirectory.dir("generated/shared-geometry"))
     sourceSets.getByName("main").assets.srcDir(layout.buildDirectory.dir("generated/shared-help"))
+    // Play no compila el cliente de GitHub ni el instalador; debug permite probarlos.
+    sourceSets.getByName("debug").java.srcDir("src/github/java")
+    sourceSets.getByName("release").java.srcDir("src/github/java")
 }
 
 val copySharedGeometry = tasks.register<Copy>("copySharedGeometry") {
@@ -100,6 +103,8 @@ tasks.register("prepareGithubRelease") {
         val apk = layout.buildDirectory.file("outputs/apk/release/app-release.apk").get().asFile
         val published = output.resolve("Polar-$version.apk")
         apk.copyTo(published, overwrite = true)
+        layout.buildDirectory.file("outputs/mapping/release/mapping.txt").get().asFile
+            .copyTo(output.resolve("Polar-$version-github-mapping.txt"), overwrite = true)
         val digest = MessageDigest.getInstance("SHA-256")
         published.inputStream().use { input -> val buffer = ByteArray(65536); while (true) { val count = input.read(buffer); if (count < 0) break; digest.update(buffer, 0, count) } }
         val sha = digest.digest().joinToString("") { "%02x".format(it) }
@@ -111,6 +116,24 @@ tasks.register("prepareGithubRelease") {
         output.resolve("update.json").writeText(JsonOutput.prettyPrint(JsonOutput.toJson(info)) + "\n")
         output.resolve("SHA256SUMS.txt").writeText("$sha  ${published.name}\n")
         println("Release preparado: ${published.name}, update.json y SHA256SUMS.txt")
+    }
+}
+
+tasks.register("preparePlayRelease") {
+    dependsOn("bundlePlay")
+    doLast {
+        val version = android.defaultConfig.versionName!!
+        check(version.matches(Regex("[0-9]{1,4}\\.[0-9]{1,4}\\.[0-9]{1,4}")))
+        val output = rootProject.projectDir.parentFile.resolve("release-assets")
+        output.mkdirs()
+        val aab = layout.buildDirectory.file("outputs/bundle/play/app-play.aab").get().asFile
+        val published = output.resolve("Polar-$version-play.aab")
+        aab.copyTo(published, overwrite = true)
+        layout.buildDirectory.file("outputs/mapping/play/mapping.txt").get().asFile
+            .copyTo(output.resolve("Polar-$version-play-mapping.txt"), overwrite = true)
+        val sha = MessageDigest.getInstance("SHA-256").digest(published.readBytes()).joinToString("") { "%02x".format(it) }
+        output.resolve("SHA256SUMS-play.txt").writeText("$sha  ${published.name}\n")
+        println("Play preparado: ${published.name} (sin actualizador GitHub), mapping y SHA256SUMS-play.txt")
     }
 }
 

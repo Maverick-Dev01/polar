@@ -27,10 +27,17 @@ Requiere el entorno Android del README, **Python 3** para el pequeño script de 
 2. Desde la raíz, con `JAVA_HOME` apuntando al JDK 21, ejecuta:
 
 ```sh
-python tools/android-release.py
+python tools/android-release.py --channel both
 ```
 
-En Mac puedes usar `python3`. El script conserva la llave existente y ejecuta `prepareGithubRelease`. Se generan `release-assets/Polar-VERSION.apk`, `update.json` y `SHA256SUMS.txt`. Para cambiar las notas agrega `-PPOLAR_RELEASE_NOTES="Descripción del cambio"`. Los tres archivos deben pertenecer a **la misma compilación**.
+En Mac puedes usar `python3`. El script conserva la llave existente y prepara ambos canales por defecto:
+
+| Canal | Archivo en `release-assets/` | Actualizaciones |
+| --- | --- | --- |
+| GitHub (`release`) | `Polar-VERSION.apk`, `update.json`, `SHA256SUMS.txt` y `Polar-VERSION-github-mapping.txt` | Ajustes → Actualizaciones |
+| Google Play (`play`) | `Polar-VERSION-play.aab`, `SHA256SUMS-play.txt` y `Polar-VERSION-play-mapping.txt` | Google Play |
+
+`--channel github` ejecuta sólo `prepareGithubRelease`; `--channel play` sólo `preparePlayRelease`. Play no genera ni reemplaza `update.json`. Conserva los archivos `mapping` de cada versión para interpretar informes de fallos del código minificado. Para cambiar las notas agrega `-PPOLAR_RELEASE_NOTES="Descripción del cambio"`. APK, manifiesto y SHA deben pertenecer a **la misma compilación**.
 
 3. Ejecuta `testDebugUnitTest`, `lintDebug` y prueba la instalación sobre una versión anterior en un dispositivo. Confirma firma y versión del APK. Guarda y sube los cambios de código; publica sólo cuando el código corresponda al APK.
 4. Autentica GitHub CLI con una cuenta que tenga permiso de escritura en `Maverick-Dev01/polar`. Escribe las notas en un archivo y publica, sustituyendo versión y SHA por los reales:
@@ -43,7 +50,9 @@ GitHub Releases aloja directamente el APK y mantiene el historial. No requiere G
 
 ## Google Play
 
-La build **release** incluye el actualizador de GitHub. La build **play** desactiva esas acciones con `GITHUB_UPDATES_ENABLED=false`, y su manifiesto elimina `REQUEST_INSTALL_PACKAGES`; Google Play gestiona sus actualizaciones. Compila el AAB con la misma configuración privada de firma y `./gradlew bundlePlay` o `.\gradlew.bat bundlePlay`.
+La build **release** incluye el actualizador de GitHub desde `src/github/`. La build **play** no compila esas fuentes y `src/play/` muestra únicamente el canal Google Play; su manifiesto elimina `REQUEST_INSTALL_PACKAGES`. Google Play gestiona sus actualizaciones. Ajustes identifica el canal. Compila el AAB con `python3 tools/android-release.py --channel play` desde la raíz, o con la configuración privada de firma y `./gradlew bundlePlay` / `.\gradlew.bat bundlePlay`.
+
+Ambas usan `io.github.maverickdev01.polar`: son distribuciones de la misma app, y no se instalan simultáneamente como dos iconos. La versión local conserva la firma permanente y no borra datos. Para conservar esa continuidad cuando Google genere los APK de Play, configura **Play App Signing con la llave de firma existente** en la primera publicación, siguiendo el procedimiento cifrado de Play Console. La firma del AAB es la de subida y no garantiza por sí sola la firma final del APK. Si Google usa otra llave, no intercambies APK entre canales; respalda los recursos del diseño antes de cualquier migración. [Firma oficial de Android](https://developer.android.com/studio/publish/app-signing).
 
 Una app distribuida por Play no puede actualizarse fuera de Play. Además, Play App Signing puede usar otra llave: no se deben mezclar APK de ambos canales para actualizar una instalación. [Política oficial](https://support.google.com/googleplay/android-developer/answer/9888379), [permiso de instalación Android](https://developer.android.com/reference/android/content/pm/PackageManager#canRequestPackageInstalls()), [descargas nativas](https://developer.android.com/reference/android/app/DownloadManager).
 

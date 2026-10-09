@@ -2,23 +2,23 @@
 
 Marca con [x] a medida que avances. Lo que requiere cuenta de Play Console lo hace el dueño de la cuenta; el resto ya está listo en el repositorio.
 
-## 0. Versión propuesta (sólo plan; aún no se cambia)
+## 0. Distribuciones 2.3.0
 
-- [ ] Subir a **2.3.0, `versionCode` 7** (hoy 2.2.0 / 6). Se cambia al preparar el release con `-PPOLAR_VERSION_NAME=2.3.0 -PPOLAR_VERSION_CODE=7` o editando los valores por defecto de `PolarAndroid/app/build.gradle.kts`. Cada subida a Play necesita un `versionCode` mayor que el anterior.
-- [ ] Mac: mismo número de versión (2.3.0) en `PolarMac/Info.plist` al publicar.
+- [x] Android **2.3.0, `versionCode` 7**: `release` para GitHub y `play` para Google Play. Cada nueva publicación necesita un `versionCode` mayor.
+- [x] Mac: mismo número de versión (2.3.0 / 7) en `PolarMac/Info.plist`.
 
 ## 1. Antes de la primera subida
 
 - [ ] Confirmar el `applicationId` definitivo (hoy `io.github.maverickdev01.polar`): no se puede cambiar después de publicar.
 - [ ] **Marca:** buscar «Polar» en Google Play, en la base de marcas (IMPI/EUIPO/USPTO) y en la web. *Polar Electro* es una marca conocida (relojes deportivos); por eso el nombre sugerido lleva descriptor: «Polar: fotos para imprimir». Si hay conflicto, usar otro nombre.
-- [ ] Crear la llave de subida (pide contraseña; guárdala en un gestor de contraseñas):
-  `keytool -genkeypair -v -keystore ~/polar-upload.jks -alias polar -keyalg RSA -keysize 4096 -validity 10000`
+- [ ] Conservar la llave de distribución existente en `.polar-signing/`. No generar otra para reemplazar APK ya distribuidos. El AAB local también se firma con esta llave; al configurar Play App Signing, decide la llave de firma final antes de publicar.
 - [ ] Agregar a `~/.gradle/gradle.properties` (nunca al repositorio): `POLAR_STORE_FILE`, `POLAR_STORE_PASSWORD`, `POLAR_KEY_ALIAS`, `POLAR_KEY_PASSWORD`. Las cuatro deben estar juntas; si faltan, la publicación falla (no hay firma debug de respaldo).
 - [ ] Si ya distribuiste el APK de GitHub, conserva su llave privada y lee [actualizaciones-android.md](actualizaciones-android.md) antes de elegir la firma de Play.
 
 ## 2. Compilar el paquete (AAB)
 
 - [ ] `cd PolarAndroid && ./gradlew bundlePlay` (el tipo de compilación se llama `play`, no `release`; la tarea `bundlePlayRelease` no existe). Salida: `app/build/outputs/bundle/play/app-play.aab`.
+- Alternativa recomendada desde la raíz: `python3 tools/android-release.py` prepara ambos canales usando la firma privada existente. El AAB para subir está en `release-assets/Polar-2.3.0-play.aab`; conserva su `Polar-2.3.0-play-mapping.txt`. `--channel play` prepara sólo Play; `--channel github` sólo el APK y `update.json`.
 - [ ] La build `play` desactiva el actualizador de GitHub (`GITHUB_UPDATES_ENABLED=false`) y elimina `REQUEST_INSTALL_PACKAGES` (`app/src/play/AndroidManifest.xml`), como exige Google Play.
 - [ ] En Play Console: **Integridad de la app → Firma de apps (Play App Signing) activado**; tu llave es sólo la de *subida*.
 - [ ] Nivel de API: `targetSdk = 36`, `compileSdk = 36`, `minSdk = 26` (Android 8). Google exige apuntar al nivel más reciente o a uno cercano; confirma el requisito vigente en Play Console antes de subir.
@@ -39,9 +39,9 @@ Marca con [x] a medida que avances. Lo que requiere cuenta de Play Console lo ha
 
 ## 5. Seguridad de los datos (Data safety)
 
-- [ ] ¿Recopila o comparte datos del usuario? **No** (ninguno): no hay cuentas, anuncios ni analítica; las fotos se procesan en el dispositivo y no se envían a servidores de Polar.
-- [ ] Quitar fondo: **ML Kit de segmentación de sujetos corre en el dispositivo**, pero el modelo se descarga una vez mediante Google Play Services. Menciónalo en la descripción del formulario y en la política de privacidad (ya está en `privacidad.md`); esa descarga la hace Google y no incluye datos del usuario.
-- [ ] ¿Datos cifrados en tránsito? Sí (la única conexión es HTTPS vía Google Play Services).
+- [ ] No marcar automáticamente «no recopila datos»: además del código propio hay que declarar los diagnósticos de **ML Kit**. Según su [documentación oficial](https://developers.google.com/ml-kit/android-data-disclosure), recopila información del dispositivo y app, identificadores técnicos, rendimiento, configuración, tamaños y eventos/errores. Clasifica esos datos y finalidades según el formulario vigente y la versión del SDK. Polar no tiene cuentas ni analítica propia y no envía fotos a servidores.
+- [ ] Quitar fondo: **ML Kit de segmentación de sujetos corre en el dispositivo**, y Google Play Services descarga el modelo. La foto permanece local; modelo y diagnósticos están descritos en `privacidad.md`.
+- [ ] ¿Datos cifrados en tránsito? Sí: Google documenta HTTPS para los datos de ML Kit.
 - [ ] ¿Puede el usuario pedir que se borren sus datos? No se guardan datos fuera del teléfono; desinstalar la app o borrar diseños dentro de ella elimina todo.
 - [ ] La build Play no consulta ni descarga actualizaciones de GitHub; la de GitHub (fuera de Play) sí, a petición, con HTTPS.
 
@@ -104,7 +104,7 @@ IMPRIME A TAMAÑO REAL
 TUS DISEÑOS, SIEMPRE A SALVO
 • Se guardan solos; deshacer y rehacer cuantas veces quieras.
 • Lo que borras se puede recuperar durante 7 días.
-• Guarda tu diseño completo en un archivo .polar para respaldarlo o seguir en otro dispositivo, incluida la versión de Polar para Mac.
+• Guarda los ajustes de tu diseño en un archivo .polar. Conserva también las imágenes originales y los moldes: las fotos no van incluidas en ese archivo.
 
 PRIVACIDAD
 • Sin cuentas, sin anuncios y sin analítica.

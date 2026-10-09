@@ -13,7 +13,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.polar.app.AppContainer
-import com.polar.app.BuildConfig
 import com.polar.app.data.AppSettings
 import com.polar.app.data.BitmapLoader
 import com.polar.app.ui.catalog.CatalogScreen
@@ -27,7 +26,7 @@ import com.polar.app.help.HelpTarget
 import com.polar.app.ui.help.HelpScreen
 import com.polar.app.ui.rememberReduceMotion
 import com.polar.app.ui.settings.SettingsScreen
-import com.polar.app.ui.settings.UpdateViewModel
+import com.polar.app.ui.settings.DistributionUpdates
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -141,9 +140,6 @@ fun PolarNavHost(container: AppContainer, startOnboarding: Boolean) {
         }
         composable<SettingsRoute> {
             val settings by container.settings.settings.collectAsStateWithLifecycle(initialValue = AppSettings())
-            val updates: UpdateViewModel? = if (BuildConfig.GITHUB_UPDATES_ENABLED) viewModel(factory = viewModelFactory {
-                initializer { UpdateViewModel(container.updates) }
-            }) else null
             var trashCount by remember { mutableIntStateOf(0) }
             LaunchedEffect(Unit) { trashCount = withContext(Dispatchers.IO) { container.store.trashCount() } }
             SettingsScreen(
@@ -156,7 +152,7 @@ fun PolarNavHost(container: AppContainer, startOnboarding: Boolean) {
                 onShowOnboarding = { nav.navigate(OnboardingRoute) },
                 onHelp = { nav.navigate(HelpRoute()) { launchSingleTop = true } },
                 onBack = { nav.popBackStack() },
-                updates = updates
+                updates = { DistributionUpdates() }
             )
         }
     }

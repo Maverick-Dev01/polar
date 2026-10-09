@@ -254,12 +254,12 @@
       "animacion": "tap",
       "destino": "inicio",
       "titulo": "Abrir un diseño de la Mac o del teléfono",
-      "resumen": "Los diseños de Polar son los mismos en Mac y en Android.",
+      "resumen": "Mac y Android comparten el formato del diseño. El archivo .polar no incluye las fotos ni el molde.",
       "pasos": [
         "En el otro dispositivo, elige «Compartir archivo .polar» (mira el artículo sobre compartir y guardar un archivo .polar).",
         "Envíatelo por correo, mensaje o Drive.",
         "En este dispositivo, en Inicio, elige «Abrir archivo .polar».",
-        "Verás tus fotos, textos y filtros como los dejaste. Si una fuente no existe en este dispositivo, Polar usa una parecida."
+        "Se conservan textos, filtros y ajustes. Guarda también las fotos, recortes de fondo y molde: al cambiar de dispositivo tendrás que volver a agregar los archivos de imagen. Si una fuente no existe, Polar usa una parecida."
       ],
       "palabras": [
         "mac",
@@ -790,7 +790,7 @@
       "animacion": "tap",
       "destino": "inicio",
       "titulo": "Compartir y guardar un archivo .polar",
-      "resumen": "Guarda tu diseño completo en un archivo para respaldarlo o seguir en otro dispositivo.",
+      "resumen": "Guarda los ajustes de tu diseño. El .polar no incluye imágenes: conserva también tus fotos, recortes de fondo y molde.",
       "pasos": [
         "En las opciones del diseño, elige «Compartir archivo .polar».",
         "Elige a dónde enviarlo o dónde guardarlo: correo, mensaje, Drive o una carpeta.",
