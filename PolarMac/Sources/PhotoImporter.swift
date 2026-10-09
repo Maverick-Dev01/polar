@@ -92,4 +92,22 @@ enum PhotoImporter {
         thumbnails.setObject(image, forKey: key)
         return image
     }
+
+    static let folderLimit = 500
+    /// «Agregar carpeta»: imágenes del primer nivel (sin subcarpetas), por nombre natural, hasta `limit`.
+    /// `ignored` cuenta lo que no es imagen; `omitted`, las imágenes que no entran por el tope.
+    static func folderListing(_ folder: URL, limit: Int = folderLimit) -> (urls: [URL], omitted: Int, ignored: Int) {
+        let children = (try? FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: [.isDirectoryKey], options: .skipsHiddenFiles)) ?? []
+        var images: [URL] = [], ignored = 0
+        for url in children {
+            if (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true { continue }
+            if UTType(filenameExtension: url.pathExtension.lowercased())?.conforms(to: .image) == true { images.append(url) } else { ignored += 1 }
+        }
+        images.sort { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
+        return (Array(images.prefix(limit)), max(0, images.count - limit), ignored)
+    }
+    static func folderStatus(added: Int, unreadable: Int, omitted: Int, limit: Int = folderLimit) -> String {
+        if omitted > 0 { return "Se agregaron las primeras \(limit); el resto se omitió" }
+        return "\(added) \(added == 1 ? "foto agregada" : "fotos agregadas")" + (unreadable > 0 ? " · \(unreadable) no se pudieron leer" : "")
+    }
 }

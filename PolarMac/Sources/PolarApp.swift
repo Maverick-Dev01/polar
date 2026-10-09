@@ -45,30 +45,30 @@ private let cream = polarCream
         .defaultSize(width: 1320, height: 900)
         .commands {
             CommandGroup(replacing: .newItem) {
-                Button("Nuevo diseño") { studio.newProject() }.keyboardShortcut("n")
-                Button("Abrir diseño…") { studio.openProject() }.keyboardShortcut("o")
-                Button("Importar molde…") { studio.importTemplate() }
-                Button("Guardar diseño…") { studio.saveProject() }.keyboardShortcut("s")
-                Button("Guardar diseño como…") { studio.saveProject(asNew: true) }.keyboardShortcut("s", modifiers: [.command, .shift])
+                Button("Nuevo diseño") { studio.newProject() }.keyboardShortcut("n").disabled(studio.helpMode)
+                Button("Abrir diseño…") { studio.openProject() }.keyboardShortcut("o").disabled(studio.helpMode)
+                Button("Importar molde…") { studio.importTemplate() }.disabled(studio.helpMode)
+                Button("Guardar diseño…") { studio.saveProject() }.keyboardShortcut("s").disabled(studio.helpMode)
+                Button("Guardar diseño como…") { studio.saveProject(asNew: true) }.keyboardShortcut("s", modifiers: [.command, .shift]).disabled(studio.helpMode)
             }
             CommandGroup(replacing: .undoRedo) {
-                Button("Deshacer") { studio.undo() }.keyboardShortcut("z").disabled(!studio.canUndo)
-                Button("Rehacer") { studio.redo() }.keyboardShortcut("z", modifiers: [.command, .shift]).disabled(!studio.canRedo)
+                Button("Deshacer") { studio.undo() }.keyboardShortcut("z").disabled(studio.helpMode || !studio.canUndo)
+                Button("Rehacer") { studio.redo() }.keyboardShortcut("z", modifiers: [.command, .shift]).disabled(studio.helpMode || !studio.canRedo)
             }
             CommandGroup(replacing: .appSettings) {
-                SettingsLink { Text("Ajustes…") }.keyboardShortcut(",")
+                SettingsLink { Text("Ajustes…") }.keyboardShortcut(",").disabled(studio.helpMode)
             }
             CommandMenu("Fotos") {
-                Button("Agregar fotos…") { studio.addPhotos() }.keyboardShortcut("i")
-                Button("Agregar carpeta…") { studio.addFolder() }
-                Button("Rellenar todo") { studio.fillAll() }
-                Button("Vaciar esta hoja") { studio.clearPage() }
+                Button("Agregar fotos…") { studio.addPhotos() }.keyboardShortcut("i").disabled(studio.helpMode)
+                Button("Agregar carpeta…") { studio.addFolder() }.disabled(studio.helpMode)
+                Button("Rellenar todo") { studio.fillAll() }.disabled(studio.helpMode)
+                Button("Vaciar esta hoja") { studio.clearPage() }.disabled(studio.helpMode)
             }
             CommandMenu("Imprimir") {
-                Button("Preparar impresión…") { studio.finish() }.keyboardShortcut("p")
-                Button("Exportar PDF…") { studio.export(.pdf) }.keyboardShortcut("e")
-                Button("Exportar JPG de esta hoja…") { studio.export(.jpeg) }
-                Button("Exportar PNG sin pérdida…") { studio.export(.png) }
+                Button("Preparar impresión…") { studio.finish() }.keyboardShortcut("p").disabled(studio.helpMode)
+                Button("Exportar PDF…") { studio.export(.pdf) }.keyboardShortcut("e").disabled(studio.helpMode)
+                Button("Exportar JPG de esta hoja…") { studio.export(.jpeg) }.disabled(studio.helpMode)
+                Button("Exportar PNG sin pérdida…") { studio.export(.png) }.disabled(studio.helpMode)
             }
             CommandGroup(replacing: .help) {
                 Button("Descargar última versión…") {
@@ -132,7 +132,7 @@ private let cream = polarCream
             try? await Task.sleep(nanoseconds: 700_000_000)
             if !Task.isCancelled, studio.shouldAutoStartTour { studio.startTour() }
         }
-        .background(PhotoKeys(compare: studio.setComparing).frame(width: 0, height: 0))
+        .background(PhotoKeys(compare: studio.setComparing, blocked: { studio.helpMode || studio.tourIndex != nil }).frame(width: 0, height: 0))
         .onChange(of: textFocused) { _, focused in if focused { studio.beginEditing() } else { studio.endEditing() } }
         .onChange(of: studio.selectedTextRole) { _, _ in studio.endEditing() }
         .onChange(of: studio.textCardScope) { _, _ in studio.endEditing() }

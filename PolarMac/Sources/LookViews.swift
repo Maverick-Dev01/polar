@@ -482,6 +482,8 @@ struct PhotoKeys: NSViewRepresentable {
     var nudge: ((Double, Double) -> Void)?
     var begin: (() -> Void)?
     var end: (() -> Void)?
+    /// Con el modo «?» o el recorrido activos las teclas no hacen nada.
+    var blocked: (() -> Bool)?
     func makeNSView(context: Context) -> KeyView { KeyView() }
     func updateNSView(_ view: KeyView, context: Context) { view.handlers = self }
     static func dismantleNSView(_ view: KeyView, coordinator: ()) { view.stop() }
@@ -497,7 +499,7 @@ struct PhotoKeys: NSViewRepresentable {
             guard monitor == nil else { return }
             focusObserver = NotificationCenter.default.addObserver(forName: NSWindow.didResignKeyNotification, object: window, queue: .main) { [weak self] _ in self?.finishInteraction() }
             monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp, .scrollWheel]) { [weak self] event in
-                guard let self, event.window == self.window, !(self.window?.firstResponder is NSTextView), let handlers = self.handlers else { return event }
+                guard let self, event.window == self.window, !(self.window?.firstResponder is NSTextView), let handlers = self.handlers, handlers.blocked?() != true else { return event }
                 if event.type == .scrollWheel, event.modifierFlags.contains(.command), let zoom = handlers.zoom {
                     if !self.wheelActive { self.wheelActive = true; handlers.begin?() }
                     zoom(Double(event.scrollingDeltaY) * 0.015)
