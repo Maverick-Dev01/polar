@@ -232,6 +232,7 @@
     <string name="text_reset">Restablecer este texto</string>
     <string name="text_own_style">Esta tarjeta tiene su propio estilo.</string>
     <string name="text_song_url">Enlace de la canción (opcional)</string>
+    <string name="text_song_url_too_long">Enlace muy largo: no cabe en un QR. Usa uno más corto.</string>
     <string name="text_song_url_help">Se imprime un QR que abre ese enlace.</string>
     <string name="text_fit_help">Si el texto no cabe, se reduce solo para no tapar la foto.</string>
     <string name="text_empty_imported">El texto de tu plantilla ya viene impreso en la imagen.</string>

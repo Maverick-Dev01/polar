@@ -652,9 +652,31 @@ object PolarRenderer {
 
     private fun drawQR(canvas: Canvas, url: String, rect: PolarRect, scale: Float) {
         val sizePx = (min(rect.width, rect.height) * scale).toInt()
-        val bitmap = QrGenerator.generateQrBitmap(url, sizePx) ?: return
         val r = rect.toAndroidRectF(scale)
-        canvas.drawBitmap(bitmap, null, r, null)
+        when (val qr = QrGenerator.generate(url, sizePx)) {
+            is QrResult.Ok -> canvas.drawBitmap(qr.bitmap, null, r, null)
+            QrResult.TooLong -> drawQrTooLong(canvas, r)
+            QrResult.Empty -> Unit
+        }
+    }
+
+    /** Marcador visible: el enlace no cabe en un QR y nunca debe desaparecer en silencio. */
+    private fun drawQrTooLong(canvas: Canvas, r: RectF) {
+        canvas.drawRect(r, Paint().apply { color = Color.WHITE })
+        val side = min(r.width(), r.height())
+        canvas.drawRect(r, Paint().apply {
+            color = Color.rgb(179, 38, 30); style = Paint.Style.STROKE
+            strokeWidth = max(1f, side * 0.03f); isAntiAlias = true
+            pathEffect = DashPathEffect(floatArrayOf(side * 0.08f, side * 0.05f), 0f)
+        })
+        val text = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.rgb(179, 38, 30); textSize = max(1f, side * 0.15f); typeface = Typeface.DEFAULT_BOLD }
+        val width = max(1, (r.width() * 0.84f).toInt())
+        val layout = android.text.StaticLayout.Builder.obtain(QrGenerator.TOO_LONG_LABEL, 0, QrGenerator.TOO_LONG_LABEL.length, text, width)
+            .setAlignment(android.text.Layout.Alignment.ALIGN_CENTER).build()
+        canvas.save()
+        canvas.translate(r.centerX() - width / 2f, r.centerY() - layout.height / 2f)
+        layout.draw(canvas)
+        canvas.restore()
     }
 
     private fun drawCalendar(

@@ -208,7 +208,8 @@ fun TextPanel(s: TextPanelState, cb: TextCallbacks) {
             OutlinedTextField(
                 value = s.songUrl, onValueChange = cb.onSongUrl, singleLine = true,
                 label = { Text(stringResource(R.string.text_song_url)) },
-                supportingText = { Text(stringResource(R.string.text_song_url_help)) },
+                isError = !com.polar.app.engine.QrGenerator.fits(s.songUrl),
+                supportingText = { Text(stringResource(if (com.polar.app.engine.QrGenerator.fits(s.songUrl)) R.string.text_song_url_help else R.string.text_song_url_too_long)) },
                 modifier = Modifier.fillMaxWidth().onFocusChanged { cb.onFocus(it.isFocused) }
             )
         }

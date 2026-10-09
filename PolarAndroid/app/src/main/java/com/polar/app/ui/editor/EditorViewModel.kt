@@ -320,7 +320,7 @@ class EditorViewModel(private val projectId: String, private val deps: EditorDep
     fun setDateSource(source: DateSource) { val c = _state.value.editCard; edit { ProjectEdits.setDateSource(it, source, c) } }
     fun setChosenDate(epochMs: Long) { val c = _state.value.editCard; edit { ProjectEdits.setChosenDate(it, epochMs, c) } }
     fun setDateStyle(style: DateStyle) = edit { ProjectEdits.setDateStyle(it, style) }
-    fun setSongUrl(url: String) = edit { ProjectEdits.updateSettings(it) { s -> s.copy(songURL = url.trim().take(500)) } }
+    fun setSongUrl(url: String) = edit { ProjectEdits.updateSettings(it) { s -> s.copy(songURL = url.trim().take(4000)) } }
 
     // ---------- diseño ----------
 
