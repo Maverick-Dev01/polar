@@ -320,10 +320,16 @@ private let cream = polarCream
                                             Image(systemName: "checkmark.circle.fill").foregroundStyle(.white, ink)
                                                 .font(.system(size: 14)).padding(3)
                                         }
+                                        if let badge = studio.placedQuality(of: photo)?.badge {
+                                            Text(badge).font(.system(size: 9, weight: .bold)).foregroundStyle(.white)
+                                                .padding(.horizontal, 4).padding(.vertical, 1)
+                                                .background(badge == "Baja" ? Color.red : Color.orange, in: Capsule())
+                                                .padding(3).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                                        }
                                     }.clipShape(RoundedRectangle(cornerRadius: PolarRadius.small))
                                     Text(photo.name).font(.system(size: 10)).lineLimit(1).frame(width: 76)
                                 }
-                            }.buttonStyle(.plain).accessibilityLabel("Colocar \(photo.name)")
+                            }.buttonStyle(.plain).accessibilityLabel("Colocar \(photo.name)" + (studio.placedQuality(of: photo)?.badge.map { ". Resolución \($0.lowercased())" } ?? ""))
                         }
                     }
                 }.scrollIndicators(.hidden)

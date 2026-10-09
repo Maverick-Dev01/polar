@@ -161,7 +161,7 @@ struct LibraryItem: Identifiable {
     static let trashRetentionDays = 7
     private var trash: URL { root.appendingPathComponent("trash") }
     private func trashEntries() -> [URL] {
-        (try? fm.contentsOfDirectory(at: trash, includingPropertiesForKeys: [.contentModificationDateKey])) ?? []
+        (try? fm.contentsOfDirectory(at: trash, includingPropertiesForKeys: [.contentModificationDateKey], options: [.skipsHiddenFiles])) ?? []
     }
     /// Number of deleted designs still in the trash.
     func trashCount() -> Int { trashEntries().count }

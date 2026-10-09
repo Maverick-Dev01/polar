@@ -645,12 +645,12 @@ enum ExportQuality: String, Codable, CaseIterable, Identifiable {
     var dpi: CGFloat { self == .light ? 200 : 300 }
     /// JPEG quality applied to photos embedded in the PDF; nil keeps rendered pixels untouched.
     var jpegQuality: Double? { self == .light ? 0.85 : (self == .high ? 0.94 : nil) }
-    var imageJPEGQuality: Double { self == .light ? 0.85 : 0.94 }
+    var imageJPEGQuality: Double { self == .light ? 0.85 : (self == .high ? 0.94 : 0.98) }
     var help: String {
         switch self {
         case .light: return "Fotos a 200 ppp con compresión ligera. Archivo pequeño, ideal para enviar."
         case .high: return "Fotos a 300 ppp con compresión de alta calidad. Equilibrio recomendado para imprimir."
-        case .max: return "Fotos a 300 ppp sin recomprimir. El archivo pesa más."
+        case .max: return "Fotos a 300 ppp sin recomprimir en el PDF; JPG con la máxima calidad. El archivo pesa más."
         }
     }
 }

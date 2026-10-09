@@ -170,7 +170,8 @@ enum PolarRenderer {
     }
 
     static func writePNG(project: PolarProject, page: Int, to url: URL, quality: ExportQuality = .high) throws {
-        try writeImage(project: project, page: page, to: url, jpeg: false, quality: quality)
+        // PNG is lossless by definition: always 300 ppp, whatever the quality preference.
+        try writeImage(project: project, page: page, to: url, jpeg: false, quality: .high)
     }
 
     static func writeJPEG(project: PolarProject, page: Int, to url: URL, quality: ExportQuality = .high) throws {
@@ -635,19 +636,20 @@ enum PolarRenderer {
     static func qrState(_ value: String) -> QRState {
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty { return .empty }
-        return trimmed.utf8.count > maxQRBytes || qrImage(trimmed) == nil ? .tooLong : .ok
+        return trimmed.utf8.count > maxQRBytes ? .tooLong : .ok  // byte count only: cheap enough for UI bodies
     }
+    private static let qrContext = CIContext()
     private static func qrImage(_ value: String) -> CGImage? {
         guard let filter = CIFilter(name: "CIQRCodeGenerator") else { return nil }
         filter.setValue(Data(value.utf8), forKey: "inputMessage")
         filter.setValue("M", forKey: "inputCorrectionLevel")
         guard let output = filter.outputImage else { return nil }
-        return CIContext().createCGImage(output, from: output.extent)
+        return qrContext.createCGImage(output, from: output.extent)
     }
 
     private static func drawQR(_ value: String, in rect: CGRect, context: CGContext, isPreview: Bool) throws {
         let link = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard qrState(link) == .ok, let image = qrImage(link) else {
+        guard qrState(link) == .ok, let image = qrImage(link) else {  // image built once; nil also means marker
             // Too long for a QR: leave a visible marker instead of failing the whole export or vanishing silently.
             fill(rect, color: .white, context: context)
             stroke(rect, color: NSColor(white: 0.35, alpha: 1), width: 0.8, context: context)

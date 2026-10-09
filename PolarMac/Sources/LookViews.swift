@@ -229,10 +229,11 @@ private let presetImageCache: NSCache<NSString, NSImage> = { let cache = NSCache
                 }.padding(.top, Spacing.m)
             }.disabled(!canApply)
             // Not a Button: a Button's own (empty) action would swallow the press-and-hold gesture.
+            // DragGesture(minimumDistance: 0) reports touch-down and release reliably.
             Label("Comparar · mantener pulsado", systemImage: "eye").frame(maxWidth: .infinity, minHeight: 48)
                 .background(polarInk.opacity(studio.comparing ? 0.18 : 0.08), in: RoundedRectangle(cornerRadius: PolarRadius.small))
                 .foregroundStyle(polarInk).contentShape(RoundedRectangle(cornerRadius: PolarRadius.small))
-                .onLongPressGesture(minimumDuration: 0.01, pressing: studio.setComparing, perform: {})
+                .gesture(DragGesture(minimumDistance: 0).onChanged { _ in studio.setComparing(true) }.onEnded { _ in studio.setComparing(false) })
                 .accessibilityAddTraits(.isButton)
                 .accessibilityHint("Mantén pulsado o mantén la tecla espacio para ver el original")
             ViewThatFits(in: .horizontal) {

@@ -67,7 +67,11 @@ import CoreImage
             check(props[kCGImagePropertyDPIWidth] as? Int == dpi, "\(quality.title) JPG declares \(dpi) dpi")
             check(props[kCGImagePropertyPixelWidth] as? Int == Int((612 * quality.dpi / 72).rounded()), "\(quality.title) JPG pixel width matches density")
         }
-        check(jpgSizes[.light]! < jpgSizes[.high]!, "Ligero JPG is lighter than Alta")
+        check(jpgSizes[.light]! < jpgSizes[.high]! && jpgSizes[.high]! < jpgSizes[.max]!, "JPG sizes grow Ligero < Alta < Máxima")
+        let pngLight = directory.appendingPathComponent("light.png")
+        try PolarRenderer.writePNG(project: project, page: 0, to: pngLight, quality: .light)
+        let pngProps = CGImageSourceCopyPropertiesAtIndex(CGImageSourceCreateWithURL(pngLight as CFURL, nil)!, 0, nil)! as NSDictionary
+        check(pngProps[kCGImagePropertyPixelWidth] as? Int == 2550, "PNG stays at 300 ppp even in Ligero")
         print("JPG sizes: Ligero \(jpgSizes[.light]!) B, Alta \(jpgSizes[.high]!) B, Máxima \(jpgSizes[.max]!) B")
 
         // Preference persists, and older settings.json files without the key still load.
@@ -121,6 +125,8 @@ import CoreImage
         check((try? store.load(active)) != nil, "active project untouched by purge/empty")
         try store.restore(ids[2])
         check((try? store.load(ids[2])) != nil, "kept design can still be restored")
+        try Data().write(to: store.root.appendingPathComponent("trash/.DS_Store"))
+        check(store.trashCount() == 0, ".DS_Store is not counted as a trashed design")
         check(store.emptyTrash() == 0 && store.trashCount() == 0, "emptying an empty trash is a no-op")
         check(store.list().count == 2, "active projects survive")
 

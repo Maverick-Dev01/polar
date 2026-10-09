@@ -752,6 +752,13 @@ struct FontChoice: Identifiable {
             libraryItems = library.list()
         } catch { errorMessage = error.localizedDescription }
     }
+    /// Resolution tier of a gallery photo at its first placed slot; nil when it is not placed.
+    func placedQuality(of photo: PhotoAsset) -> PhotoQuality? {
+        guard let slot = project.placements.firstIndex(where: { $0?.assetID == photo.id }),
+              let geometry = PolarRenderer.cropGeometry(project: project, slot: slot),
+              let dpi = project.effectiveDPI(slot: slot, rect: geometry.photo) else { return nil }
+        return PhotoQuality.of(dpi: dpi)
+    }
     var trashCount: Int { library.trashCount() }
     /// Permanently removes the trash, keeping the design that can still be undone.
     func emptyTrash() {
