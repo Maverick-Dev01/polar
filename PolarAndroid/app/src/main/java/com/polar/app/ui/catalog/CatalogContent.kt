@@ -42,6 +42,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -177,10 +179,11 @@ fun CatalogContent(
 private fun TemplateCard(template: SavedTemplate, thumbnail: suspend (SavedTemplate) -> Bitmap?, onClick: () -> Unit, onDelete: () -> Unit) {
     val image by produceState<ImageBitmap?>(null, template.id) { value = withContext(Dispatchers.Default) { thumbnail(template)?.asImageBitmap() } }
     val label = stringResource(R.string.catalog_mine_card, template.name, template.regions.size)
-    val deleteLabel = stringResource(R.string.catalog_mine_delete_action, template.name)
+    val deleteLabel = stringResource(R.string.catalog_mine_delete_action)
+    val useLabel = stringResource(R.string.catalog_mine_use)
     OutlinedCard(
         onClick = onClick, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        modifier = Modifier.fillMaxWidth().semantics { contentDescription = label }
+        modifier = Modifier.fillMaxWidth().semantics { contentDescription = label; onClick(label = useLabel) { onClick(); true } }
     ) {
         Column(Modifier.padding(Spacing.grid), verticalArrangement = Arrangement.spacedBy(Spacing.grid)) {
             Box(Modifier.fillMaxWidth().aspectRatio(1.2f).background(PolarColors.table, MaterialTheme.shapes.small).padding(Spacing.grid), contentAlignment = Alignment.Center) {
@@ -193,6 +196,7 @@ private fun TemplateCard(template: SavedTemplate, thumbnail: suspend (SavedTempl
                 }
                 IconButton(onClick = onDelete, modifier = Modifier.size(48.dp)) { Icon(Icons.Outlined.Delete, deleteLabel) }
             }
+            OutlinedButton(onClick = onClick, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).clearAndSetSemantics { }) { Text(useLabel) }
         }
     }
 }

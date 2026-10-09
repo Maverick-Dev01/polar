@@ -33,6 +33,7 @@ class HelpUiTest {
     private val content = HelpContent.parse(SharedFixtures.file("help.json").readText())
     private val clicks = mutableListOf<String>()
     private var finished = 0
+    private var unshown = 0
 
     /** Sin animaciones del sistema: también prueba la ruta de «reducir movimiento» (cuadro final estático). */
     @Before fun noAnimations() {
@@ -60,7 +61,7 @@ class HelpUiTest {
 
     private val tourIds = listOf("tool.fotos", "hoja", "tool.texto", "tool.filtros", "top.imprimir")
 
-    private fun tour() = harness(tourIds) { t -> TourOverlay(content.recorrido, t, onFinish = { finished++ }) }
+    private fun tour() = harness(tourIds) { t -> TourOverlay(content.recorrido, t, onFinish = { shown -> if (shown) finished++ else unshown++ }) }
 
     @Test fun tourAdvancesThroughFiveStepsAndEnds() {
         tour()
@@ -89,7 +90,7 @@ class HelpUiTest {
     }
 
     @Test fun missingTargetsAreSkippedInsteadOfGettingStuck() {
-        harness(listOf("tool.fotos", "tool.filtros", "top.imprimir")) { t -> TourOverlay(content.recorrido, t, onFinish = { finished++ }) }
+        harness(listOf("tool.fotos", "tool.filtros", "top.imprimir")) { t -> TourOverlay(content.recorrido, t, onFinish = { shown -> if (shown) finished++ else unshown++ }) }
         compose.waitForIdle()
         compose.onNodeWithText("Paso 1 de 3").assertExists()
         compose.onNodeWithText("Siguiente").performClick(); compose.waitForIdle()
@@ -101,9 +102,10 @@ class HelpUiTest {
     }
 
     @Test fun tourEndsByItselfWhenNothingIsOnScreen() {
-        harness(emptyList()) { t -> TourOverlay(content.recorrido, t, onFinish = { finished++ }) }
+        harness(emptyList()) { t -> TourOverlay(content.recorrido, t, onFinish = { shown -> if (shown) finished++ else unshown++ }) }
         compose.waitForIdle()
-        assertEquals(1, finished)
+        assertEquals("Sin pasos mostrados no cuenta como visto", 1, unshown)
+        assertEquals(0, finished)
     }
 
     @Test fun tourBlocksTouchesToTheEditorBelow() {
@@ -114,7 +116,7 @@ class HelpUiTest {
 
     @Test @Config(sdk = [34], qualifiers = "w360dp-h640dp-xxhdpi")
     fun bubbleStaysOnScreenWithLargeFont() {
-        harness(tourIds, fontScale = 1.3f) { t -> TourOverlay(content.recorrido, t, onFinish = { finished++ }) }
+        harness(tourIds, fontScale = 1.3f) { t -> TourOverlay(content.recorrido, t, onFinish = { shown -> if (shown) finished++ else unshown++ }) }
         compose.waitForIdle()
         val screen = compose.onRoot().fetchSemanticsNode().boundsInRoot
         content.recorrido.forEach { step ->
@@ -190,7 +192,7 @@ class HelpUiTest {
         helpScreen()
         compose.onNodeWithText("Quitar el fondo de una foto").performClick()
         compose.onNodeWithText("Paso a paso").assertExists()
-        compose.onNodeWithText(content.article("quitar-fondo")!!.pasos.first()).assertExists()
+        compose.onNodeWithText(content.article("quitar-fondo")!!.pasosAqui.first()).assertExists()
         compose.onNodeWithText("Llévame ahí").performScrollTo().performClick()
         assertEquals("editor.encuadrar", went)
     }

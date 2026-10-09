@@ -17,7 +17,7 @@ object HelpSearch {
         return inCategory.mapNotNull { a ->
             val title = normalize(a.titulo)
             val head = title + " " + normalize(a.palabras.joinToString(" ")) + " " + normalize(a.resumen)
-            val all = head + " " + normalize(a.pasos.joinToString(" "))
+            val all = head + " " + normalize(a.todosLosPasos.joinToString(" "))
             if (words.all { it in all }) (if (words.all { it in title }) 0 else if (words.all { it in head }) 1 else 2) to a else null
         }.sortedBy { it.first }.map { it.second }
     }

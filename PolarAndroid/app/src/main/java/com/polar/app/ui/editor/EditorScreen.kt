@@ -252,7 +252,7 @@ fun EditorScreen(
     }
     }
     if (editing && helpContent != null) {
-        if (tourActive) TourOverlay(helpContent.recorrido, helpTargets, onFinish = { tourActive = false; scope.launch { container.settings.setTourSeen(true) } })
+        if (tourActive) TourOverlay(helpContent.recorrido, helpTargets, onFinish = { shown -> tourActive = false; if (shown) scope.launch { container.settings.setTourSeen(true) } })
         else if (helpMode) HelpModeOverlay(helpContent, helpTargets, onDone = { helpMode = false })
     }
     }

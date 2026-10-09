@@ -10,12 +10,23 @@ import kotlinx.serialization.json.Json
 data class HelpArticle(
     val id: String, val categoria: String, val titulo: String, val resumen: String,
     val pasos: List<String>, val destino: String? = null, val animacion: String,
+    /** Variantes por plataforma cuando la interacción difiere; si faltan se usa `pasos`. */
+    val pasosAndroid: List<String>? = null, val pasosMac: List<String>? = null,
     /** Sinónimos para la búsqueda («recortar» encuentra «Encuadrar»). */
     val palabras: List<String> = emptyList()
-)
+) {
+    /** Los pasos que ve esta app (Android). */
+    val pasosAqui: List<String> get() = pasosAndroid ?: pasos
+    /** Todas las variantes (para validar etiquetas y buscar). */
+    val todosLosPasos: List<String> get() = pasos + pasosAndroid.orEmpty() + pasosMac.orEmpty()
+}
 
-@Serializable data class TourStep(val id: String, val objetivo: String, val animacion: String, val titulo: String, val texto: String)
-@Serializable data class HelpControl(val id: String, val titulo: String, val texto: String)
+@Serializable data class TourStep(val id: String, val objetivo: String, val animacion: String, val titulo: String, val texto: String, val textoAndroid: String? = null, val textoMac: String? = null) {
+    val textoAqui: String get() = textoAndroid ?: texto
+}
+@Serializable data class HelpControl(val id: String, val titulo: String, val texto: String, val textoAndroid: String? = null, val textoMac: String? = null) {
+    val textoAqui: String get() = textoAndroid ?: texto
+}
 
 /** Contenido único de la guía: `shared-fixtures/help.json`, copiado a los assets al compilar. */
 @Serializable
@@ -41,7 +52,7 @@ data class HelpContent(
             if (a.categoria !in cats) add("${a.id}: categoría desconocida «${a.categoria}»")
             if (a.destino != null && a.destino !in destinos) add("${a.id}: destino desconocido «${a.destino}»")
             if (a.animacion !in animaciones) add("${a.id}: animación desconocida «${a.animacion}»")
-            if (a.pasos.isEmpty() || a.pasos.any { it.isBlank() }) add("${a.id}: pasos vacíos")
+            if (a.pasos.isEmpty() || a.todosLosPasos.any { it.isBlank() } || a.pasosAndroid?.isEmpty() == true || a.pasosMac?.isEmpty() == true) add("${a.id}: pasos vacíos")
             if (a.titulo.isBlank() || a.resumen.isBlank()) add("${a.id}: título o resumen vacío")
         }
         val controlIds = controles.map { it.id }.toSet()

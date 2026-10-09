@@ -38,6 +38,7 @@ sealed interface HomeEvent {
     data class Deleted(val id: String, val name: String) : HomeEvent
     data class Message(val text: UiText) : HomeEvent
     data class SharePolar(val file: File) : HomeEvent
+    data class Opened(val id: String) : HomeEvent
 }
 
 class HomeViewModel(
@@ -122,6 +123,19 @@ class HomeViewModel(
                 _events.send(HomeEvent.SharePolar(file))
             } catch (e: IOException) {
                 failed()
+            }
+        }
+    }
+
+    /** «Abrir archivo .polar»: crea un proyecto nuevo con el contenido del archivo y lo abre. */
+    fun openPolar(text: String, displayName: String, fallbackName: String) {
+        viewModelScope.launch {
+            try {
+                val id = withContext(io) { store.importPolar(text, displayName.removeSuffix(".polar").ifBlank { fallbackName }) }
+                _events.send(HomeEvent.Opened(id))
+            } catch (e: CancellationException) { throw e
+            } catch (e: Exception) {
+                _events.send(HomeEvent.Message(UiText(R.string.catalog_bad_file)))
             }
         }
     }
