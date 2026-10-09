@@ -187,7 +187,7 @@ private fun Header(state: HomeUiState, onSettings: () -> Unit, onQuery: (String)
                 value = state.query, onValueChange = onQuery, singleLine = true,
                 leadingIcon = { Icon(Icons.Filled.Search, null) },
                 placeholder = { Text(stringResource(R.string.home_search)) },
-                shape = MaterialTheme.shapes.extraLarge, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
+                shape = MaterialTheme.shapes.extraLarge, modifier = Modifier.widthIn(max = 640.dp).fillMaxWidth().heightIn(min = 56.dp)
             )
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 PolarChip(state.sort == SortMode.RECENT, { onSort(SortMode.RECENT) }, { Text(stringResource(R.string.home_sort_recent)) })
