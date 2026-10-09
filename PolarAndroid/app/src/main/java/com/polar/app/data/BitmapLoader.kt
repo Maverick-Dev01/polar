@@ -88,8 +88,8 @@ class BitmapLoader(private val context: Context) {
             val longSide = maxOf(oriented.width, oriented.height)
             val result = if (exactSize && longSide > maxDim) {
                 val scale = maxDim.toDouble() / longSide
-                Bitmap.createScaledBitmap(oriented, (oriented.width * scale).roundToInt().coerceAtLeast(1),
-                    (oriented.height * scale).roundToInt().coerceAtLeast(1), true).also { if (it != oriented) oriented.recycle() }
+                downscaleProgressive(oriented, (oriented.width * scale).roundToInt().coerceAtLeast(1),
+                    (oriented.height * scale).roundToInt().coerceAtLeast(1)).also { if (it != oriented) oriented.recycle() }
             } else oriented
             cache.put(key, result)
             result
@@ -152,4 +152,20 @@ internal fun applyExifOrientation(bitmap: Bitmap, orientation: Int): Bitmap {
         val out = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, m, true)
         if (out != bitmap) bitmap.recycle()
         return out
+}
+
+/** Reduce a la mitad con filtro mientras sobre el doble y termina con un ajuste fino: evita el aliasing de un solo paso. */
+internal fun downscaleProgressive(source: Bitmap, targetW: Int, targetH: Int): Bitmap {
+    var current = source
+    while (current.width >= targetW * 2 && current.height >= targetH * 2) {
+        val next = Bitmap.createScaledBitmap(current, current.width / 2, current.height / 2, true)
+        if (current != source && next != current) current.recycle()
+        current = next
+    }
+    if (current.width != targetW || current.height != targetH) {
+        val last = Bitmap.createScaledBitmap(current, targetW, targetH, true)
+        if (current != source && last != current) current.recycle()
+        current = last
+    }
+    return current
 }
