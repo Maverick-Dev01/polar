@@ -1,29 +1,121 @@
-# Polar en Play Store
+# Polar en Google Play · lista de lanzamiento
 
-## Antes de la primera subida (lo hace el dueño de la cuenta)
+Marca con [x] a medida que avances. Lo que requiere cuenta de Play Console lo hace el dueño de la cuenta; el resto ya está listo en el repositorio.
 
-1. Confirmar el `applicationId` definitivo (hoy `io.github.maverickdev01.polar`): no se puede cambiar después de publicar.
-2. Crear la llave de subida (pide una contraseña; guárdala en un gestor de contraseñas):
-   `keytool -genkeypair -v -keystore ~/polar-upload.jks -alias polar -keyalg RSA -keysize 4096 -validity 10000`
-3. Agregar a `~/.gradle/gradle.properties` (nunca al repositorio):
-   `POLAR_STORE_FILE=/Users/<usuario>/polar-upload.jks`, `POLAR_STORE_PASSWORD=…`, `POLAR_KEY_ALIAS=polar`, `POLAR_KEY_PASSWORD=…`
-   Las cuatro propiedades `POLAR_*` deben estar juntas. Ya no hay firma debug como alternativa; si faltan, la publicación falla. Si ya distribuiste la versión GitHub, conserva su llave privada; revisa [actualizaciones-android.md](actualizaciones-android.md) antes de elegir la firma de Play.
-4. `cd PolarAndroid && ./gradlew bundlePlay` → subir `app/build/outputs/bundle/play/app-play.aab` con *Play App Signing* activado. La build `play` desactiva el actualizador externo y elimina `REQUEST_INSTALL_PACKAGES`, como exige Google Play.
-5. Publicar `docs/privacidad.md` en una URL pública (por ejemplo GitHub Pages de la cuenta personal) y pegarla en Play Console.
+## 0. Versión propuesta (sólo plan; aún no se cambia)
 
-## Ficha
+- [ ] Subir a **2.3.0, `versionCode` 7** (hoy 2.2.0 / 6). Se cambia al preparar el release con `-PPOLAR_VERSION_NAME=2.3.0 -PPOLAR_VERSION_CODE=7` o editando los valores por defecto de `PolarAndroid/app/build.gradle.kts`. Cada subida a Play necesita un `versionCode` mayor que el anterior.
+- [ ] Mac: mismo número de versión (2.3.0) en `PolarMac/Info.plist` al publicar.
 
-- **Nombre:** Polar · Fotos para imprimir
-- **Descripción corta (≤ 80):** Convierte tus fotos en polaroids, boletos y calendarios listos para imprimir.
-- **Descripción completa:** Elige un diseño (Polaroid, foto con canción y QR, boleto, película, calendario y más), pon tus fotos y se acomodan solas. Escribe un pie de foto para todas o uno distinto para cada tarjeta, con fecha, color y 20 tipos de letra. Imprime desde tu teléfono o guarda un PDF a tamaño real en Carta, Oficio, A4, 4 × 6 y más. Funciona sin internet, sin cuentas y sin anuncios: tus fotos nunca salen de tu teléfono.
-- **Categoría:** Fotografía.
-- **Capturas:** teléfono (4–8) y tablet de 10" (2–4), en claro y oscuro: Tus diseños, Catálogo, Editor, Texto por tarjeta, Terminar.
+## 1. Antes de la primera subida
 
-## Seguridad de los datos (Data safety)
+- [ ] Confirmar el `applicationId` definitivo (hoy `io.github.maverickdev01.polar`): no se puede cambiar después de publicar.
+- [ ] **Marca:** buscar «Polar» en Google Play, en la base de marcas (IMPI/EUIPO/USPTO) y en la web. *Polar Electro* es una marca conocida (relojes deportivos); por eso el nombre sugerido lleva descriptor: «Polar: fotos para imprimir». Si hay conflicto, usar otro nombre.
+- [ ] Crear la llave de subida (pide contraseña; guárdala en un gestor de contraseñas):
+  `keytool -genkeypair -v -keystore ~/polar-upload.jks -alias polar -keyalg RSA -keysize 4096 -validity 10000`
+- [ ] Agregar a `~/.gradle/gradle.properties` (nunca al repositorio): `POLAR_STORE_FILE`, `POLAR_STORE_PASSWORD`, `POLAR_KEY_ALIAS`, `POLAR_KEY_PASSWORD`. Las cuatro deben estar juntas; si faltan, la publicación falla (no hay firma debug de respaldo).
+- [ ] Si ya distribuiste el APK de GitHub, conserva su llave privada y lee [actualizaciones-android.md](actualizaciones-android.md) antes de elegir la firma de Play.
 
-- ¿Recopila datos? **No.** ¿Comparte datos? **No.**
-- La build Play no consulta ni descarga actualizaciones de GitHub. Eliminación de datos: el usuario borra sus diseños dentro de la app. La versión distribuida por GitHub usa HTTPS para consultar/descargar actualizaciones a petición; revisa la política de privacidad por canal.
+## 2. Compilar el paquete (AAB)
 
-## Clasificación de contenido
+- [ ] `cd PolarAndroid && ./gradlew bundlePlay` (el tipo de compilación se llama `play`, no `release`; la tarea `bundlePlayRelease` no existe). Salida: `app/build/outputs/bundle/play/app-play.aab`.
+- [ ] La build `play` desactiva el actualizador de GitHub (`GITHUB_UPDATES_ENABLED=false`) y elimina `REQUEST_INSTALL_PACKAGES` (`app/src/play/AndroidManifest.xml`), como exige Google Play.
+- [ ] En Play Console: **Integridad de la app → Firma de apps (Play App Signing) activado**; tu llave es sólo la de *subida*.
+- [ ] Nivel de API: `targetSdk = 36`, `compileSdk = 36`, `minSdk = 26` (Android 8). Google exige apuntar al nivel más reciente o a uno cercano; confirma el requisito vigente en Play Console antes de subir.
 
-Sin violencia, sin contenido generado por usuarios compartido públicamente, sin compras ni anuncios.
+## 3. Política de privacidad pública (GitHub Pages)
+
+- [ ] Repositorio: `https://github.com/Maverick-Dev01/polar` (cuenta personal).
+- [ ] En GitHub: **Settings → Pages → Build and deployment → Source: Deploy from a branch → Branch: `global` (o la rama principal) y carpeta `/docs` → Save**. Si el repositorio es privado, Pages puede requerir plan de pago o hacerlo público.
+- [ ] URL resultante (confírmala en Pages al terminar el despliegue): `https://maverick-dev01.github.io/polar/privacidad` (GitHub Pages sirve `docs/privacidad.md` como página; si no, usa `.../privacidad.html`).
+- [ ] Abrirla en una ventana privada y pegarla en **Contenido de la app → Política de privacidad**.
+
+## 4. Prueba cerrada
+
+- [ ] **Cuentas personales nuevas:** según la política de Google vigente en 2026, antes de pedir acceso a producción hay que correr una **prueba cerrada con al menos 12 testers que permanezcan 14 días seguidos**. Confirma el requisito exacto y si aplica a tu cuenta en Play Console (**Prueba y lanzamiento → Prueba cerrada**), porque Google lo ajusta.
+- [ ] Crear la pista cerrada, subir el AAB, crear una lista de correos de testers (Gmail) y compartirles el enlace de opt-in.
+- [ ] Llevar la cuenta: 12 testers aceptados, 14 días corridos, y recoger sus comentarios.
+- [ ] Después: **Solicitar acceso a producción** y contestar el cuestionario.
+
+## 5. Seguridad de los datos (Data safety)
+
+- [ ] ¿Recopila o comparte datos del usuario? **No** (ninguno): no hay cuentas, anuncios ni analítica; las fotos se procesan en el dispositivo y no se envían a servidores de Polar.
+- [ ] Quitar fondo: **ML Kit de segmentación de sujetos corre en el dispositivo**, pero el modelo se descarga una vez mediante Google Play Services. Menciónalo en la descripción del formulario y en la política de privacidad (ya está en `privacidad.md`); esa descarga la hace Google y no incluye datos del usuario.
+- [ ] ¿Datos cifrados en tránsito? Sí (la única conexión es HTTPS vía Google Play Services).
+- [ ] ¿Puede el usuario pedir que se borren sus datos? No se guardan datos fuera del teléfono; desinstalar la app o borrar diseños dentro de ella elimina todo.
+- [ ] La build Play no consulta ni descarga actualizaciones de GitHub; la de GitHub (fuera de Play) sí, a petición, con HTTPS.
+
+## 6. Clasificación de contenido (cuestionario IARC)
+
+- [ ] Categoría: **Utilidad / Productividad** (no juego).
+- [ ] Violencia, sangre, contenido sexual, lenguaje soez, drogas, apuestas: **No** a todo.
+- [ ] ¿Contenido generado por usuarios compartido con otros? **No** (los archivos sólo salen cuando el usuario los guarda o comparte).
+- [ ] ¿Comparte la ubicación? **No**. ¿Permite compras? **No** (hasta activar Polar Pro; ver [monetizacion.md](monetizacion.md)). ¿Anuncios? **No**.
+- [ ] Resultado esperado: apta para todo público.
+- [ ] Otros formularios: **Público objetivo** (13+ o todo público; no dirigida a niños), **Anuncios: no contiene**, **Declaración de permisos** (ninguno sensible), **Apps de gobierno / salud / finanzas: no**.
+
+## 7. Recursos de la ficha
+
+- [ ] Ícono 512 × 512 px, PNG de 32 bits, ≤ 1 MB.
+- [ ] Gráfico de funciones (feature graphic) 1024 × 500 px, JPG o PNG sin transparencia.
+- [ ] Capturas de teléfono: **mínimo 2**, recomendado 4–8 (relación 16:9 a 9:16, lado menor ≥ 320 px). Sugeridas: Tus diseños, Catálogo, Editor, Texto por tarjeta, Terminar; en claro y oscuro (`docs/capturas/`).
+- [ ] Capturas de tablet de 7" y 10": opcionales, 2–4 cada una.
+- [ ] Opcional: video de YouTube.
+
+## 8. Texto de la ficha (listo para pegar)
+
+- **Nombre (≤ 30 caracteres):** `Polar: fotos para imprimir` (26). Ver nota de marca en el punto 1.
+- **Descripción corta (≤ 80):** `Polaroids, boletos y más listos para imprimir. Sin cuentas ni anuncios.` (71 caracteres)
+- **Categoría:** Fotografía. **Etiquetas:** impresión de fotos, polaroid, collage.
+- **Contacto:** josecatalino.code@gmail.com. **Política:** URL del punto 3.
+- **Descripción completa (≤ 4000):**
+
+```
+Polar convierte tus fotos en tarjetas listas para imprimir: polaroids, fotomatón, vinilo, casete, collage, cinta washi y muchos diseños más. Eliges un diseño, pones tus fotos y se acomodan solas en la hoja.
+
+DISEÑOS
+• Clásicos: Polaroid, Instantánea ancha, Fotomatón y más.
+• Música: Vinilo y Casete, y "Foto + canción" con un código QR que abre tu canción en el celular de quien lo escanee.
+• Libre y ocasiones: Collage, Cinta washi, boletos, película y calendarios.
+• Busca un diseño por nombre, sin importar acentos ni mayúsculas, y cámbialo cuando quieras: tus fotos y textos se conservan.
+
+TUS FOTOS
+• Agrega fotos sueltas o una carpeta completa.
+• Encuadra cada foto con los dedos (acércala y muévela).
+• Quita el fondo de una foto con un toque: el recorte se hace en tu teléfono.
+• Filtros: blanco y negro, sepia, luz, contraste y grano. Mantén pulsada la hoja para comparar con el original.
+• Avisos cuando una foto es muy chica para verse nítida en papel.
+
+TU TEXTO
+• Escribe una vez para todas las tarjetas, o dale a una su propio texto.
+• 120 frases listas para adaptar, la fecha de la foto, colores y 20 tipos de letra.
+• Color y letra de todo el diseño con un solo toque.
+
+TUS MOLDES
+• Importa una imagen con huecos para tus fotos y úsala como diseño propio.
+• Todos tus moldes quedan guardados en "Mis moldes".
+
+IMPRIME A TAMAÑO REAL
+• Papel Carta, Oficio, A4, 4 × 6 y más, con orientación y márgenes ajustables.
+• Marcas de corte para recortar cada tarjeta.
+• Guarda un PDF o una imagen, o imprime directo desde el teléfono. Elige entre un archivo ligero para enviar o la mejor calidad para imprimir.
+• Si imprimes, hazlo al 100 % (sin "ajustar a la página") para que cada tarjeta salga de su medida exacta.
+
+TUS DISEÑOS, SIEMPRE A SALVO
+• Se guardan solos; deshacer y rehacer cuantas veces quieras.
+• Lo que borras se puede recuperar durante 7 días.
+• Guarda tu diseño completo en un archivo .polar para respaldarlo o seguir en otro dispositivo, incluida la versión de Polar para Mac.
+
+PRIVACIDAD
+• Sin cuentas, sin anuncios y sin analítica.
+• Tus fotos nunca salen de tu teléfono: se procesan en el dispositivo.
+• Diseñar, guardar e imprimir funciona sin internet. (Quitar fondo puede descargar una vez un modelo de Google Play Services.)
+
+Polar es una app independiente y no está afiliada a ninguna otra marca.
+```
+
+## 9. Envío
+
+- [ ] Completar todas las secciones de **Contenido de la app** (privacidad, anuncios, acceso a la app, clasificación, público objetivo, seguridad de los datos).
+- [ ] Subir primero a la pista cerrada; tras los 14 días, pedir producción y publicar por etapas (p. ej. 20 % → 100 %).
+- [ ] Guardar el AAB y su `mapping.txt` de cada versión.
