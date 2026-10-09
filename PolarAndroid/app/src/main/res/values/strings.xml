@@ -38,7 +38,7 @@
     <string name="settings_empty_trash_body">Los diseños borrados se eliminarán para siempre. Esta acción no se puede deshacer.</string>
     <string name="settings_licenses">Licencias de las fuentes</string>
     <string name="settings_privacy_title">Tus fotos se quedan en tu teléfono</string>
-    <string name="settings_privacy_body">Tus fotos y diseños se quedan en el dispositivo. Diseñar e imprimir funciona sin internet. Sólo la búsqueda y descarga de actualizaciones utiliza conexión.</string>
+    <string name="settings_privacy_body">Tus fotos y diseños se quedan en el dispositivo. Diseñar e imprimir funciona sin internet. Para quitar fondo, ML Kit puede descargar un modelo y enviar diagnósticos técnicos a Google.</string>
     <string name="settings_version">Polar %1$s · Hecho para imprimir recuerdos</string>
     <string name="home_search">Buscar en tus diseños</string>
     <string name="home_sort_recent">Recientes</string>

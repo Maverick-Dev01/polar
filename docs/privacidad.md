@@ -1,6 +1,6 @@
 # Política de privacidad de Polar
 
-**Última actualización:** 8 de octubre de 2026
+**Última actualización:** 9 de octubre de 2026
 
 Polar es una app para diseñar e imprimir tus fotos. Diseñar, guardar e imprimir funciona sin internet; no tiene cuentas, anuncios ni analítica propia. Polar no recibe tus fotos ni diseños. La función Android de quitar fondo utiliza un SDK de Google con diagnósticos técnicos, descritos abajo.
 

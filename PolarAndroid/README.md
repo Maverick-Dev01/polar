@@ -32,7 +32,7 @@ El APK se genera en `app/build/outputs/apk/debug/app-debug.apk`. Los compilados 
 
 Para publicar, sigue `../docs/play-store.md`.
 
-Desde la raíz, `python3 tools/android-release.py` genera ambas distribuciones firmadas en `release-assets/`: **Polar-2.3.0.apk** (`release`, con actualizador GitHub) y **Polar-2.3.0-play.aab** (`play`, sin instalador propio, para Play Console). Usa `--channel github` o `--channel play` para preparar una sola. En Windows usa `python` con Python 3 instalado. No copies la llave al repositorio: recupera `.polar-signing/` por un medio privado.
+Desde la raíz, `python3 tools/android-release.py` genera ambas distribuciones firmadas en `release-assets/`: **Polar-2.3.1.apk** (`release`, con actualizador GitHub) y **Polar-2.3.1-play.aab** (`play`, sin instalador propio, para Play Console). Usa `--channel github` o `--channel play` para preparar una sola. En Windows usa `python` con Python 3 instalado. No copies la llave al repositorio: recupera `.polar-signing/` por un medio privado.
 
 ## Cómo está hecho
 

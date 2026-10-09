@@ -43,3 +43,24 @@ El cliente GitHub reside en `app/src/github/`, incluido sólo en debug y release
 ## Límites de esta entrega
 
 No se publicó en Play Console ni se probó un teléfono físico o dispositivo de 16 KiB. Quedan las decisiones de Play App Signing, formulario de datos, política pública y pruebas de la cuenta. La segmentación positiva de Android depende del modelo opcional de Google; los casos de composición usan máscaras sintéticas. La versión Mac mantiene firma local, sin notarización.
+
+## Publicación y recorrido de 2.3.0 (9 de octubre)
+
+- Publicada `android-v2.3.0`, código `5e57889`, en `global`. APK, AAB, ZIP Mac, manifiesto y SHA públicos descargados y comparados byte a byte con los locales. `Latest` devolvió versión 2.3.0 / 7.
+- Instalación real por **Ajustes → Buscar → Descargar → Instalar**, desde la app 2.2.0 del usuario Demo. Android pidió permiso para esa fuente y confirmación de actualizar. Versión instalada 2.3.0 / 7.
+- Se conservó el único diseño Polaroid y se abrió en el editor con sus nueve fotografías, textos y filtros. No se desinstaló ni se borró almacenamiento.
+- Se instaló también el APK de la variante Play, con el mismo paquete, versión y firma local, sin perder la biblioteca. Ajustes mostró «Esta versión recibe sus actualizaciones desde Google Play», sin buscar/descargar/instalar APK; el paquete instalado no solicitó `REQUEST_INSTALL_PACKAGES`. Se restauró el canal GitHub.
+- En ese recorrido se detectó una frase heredada de privacidad que decía que sólo las actualizaciones usaban internet. Se corrigió para indicar la descarga y los diagnósticos de ML Kit. Se prepara el parche **2.3.1 / 8** sin reemplazar los archivos ya publicados de 2.3.0. Mac conserva el binario Swift verificado, con metadatos de versión 2.3.1 / 8 y firma local renovada.
+
+## Parche final 2.3.1 / 8
+
+- Compilación limpia de las tres variantes; Android vuelve a pasar 383 pruebas en 64 suites sin fallos, errores ni omitidas. Play pasa su prueba de exclusión de clases y permisos. Lint conserva 0 errores: debug/release 100 advertencias y Play 118.
+- APK y AAB con firma permanente verificada; `bundletool validate` correcto. Play no contiene clases ni endpoint de GitHub ni permiso para instalar APK. Las cuatro bibliotecas ELF de 64 bits conservan alineación de al menos 16 KiB.
+- Se corrigieron el texto de Ajustes y la ficha de Play sobre diagnósticos de ML Kit, además de aclarar la diferencia entre firma de subida y firma final.
+- Mac mantiene el binario Swift ya verificado; Info.plist confirma 2.3.1 / 8 y la firma local renovada pasa `codesign --verify --deep --strict`.
+
+| Archivo 2.3.1 | Bytes | SHA-256 |
+| --- | ---: | --- |
+| APK | 5501757 | `6d230913e78d45950c7880ed9c867c25edd5cf8e68c850162e0b7f6ff18acb57` |
+| AAB Play | 8644359 | `8438ce3131716f5f463bc1c8b64a2b1696a3cb40e3502bff94c6921e678b38d5` |
+| ZIP Mac | 4086966 | `57e4b6a960eb94b63e249c6d0465ef31a6d1a35e01a9d8b6ab49bcb3c80d444c` |
