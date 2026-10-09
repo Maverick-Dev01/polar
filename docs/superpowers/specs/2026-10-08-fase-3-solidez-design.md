@@ -127,13 +127,15 @@
 
 ### 3.1 Seis diseños nuevos (ambas apps, mismo renderizado)
 
+> *Decisión (2026-10-08):* «Portada de revista» se reemplazó por **Collage** porque `editorial` («Como una revista») ya existe.
+
 | id | Nombre | Categoría | Fotos por tarjeta | Descripción |
 |---|---|---|---|---|
 | `photobooth` | Fotomatón | Clásicos | 4 | Tira vertical de 4 fotos con pie de texto, como cabina de fotos |
 | `instaxWide` | Instantánea ancha | Clásicos | 1 | Formato horizontal ancho (proporción tipo Wide) con pie |
 | `vinyl` | Vinilo | Música | 1 | Disco negro con la foto como etiqueta circular, título y artista; QR opcional |
 | `cassette` | Casete | Música | 1 | Casete con la foto en la ventana de la etiqueta, título y artista; QR opcional |
-| `magazine` | Portada de revista | Libre | 1 | Foto a sangre, cabecera grande con el título, subtítulos tipo titular |
+| `collage` | Collage | Libre | 3 | Una foto grande y dos pequeñas en la misma tarjeta, con pie de texto |
 | `washi` | Cinta washi | Ocasiones | 1 | Foto con borde blanco y dos tiras de cinta decorativa en las esquinas, pie manuscrito |
 
 - **Decisión:** el QR se habilita en todos los diseños musicales (`spotify`, `playerRed`, `playerGray`, `vinyl`, `cassette`), siempre que exista el campo de enlace.

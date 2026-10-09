@@ -36,8 +36,8 @@ Las de los subproyectos 1 y 2. Además:
 - Pruebas en ambas plataformas que leen el fixture y lo comparan con la geometría del código.
 
 ### Task 2: Android — los 6 estilos
-- `photobooth`, `instaxWide`, `vinyl`, `cassette`, `magazine`, `washi` en `Models.kt`/`StyleInfo.kt`, con su categoría, nombre y descripción.
-- Dibujo en `PolarRenderer`, miniatura en `Thumbnailer.styleCard` y fotos por tarjeta (fotomatón = 4).
+- `photobooth`, `instaxWide`, `vinyl`, `cassette`, `collage`, `washi` en `Models.kt`/`StyleInfo.kt`, con su categoría, nombre y descripción.
+- Dibujo en `PolarRenderer`, miniatura en `Thumbnailer.styleCard` y fotos por tarjeta (fotomatón = 4, collage = 3).
 - Pruebas: cada estilo × Carta/A4/4×6 × vertical/horizontal renderiza sin excepción, y la geometría coincide con el fixture.
 
 ### Task 3: Mac — los 6 estilos
