@@ -65,7 +65,66 @@ import UniformTypeIdentifiers
         var region = TemplateRegion(x: 0.95, y: -0.1, width: 0.4, height: 0)
         region.clamp()
         precondition(region.rect.minX >= 0 && region.rect.minY >= 0 && region.rect.maxX <= 1 && region.rect.maxY <= 1 && region.height >= 0.02)
-        print("TemplateChecks: transparent and white holes, borders, EXIF orientation, downsampling, fallback, row order, 64-region cap, unchanged originals, unreadable files and persistence passed")
+        try shapeChecks()
+        print("TemplateChecks: transparent and white holes, borders, EXIF orientation, downsampling, fallback, row order, 64-region cap, unchanged originals, unreadable files, persistence, and rect/round/ellipse shape detection (synthetic masks and shared fixtures) passed")
+    }
+
+    /// Máscara sintética de un hueco: un cuadrado, un rectángulo redondeado (radio = fracción del lado menor) o un óvalo.
+    static func mask(_ shape: RegionShape, width: Int, height: Int, radius: Double = 0) -> [Bool] {
+        let r = radius * Double(min(width, height))
+        var result = [Bool](repeating: false, count: width * height)
+        for y in 0..<height { for x in 0..<width {
+            let px = Double(x) + 0.5, py = Double(y) + 0.5
+            switch shape {
+            case .rect: result[y * width + x] = true
+            case .ellipse:
+                let dx = (px - Double(width) / 2) / (Double(width) / 2), dy = (py - Double(height) / 2) / (Double(height) / 2)
+                result[y * width + x] = dx * dx + dy * dy <= 1
+            case .round:
+                let cx = min(px, Double(width) - px), cy = min(py, Double(height) - py)
+                if cx >= r || cy >= r { result[y * width + x] = true }
+                else { let dx = r - cx, dy = r - cy; result[y * width + x] = dx * dx + dy * dy <= r * r }
+            }
+        } }
+        return result
+    }
+
+    static func shapeChecks() throws {
+        let square = TemplateImporter.classifyShape(mask: mask(.rect, width: 120, height: 120), width: 120, height: 120)
+        precondition(square.shape == .rect && square.radius == 0 && !square.approximate, "Un cuadrado lleno es un rectángulo")
+        for (w, h) in [(200, 200), (300, 180), (160, 240)] {
+            let rounded = TemplateImporter.classifyShape(mask: mask(.round, width: w, height: h, radius: 0.2), width: w, height: h)
+            precondition(rounded.shape == .round && abs(rounded.radius - 0.2) <= 0.05 && !rounded.approximate,
+                         "Rectángulo redondeado con radio de 20 % (\(w)×\(h)): \(rounded)")
+        }
+        let pill = TemplateImporter.classifyShape(mask: mask(.round, width: 300, height: 120, radius: 0.35), width: 300, height: 120)
+        precondition(pill.shape == .round && abs(pill.radius - 0.35) <= 0.05, "Radio de 35 %: \(pill)")
+        for (w, h) in [(150, 150), (240, 150)] {
+            let circle = TemplateImporter.classifyShape(mask: mask(.ellipse, width: w, height: h), width: w, height: h)
+            precondition(circle.shape == .ellipse && circle.radius == 0 && !circle.approximate, "Círculo u óvalo \(w)×\(h): \(circle)")
+        }
+        // Una forma que no se parece a ninguna (triángulo) cae a rectángulo y avisa «forma aproximada».
+        var triangle = [Bool](repeating: false, count: 160 * 160)
+        for y in 0..<160 { for x in 0..<160 where Double(x) <= Double(y) { triangle[y * 160 + x] = true } }
+        let approx = TemplateImporter.classifyShape(mask: triangle, width: 160, height: 160)
+        precondition(approx.shape == .rect && approx.approximate, "Un triángulo queda como rectángulo con aviso de forma aproximada")
+
+        // Los moldes compartidos de shared-fixtures/moldes: mismas regiones, orden y forma que espera moldes.json (tolerancia 0.01; radio ±0.05).
+        guard let fixtures = ProcessInfo.processInfo.environment["POLAR_FIXTURES_DIR"].map({ URL(fileURLWithPath: $0).appendingPathComponent("moldes") }) else { return }
+        let document = try JSONSerialization.jsonObject(with: Data(contentsOf: fixtures.appendingPathComponent("moldes.json"))) as! [String: Any]
+        let templates = document["templates"] as! [String: [String: Any]]
+        for (file, entry) in templates.sorted(by: { $0.key < $1.key }) {
+            guard let expected = (entry["regions"] ?? (entry["sameAs"] as? String).flatMap { templates[$0]?["regions"] }) as? [[String: Any]] else { continue }
+            let result = try TemplateImporter.read(url: fixtures.appendingPathComponent(file))
+            precondition(result.detectedCount == expected.count && result.approximateShapes == 0, "\(file): \(result.detectedCount) huecos, esperaba \(expected.count)")
+            for (region, raw) in zip(result.template.regions, expected) {
+                let rect = (raw["rect"] as! [Double])
+                precondition(abs(region.x - rect[0]) < 0.01 && abs(region.y - rect[1]) < 0.01 && abs(region.width - rect[2]) < 0.01 && abs(region.height - rect[3]) < 0.01,
+                             "\(file): región \(region.rect) vs \(rect)")
+                precondition(region.shape.rawValue == raw["shape"] as? String, "\(file): forma \(region.shape) vs \(raw["shape"] ?? "")")
+                precondition(abs(region.radius - (raw["radius"] as! Double)) <= 0.05, "\(file): radio \(region.radius) vs \(raw["radius"] ?? "")")
+            }
+        }
     }
 
     static func check(_ actual: CGRect, _ expected: CGRect) {
