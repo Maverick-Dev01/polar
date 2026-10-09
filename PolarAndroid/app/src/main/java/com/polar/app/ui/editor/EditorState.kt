@@ -51,7 +51,8 @@ data class EditorUiState(
     val busy: Boolean = false,
     val backgroundError: UiText? = null,
     val lastMood: MoodPreset = MoodPreset.COUPLE,
-    val loadFailed: Boolean = false
+    val loadFailed: Boolean = false,
+    val focusBackground: Boolean = false
 ) {
     val selectedCard: Int? get() = selectedSlot?.let { project.cardOfSlot(it) }
     val selectedPlacement: PhotoPlacement? get() = selectedSlot?.let { project.placements.getOrNull(it) }

@@ -138,6 +138,7 @@
     <string name="editor_card_fair">, resolución aceptable</string>
     <string name="ctx_change">Cambiar</string>
     <string name="ctx_crop">Encuadrar</string>
+    <string name="ctx_remove_background">Quitar fondo</string>
     <string name="ctx_rotate">Girar</string>
     <string name="ctx_text">Texto</string>
     <string name="ctx_remove">Quitar</string>

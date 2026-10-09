@@ -494,6 +494,20 @@ class EditorViewModelTest {
         assertEquals(R.string.editor_folder_empty, (v.events.first { it is EditorEvent.Message } as EditorEvent.Message).text.id)
     }
 
+    @Test
+    fun removeBackgroundShortcutOpensCropFocusedOnBackgroundAndClearsOnExit() = runTest(main.dispatcher) {
+        val v = vm(); advanceUntilIdle()
+        v.openCropForBackground()
+        assertEquals(EditorMode.EDIT, v.state.value.mode) // sin foto en la tarjeta no hace nada
+        v.addPhotos(listOf("a")); advanceUntilIdle()
+        v.selectSlot(0)
+        v.openCropForBackground()
+        assertEquals(EditorMode.CROP, v.state.value.mode)
+        assertTrue(v.state.value.focusBackground)
+        v.setMode(EditorMode.EDIT)
+        assertFalse(v.state.value.focusBackground)
+    }
+
     private fun vmWith(projectId: String, photos: PhotoSource) = EditorViewModel(projectId, EditorDeps(store, photos, object : ExportService {
         override suspend fun pdf(project: PolarProject, template: Bitmap?, quality: ExportQuality) = File(tmp.root, "a.pdf")
         override suspend fun png(project: PolarProject, page: Int, template: Bitmap?, quality: ExportQuality) = File(tmp.root, "a.png")

@@ -3,6 +3,7 @@ package com.polar.app.ui.editor
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.polar.app.data.ThemeMode
 import com.polar.app.ui.theme.PolarTheme
@@ -22,10 +23,11 @@ class ContextBarTest {
         var last = ""
         compose.setContent {
             PolarTheme(ThemeMode.LIGHT) {
-                ContextBar(true, { last = "cambiar" }, { last = "encuadrar" }, { last = "girar" }, { last = "texto" }, { last = "quitar" })
+                ContextBar(true, { last = "cambiar" }, { last = "encuadrar" }, { last = "fondo" }, { last = "girar" }, { last = "texto" }, { last = "quitar" })
             }
         }
-        compose.onNodeWithText("Quitar").performClick(); assertEquals("quitar", last)
+        compose.onNodeWithText("Quitar").performScrollTo().performClick(); assertEquals("quitar", last)
+        compose.onNodeWithText("Quitar fondo").performClick(); assertEquals("fondo", last)
         compose.onNodeWithText("Texto").performClick(); assertEquals("texto", last)
         compose.onNodeWithText("Encuadrar").performClick(); assertEquals("encuadrar", last)
     }
@@ -33,7 +35,7 @@ class ContextBarTest {
     @Test
     fun emptyCardOffersToPlacePhoto() {
         var changed = false
-        compose.setContent { PolarTheme(ThemeMode.LIGHT) { ContextBar(false, { changed = true }, {}, {}, {}, {}) } }
+        compose.setContent { PolarTheme(ThemeMode.LIGHT) { ContextBar(false, { changed = true }, {}, {}, {}, {}, {}) } }
         compose.onNodeWithText("Poner una foto aquí").performClick()
         assertEquals(true, changed)
     }

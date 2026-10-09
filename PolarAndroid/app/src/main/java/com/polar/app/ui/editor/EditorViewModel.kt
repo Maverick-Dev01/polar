@@ -284,7 +284,14 @@ class EditorViewModel(private val projectId: String, private val deps: EditorDep
         _state.update { it.copy(textScope = scope) }
     }
 
-    fun setMode(mode: EditorMode) { endGesture(); _state.update { it.copy(mode = mode, comparing = false) } }
+    fun setMode(mode: EditorMode) { endGesture(); _state.update { it.copy(mode = mode, comparing = false, focusBackground = false) } }
+
+    /** Acción directa «Quitar fondo» del menú de la tarjeta: abre Encuadrar con la sección de fondo a la vista. */
+    fun openCropForBackground() {
+        if (_state.value.selectedPlacement == null) return
+        endGesture()
+        _state.update { it.copy(mode = EditorMode.CROP, comparing = false, focusBackground = true) }
+    }
     fun setEditingRegions(on: Boolean) = _state.update { it.copy(editingRegions = on) }
 
     // ---------- texto ----------

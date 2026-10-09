@@ -219,7 +219,22 @@ private fun EditorLayout(state: EditorUiState, vm: EditorViewModel, container: A
             else WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal),
         // Compacto: aviso propio sobre la barra de herramientas (abajo); aquí sólo ancho y carga.
         snackbarHost = { if (expanded || state.loading) SnackbarHost(snackbar) },
-        topBar = { EditorTopBar(state, vm, onBack, onRename = { renaming = true }) }
+        topBar = {
+            EditorTopBar(
+                name = state.project.name, styleName = state.project.settings.style.displayName,
+                status = stringResource(when {
+                    state.saveFailed -> R.string.editor_not_saved
+                    state.saving || state.hasUnsavedChanges -> R.string.editor_saving
+                    else -> R.string.editor_saved
+                }),
+                canUndo = state.canUndo, canRedo = state.canRedo,
+                actions = EditorTopBarActions(
+                    onBack = onBack, onRename = { renaming = true }, onUndo = vm::undo, onRedo = vm::redo,
+                    onPrint = { vm.setMode(EditorMode.FINISH) }, onSelectMany = { vm.setMultiSelecting(true) },
+                    onAddPage = vm::addPage, onClearPage = vm::clearPage, onRemovePage = vm::removePage
+                )
+            )
+        }
     ) { padding ->
         if (state.loading) {
             Box(Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
@@ -233,7 +248,7 @@ private fun EditorLayout(state: EditorUiState, vm: EditorViewModel, container: A
                     FilmSuggestion(state,vm)
                     when {
                         noPhotos -> EmptyPhotosCta(pickPhotos)
-                        hasSelection -> ContextBar(selectedHasPhoto, { vm.setTool(Tool.PHOTOS) }, { vm.setMode(EditorMode.CROP) }, vm::rotateSelected, vm::openTextForSelected, vm::removeSelectedPhoto)
+                        hasSelection -> ContextBar(selectedHasPhoto, { vm.setTool(Tool.PHOTOS) }, { vm.setMode(EditorMode.CROP) }, vm::openCropForBackground, vm::rotateSelected, vm::openTextForSelected, vm::removeSelectedPhoto)
                     }
                 }
                 ToolPanel(state.tool ?: Tool.PHOTOS, state, vm, container, compact = false, onClose = {}, modifier = Modifier.width(360.dp).fillMaxHeight())
@@ -260,7 +275,7 @@ private fun EditorLayout(state: EditorUiState, vm: EditorViewModel, container: A
                     when {
                         state.tool != null -> Unit
                         noPhotos -> EmptyPhotosCta(pickPhotos)
-                        hasSelection -> ContextBar(selectedHasPhoto, { vm.setTool(Tool.PHOTOS) }, { vm.setMode(EditorMode.CROP) }, vm::rotateSelected, vm::openTextForSelected, vm::removeSelectedPhoto)
+                        hasSelection -> ContextBar(selectedHasPhoto, { vm.setTool(Tool.PHOTOS) }, { vm.setMode(EditorMode.CROP) }, vm::openCropForBackground, vm::rotateSelected, vm::openTextForSelected, vm::removeSelectedPhoto)
                         else -> Hint()
                     }
                     Box(Modifier.onSizeChanged { navBarHeight = with(density) { it.height.toDp() } }) {
@@ -282,47 +297,6 @@ private fun EditorLayout(state: EditorUiState, vm: EditorViewModel, container: A
             dismissButton = { TextButton(onClick = { renaming = false }) { Text(stringResource(R.string.action_cancel)) } }
         )
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun EditorTopBar(state: EditorUiState, vm: EditorViewModel, onBack: () -> Unit, onRename: () -> Unit) {
-    var menu by remember { mutableStateOf(false) }
-    TopAppBar(
-        expandedHeight=if(LocalDensity.current.fontScale>=1.2f) 104.dp else 88.dp,
-        navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.editor_back)) } },
-        title = {
-            Column(Modifier.clickable(onClick = onRename)) {
-                Text(state.project.name, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis,modifier=Modifier.semantics { contentDescription=state.project.name })
-                Text(
-                    state.project.settings.style.displayName + " · " + stringResource(when {
-                        state.saveFailed -> R.string.editor_not_saved
-                        state.saving || state.hasUnsavedChanges -> R.string.editor_saving
-                        else -> R.string.editor_saved
-                    }),
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1
-                )
-            }
-        },
-        actions = {
-            IconButton(onClick = vm::undo, enabled = state.canUndo) { Icon(Icons.AutoMirrored.Filled.Undo, stringResource(R.string.action_undo)) }
-            Box {
-                IconButton(onClick = { menu = true }) { Icon(Icons.Filled.MoreVert, stringResource(R.string.editor_more)) }
-                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                    DropdownMenuItem({ Text(stringResource(R.string.action_redo)) }, { menu = false; vm.redo() }, enabled = state.canRedo,
-                        leadingIcon = { Icon(Icons.AutoMirrored.Filled.Redo, null) })
-                    DropdownMenuItem({ Text(stringResource(R.string.editor_select_many)) }, { menu = false; vm.setMultiSelecting(true) })
-                    DropdownMenuItem({ Text(stringResource(R.string.editor_add_page)) }, { menu = false; vm.addPage() })
-                    DropdownMenuItem({ Text(stringResource(R.string.editor_clear_page)) }, { menu = false; vm.clearPage() })
-                    DropdownMenuItem({ Text(stringResource(R.string.editor_remove_page)) }, { menu = false; vm.removePage() })
-                    DropdownMenuItem({ Text(stringResource(R.string.editor_rename)) }, { menu = false; onRename() })
-                }
-            }
-            Button(onClick = { vm.setMode(EditorMode.FINISH) }, contentPadding = PaddingValues(horizontal = 8.dp), modifier = Modifier.padding(end = 8.dp)) {
-                Icon(Icons.Outlined.Print,stringResource(R.string.editor_print),Modifier.size(20.dp))
-            }
-        }
-    )
 }
 
 @Composable

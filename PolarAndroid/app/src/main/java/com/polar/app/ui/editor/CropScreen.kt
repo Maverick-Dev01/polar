@@ -5,6 +5,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -72,6 +74,8 @@ fun CropScreen(state: EditorUiState,vm: EditorViewModel,container: AppContainer)
         stringResource(R.string.crop_move_up) to {move(0.0,-.01)},stringResource(R.string.crop_move_down) to {move(0.0,.01)},
         stringResource(R.string.crop_zoom_in) to {zoom(.1)},stringResource(R.string.crop_zoom_out) to {zoom(-.1)}
     )
+    val backgroundRequester=remember { BringIntoViewRequester() }
+    LaunchedEffect(state.focusBackground,slot) { if(state.focusBackground) { withFrameNanos { }; backgroundRequester.bringIntoView() } }
     DisposableEffect(slot) { onDispose { vm.endGesture() } }
     Scaffold(topBar={ TopAppBar(title={Text(stringResource(R.string.crop_title,state.selectedCardNumber ?: 1),maxLines=2)},navigationIcon={IconButton(onClick={vm.setMode(EditorMode.EDIT)}){Icon(Icons.Filled.Close,stringResource(R.string.action_close))}},actions={TextButton(onClick={vm.setMode(EditorMode.EDIT)}){Text(stringResource(R.string.crop_done))}}) }) { padding ->
         BoxWithConstraints(Modifier.padding(padding).fillMaxSize()) {
@@ -133,7 +137,7 @@ fun CropScreen(state: EditorUiState,vm: EditorViewModel,container: AppContainer)
                 Surface(color=qBg,shape=MaterialTheme.shapes.medium,modifier=Modifier.fillMaxWidth()) {
                     Text(stringResource(when(quality){PhotoQuality.LOW->R.string.crop_quality_low;PhotoQuality.FAIR->R.string.crop_quality_fair;PhotoQuality.GOOD->R.string.crop_quality_ok}),color=qFg,modifier=Modifier.padding(12.dp),style=MaterialTheme.typography.labelLarge)
                 }
-                com.polar.app.ui.editor.panels.BackgroundControls(state, vm, container)
+                Box(Modifier.bringIntoViewRequester(backgroundRequester)) { com.polar.app.ui.editor.panels.BackgroundControls(state, vm, container) }
                 LensRing(stringResource(R.string.crop_zoom),placement.zoom,minimumZoom..4.0,String.format(Locale.ROOT,"%.1f×",placement.zoom),.1,{ v->vm.editSelectedPlacement { it.copy(zoom=v) } },vm::beginGesture,vm::endGesture)
                 val actions=listOf(stringResource(R.string.crop_rotate) to vm::rotateSelected,stringResource(R.string.crop_fill) to ::fill,stringResource(R.string.crop_fit) to ::fit,stringResource(R.string.crop_center) to {vm.editSelectedPlacement {it.copy(offsetX=0.0,offsetY=0.0)}},stringResource(R.string.crop_reset) to vm::resetSelectedPlacement)
                 LazyRow(horizontalArrangement=Arrangement.spacedBy(12.dp)) { items(actions.size) { i->val (label,action)=actions[i];OutlinedButton(onClick=action,modifier=Modifier.width(104.dp).heightIn(min=56.dp),contentPadding=PaddingValues(8.dp),shape=MaterialTheme.shapes.medium){Text(label,maxLines=2,textAlign=androidx.compose.ui.text.style.TextAlign.Center)} } }
