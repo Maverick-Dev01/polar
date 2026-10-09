@@ -23,6 +23,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.polar.app.R
@@ -78,7 +79,7 @@ fun LabeledSlider(
             value = value, valueRange = range, steps = steps,
             onValueChange = { if (!dragging) { dragging = true; onStart() }; onChange(it) },
             onValueChangeFinished = { dragging = false; onEnd() },
-            modifier = Modifier.semantics { contentDescription = label }
+            modifier = Modifier.semantics { contentDescription = label; stateDescription = valueText }
         )
     }
 }

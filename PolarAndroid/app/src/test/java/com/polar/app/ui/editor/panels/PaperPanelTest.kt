@@ -1,5 +1,6 @@
 package com.polar.app.ui.editor.panels
 
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -64,5 +65,7 @@ class PaperPanelTest {
     fun marginShowsMillimetersByDefault() {
         compose.setContent { PolarTheme(ThemeMode.LIGHT) { PaperPanel(PrintSettings(margin = 24.0), Units.MM, cb) } }
         compose.onNodeWithText("8.47 mm").assertExists()
+        compose.onNodeWithContentDescription("Margen de la hoja")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "8.47 mm"))
     }
 }
