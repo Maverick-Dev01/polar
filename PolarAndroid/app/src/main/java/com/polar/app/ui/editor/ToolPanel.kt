@@ -103,7 +103,7 @@ fun ToolPanel(tool: Tool, state: EditorUiState, vm: EditorViewModel, container: 
                         onGestureStart = vm::beginGesture, onGestureEnd = vm::endGesture
                     ))
                     Tool.TEXT -> TextPanel(textPanelState(state), TextCallbacks(
-                        onExpand = { vm.beginGesture(); expandedText = true }, onRole = vm::setTextRole, onScope = vm::setTextScope, onText = vm::setText,
+                        onExpand = { vm.beginGesture(); expandedText = true }, onRole = vm::setTextRole, onScope = vm::setTextScope, onText = vm::setText, onRoleText = vm::setTextFor,
                         onFocus = { focused -> if (focused) vm.beginGesture() else vm.endGesture() },
                         onRevert = vm::clearOwnText, onApplyAll = vm::applyTextToAll, onAppearance = vm::editAppearance,
                         onReset = vm::resetAppearance, onDateSource = vm::setDateSource, onChosenDate = vm::setChosenDate,

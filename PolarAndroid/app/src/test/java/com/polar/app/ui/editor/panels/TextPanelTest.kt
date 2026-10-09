@@ -23,7 +23,7 @@ class TextPanelTest {
     private val applied = mutableListOf<TextAppearance>()
     private var base = TextAppearance()
     private val cb = TextCallbacks(
-        onRole = { log += "rol:${it.key}" }, onScope = { log += "alcance:${it.name}" }, onText = { log += "texto:$it" },
+        onRole = { log += "rol:${it.key}" }, onRoleText = { r, t -> log += "cancion:${r.key}:$t" }, onScope = { log += "alcance:${it.name}" }, onText = { log += "texto:$it" },
         onFocus = {}, onRevert = { log += "volver" }, onApplyAll = { log += "todas" }, onAppearance = { change -> applied += change(base) },
         onReset = {}, onDateSource = { log += "fecha:${it.name}" }, onChosenDate = {}, onDateStyle = {}, onSongUrl = {},
         onGestureStart = {}, onGestureEnd = {}
@@ -83,6 +83,7 @@ class TextPanelTest {
         assertEquals(18.0, applied.last().size, 0.0)
         compose.onNodeWithContentDescription("Negrita").performScrollTo().performClick()
         assertEquals(true, applied.last().bold)
+        compose.onNodeWithText("Más opciones").performScrollTo().performClick()
         compose.onNodeWithContentDescription("Izquierda").performScrollTo().performClick()
         assertEquals(TextAlignment.LEFT, applied.last().alignment)
     }
@@ -94,5 +95,39 @@ class TextPanelTest {
         assertEquals(listOf("fecha:NONE"), log)
         compose.onNodeWithText("Elegir fecha").performClick()
         compose.onNodeWithText("Aceptar").assertExists()
+    }
+
+    @Test
+    fun musicalDesignShowsSongFieldsAndQrLinkWithoutScrolling() {
+        show(EditorUiState(loading = false, project = PolarProject().normalized().withStyle(TemplateStyle.SPOTIFY)))
+        compose.onNodeWithText("Canción para todas").assertIsDisplayed()
+        compose.onNodeWithText("Artista para todas").assertIsDisplayed()
+        compose.onNodeWithText("Enlace para el QR (opcional)").assertIsDisplayed()
+    }
+
+    @Test
+    fun songSectionDoesNotExistInOtherDesigns() {
+        showTitle()
+        compose.onNodeWithText("Enlace para el QR (opcional)").assertDoesNotExist()
+        compose.onNodeWithText("Canción para todas").assertDoesNotExist()
+    }
+
+    @Test
+    fun visibleAndSizeAreOutsideMoreOptionsAndAlignmentInside() {
+        showTitle()
+        compose.onNodeWithText("Mostrar este texto").performScrollTo().assertExists()
+        compose.onNodeWithText("Tamaño exacto").performScrollTo().assertExists()
+        compose.onNodeWithText("Mediana").performScrollTo().assertExists()
+        compose.onNodeWithContentDescription("Izquierda").assertDoesNotExist()
+        compose.onNodeWithText("Más opciones").performScrollTo().performClick()
+        compose.onNodeWithContentDescription("Izquierda").performScrollTo().assertExists()
+        compose.onNodeWithText("Mover a los lados").performScrollTo().assertExists()
+    }
+
+    @Test
+    fun typingSongTitleEditsTheSongRole() {
+        show(EditorUiState(loading = false, project = PolarProject().normalized().withStyle(TemplateStyle.SPOTIFY)))
+        compose.onNodeWithText("Canción para todas").performTextReplacement("Mi canción")
+        assertEquals(listOf("cancion:song:Mi canción"), log)
     }
 }

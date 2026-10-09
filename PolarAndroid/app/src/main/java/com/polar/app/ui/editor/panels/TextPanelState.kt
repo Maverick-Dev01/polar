@@ -8,6 +8,9 @@ import com.polar.app.model.*
 import com.polar.app.ui.editor.EditorUiState
 import java.util.TimeZone
 
+/** Secciones del panel Texto, en el orden en que se muestran. */
+enum class TextPanelSection { SONG, SCOPE, ROLES, TEXT, DATE, VISIBLE, FONT, COLOR, SIZE, MORE }
+
 data class TextPanelState(
     val roles: List<TextRole>,
     val role: TextRole,
@@ -26,6 +29,10 @@ data class TextPanelState(
     val accentHex: String,
     val showSongUrl: Boolean,
     val songUrl: String,
+    val isMusical: Boolean,
+    val songText: String,
+    val artistText: String,
+    val sections: List<TextPanelSection>,
     @param:StringRes val emptyReason: Int?
 )
 
@@ -37,6 +44,18 @@ fun textPanelState(state: EditorUiState, zone: TimeZone = TimeZone.getDefault())
     val roles = s.style.textRoles
     val role = state.textRole.takeIf { it in roles } ?: roles.firstOrNull() ?: TextRole.TITLE
     val card = state.editCard
+    val musical = s.style.category == DesignCategory.MUSIC
+    fun valueOf(r: TextRole) = if (card != null) TextResolver.text(p, card, r, zone) else s.text(r)
+    val sections = when {
+        roles.isEmpty() -> emptyList()
+        else -> buildList {
+            if (musical) add(TextPanelSection.SONG)
+            add(TextPanelSection.SCOPE)
+            add(TextPanelSection.ROLES)
+            if (role == TextRole.DATE) add(TextPanelSection.DATE) else if (!musical) add(TextPanelSection.TEXT)
+            addAll(listOf(TextPanelSection.VISIBLE, TextPanelSection.FONT, TextPanelSection.COLOR, TextPanelSection.SIZE, TextPanelSection.MORE))
+        }
+    }
     return TextPanelState(
         roles = roles,
         role = role,
@@ -55,6 +74,10 @@ fun textPanelState(state: EditorUiState, zone: TimeZone = TimeZone.getDefault())
         accentHex = s.accentHex,
         showSongUrl = s.style == TemplateStyle.SPOTIFY,
         songUrl = s.songURL,
+        isMusical = musical,
+        songText = valueOf(TextRole.SONG),
+        artistText = valueOf(TextRole.ARTIST),
+        sections = sections,
         emptyReason = when {
             roles.isNotEmpty() -> null
             s.style == TemplateStyle.IMPORTED -> R.string.text_empty_imported

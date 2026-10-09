@@ -296,9 +296,12 @@ class EditorViewModel(private val projectId: String, private val deps: EditorDep
 
     // ---------- texto ----------
 
-    fun setText(value: String) {
+    fun setText(value: String) = setTextFor(_state.value.textRole, value)
+
+    /** Texto de un rol concreto (la sección «Canción» edita título y artista a la vez). */
+    fun setTextFor(role: TextRole, value: String) {
         val s = _state.value
-        edit { ProjectEdits.setText(it, s.textRole, value.take(500), s.editCard) }
+        edit { ProjectEdits.setText(it, role, value.take(500), s.editCard) }
     }
 
     fun clearOwnText() {
