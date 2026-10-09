@@ -15,7 +15,9 @@ data class TextItem(
     val defaultColor: Int,
     val defaultBold: Boolean,
     val align: TextAlign,
-    val appearance: TextAppearance?
+    val appearance: TextAppearance?,
+    /** Fuente propia del diseño; se usa mientras la tarjeta no elija otra. */
+    val defaultFont: String = FontNames.SYSTEM
 )
 
 /** Qué textos lleva cada tarjeta y dónde. Puro Kotlin: se prueba sin Canvas. */
@@ -34,7 +36,7 @@ object CardTextLayout {
         accent: Int,
         zone: TimeZone = TimeZone.getDefault()
     ): List<TextItem> {
-        val style = project.settings.style
+        val style = project.settingsForCard(cardIndex).style
         val fontSize = card.width * 0.06
         val firstSlot = project.firstSlotOfCard(cardIndex)
         val out = mutableListOf<TextItem>()
@@ -43,9 +45,18 @@ object CardTextLayout {
             card.minX + x * card.width, card.minY + y * card.height,
             card.minX + (x + w) * card.width, card.minY + (y + h) * card.height
         )
-        fun role(role: TextRole, rect: PolarRect, size: Double, color: Int, bold: Boolean = false, align: TextAlign = TextAlign.CENTER) {
+        fun role(role: TextRole, rect: PolarRect, size: Double, color: Int, bold: Boolean = false, align: TextAlign = TextAlign.CENTER, font: String = FontNames.SYSTEM) {
             out += TextItem(role, TextResolver.text(project, cardIndex, role, zone), rect, size, color, bold, align,
-                TextResolver.appearance(project, cardIndex, role))
+                TextResolver.appearance(project, cardIndex, role), font)
+        }
+        val geo = SharedGeometry.of(style)
+        if (geo != null) {
+            for (slot in geo.textSlots) {
+                val textRole = slot.textRole ?: continue
+                if (textRole == TextRole.DATE) continue // la fecha sigue la misma regla que en los demás diseños
+                if (textRole !in style.textRoles) continue
+                out += geoItem(project, cardIndex, card, slot, zone)
+            }
         }
         fun fixed(text: String, rect: PolarRect, size: Double, color: Int, bold: Boolean = false, align: TextAlign = TextAlign.CENTER) {
             out += TextItem(null, text, rect, size, color, bold, align, null)
@@ -117,15 +128,34 @@ object CardTextLayout {
                 fixed(String.format(Locale.ROOT, "POLAR / %03d", firstSlot + 1), r(0.065, 0.95, 0.87, 0.025), fontSize * 0.42, accent, false, TextAlign.RIGHT)
             }
             TemplateStyle.FILM_VERTICAL, TemplateStyle.FILM_HORIZONTAL, TemplateStyle.CALENDAR,
-            TemplateStyle.BORDERLESS, TemplateStyle.IMPORTED -> Unit
+            TemplateStyle.BORDERLESS, TemplateStyle.IMPORTED,
+            TemplateStyle.PHOTOBOOTH, TemplateStyle.INSTAX_WIDE, TemplateStyle.VINYL,
+            TemplateStyle.CASSETTE, TemplateStyle.COLLAGE, TemplateStyle.WASHI -> Unit
         }
 
-        if (style.supportsDate && TextResolver.dateSource(project, cardIndex) != DateSource.NONE) {
+        if (geo != null) {
+            val date = geo.textSlots.firstOrNull { it.textRole == TextRole.DATE }
+            if (date != null && style.supportsDate && TextResolver.dateSource(project, cardIndex) != DateSource.NONE)
+                out += geoItem(project, cardIndex, card, date, zone)
+        } else if (style.supportsDate && TextResolver.dateSource(project, cardIndex) != DateSource.NONE) {
             dateSlot(style, ::r, fontSize, card, accent)?.let { (rect, size, color, align) ->
                 role(TextRole.DATE, rect, size, color, false, align)
             }
         }
         return out
+    }
+
+    /** Texto de un diseño con geometría compartida: tamaños a 180 pt de ancho, escalados al ancho real. */
+    private fun geoItem(project: PolarProject, cardIndex: Int, card: PolarRect, slot: TextSlotGeo, zone: TimeZone): TextItem {
+        val role = slot.textRole!!
+        return TextItem(
+            role, TextResolver.text(project, cardIndex, role, zone),
+            GeometryDrawing.rect(card, slot.x, slot.y, slot.w, slot.h),
+            slot.defaultSizePt * card.width / SharedGeometry.referenceCardWidthPt,
+            GeometryDrawing.parseColor(slot.color), slot.bold,
+            when (slot.align) { "left" -> TextAlign.LEFT; "right" -> TextAlign.RIGHT; else -> TextAlign.CENTER },
+            TextResolver.appearance(project, cardIndex, role), slot.defaultFont
+        )
     }
 
     private data class DateSlot(val rect: PolarRect, val size: Double, val color: Int, val align: TextAlign)

@@ -152,6 +152,9 @@ object PolarRenderer {
             TemplateStyle.PETS -> listOf(r(0.065, 0.07, 0.87, 0.65))
             TemplateStyle.HEART -> listOf(r(0.065, 0.08, 0.87, 0.65))
             TemplateStyle.EDITORIAL -> listOf(r(0.065, 0.19, 0.87, 0.55))
+            TemplateStyle.PHOTOBOOTH, TemplateStyle.INSTAX_WIDE, TemplateStyle.VINYL,
+            TemplateStyle.CASSETTE, TemplateStyle.COLLAGE, TemplateStyle.WASHI ->
+                GeometryDrawing.photoRects(card, SharedGeometry.of(style)!!)
         }
     }
 
@@ -237,7 +240,7 @@ object PolarRenderer {
         return result
     }
 
-    private fun drawCard(
+    internal fun drawCard(
         canvas: Canvas,
         card: PolarRect,
         project: PolarProject,
@@ -254,7 +257,8 @@ object PolarRenderer {
         val style = s.style
         val accent = parseColor(s.accentHex)
 
-        val bgColor = when (style) {
+        val geo = SharedGeometry.of(style)
+        val bgColor = if (geo != null) GeometryDrawing.parseColor(geo.defaultBackground) else when (style) {
             TemplateStyle.FILM_VERTICAL, TemplateStyle.FILM_HORIZONTAL -> Color.rgb(14, 14, 14)
             TemplateStyle.PLAYER_RED -> accent
             TemplateStyle.PLAYER_GRAY -> Color.rgb(133, 133, 133)
@@ -307,6 +311,8 @@ object PolarRenderer {
             canvas.drawRect(insetRect, strokePaint)
         }
 
+        if (geo != null) GeometryDrawing.drawDecorations(canvas, card, geo, "below", scale)
+
         // Draw photo slots
         val photoSlots = calculatePhotoRects(card, style, s)
         for ((subslot, rect) in photoSlots.withIndex()) {
@@ -318,7 +324,10 @@ object PolarRenderer {
             val cornerRad = if (rounded) (min(rect.width, rect.height) * 0.045 * scale).toFloat() else 0f
 
             canvas.save()
-            if (style == TemplateStyle.HEART) {
+            if (geo != null) {
+                val slotGeo = geo.photoSlots[subslot]
+                canvas.clipPath(GeometryDrawing.shapePath(rect.toAndroidRectF(scale), slotGeo.regionShape, slotGeo.radius))
+            } else if (style == TemplateStyle.HEART) {
                 val path = heartPath(rect, scale)
                 canvas.clipPath(path)
             } else if (cornerRad > 0) {
@@ -333,6 +342,8 @@ object PolarRenderer {
             drawPhoto(canvas, photo, placement, rect, accent, bgColor, isPreview, scale, bitmapProvider, LookResolver.resolve(project, slot), cardIndex, card, pdfPhoto = pdfPhoto, backgroundPhoto = placement?.background?.imageID?.let { id -> project.photos.firstOrNull { it.id == id } }, opaqueUnder = bgColor, photoDpi = photoDpi)
             canvas.restore()
         }
+
+        if (geo != null) GeometryDrawing.drawDecorations(canvas, card, geo, "above", scale)
 
         // Draw Card Texts & Details
         drawCardElements(canvas, card, project, firstSlot, cardIndex, photoSlots, scale, accent, fonts)
@@ -349,7 +360,7 @@ object PolarRenderer {
         accent: Int,
         fonts: FontProvider
     ) {
-        val s = project.settings
+        val s = project.settingsForCard(cardIndex)
         val style = s.style
         val fontSize = card.width * 0.06
 
@@ -373,10 +384,13 @@ object PolarRenderer {
             }
             TemplateStyle.PLAYER_RED -> {
                 drawPlayer(canvas, r(0.075, 0.76, 0.85, 0.195), Color.WHITE, scale, true)
+                drawQrSticker(canvas, card, s, scale)
             }
             TemplateStyle.PLAYER_GRAY -> {
                 drawPlayer(canvas, r(0.56, 0.44, 0.38, 0.42), Color.WHITE, scale, true)
+                drawQrSticker(canvas, card, s, scale)
             }
+            TemplateStyle.VINYL, TemplateStyle.CASSETTE -> drawQrSticker(canvas, card, s, scale)
             TemplateStyle.TICKET -> {
                 drawTicketNotches(canvas, card, scale)
             }
@@ -413,7 +427,7 @@ object PolarRenderer {
                 canvas = canvas, value = item.text, rect = item.rect, sizePt = item.sizePt,
                 defaultColor = item.defaultColor, defaultBold = item.defaultBold,
                 align = when (item.align) { TextAlign.LEFT -> Paint.Align.LEFT; TextAlign.CENTER -> Paint.Align.CENTER; TextAlign.RIGHT -> Paint.Align.RIGHT },
-                appearance = item.appearance, scale = scale, fonts = fonts
+                appearance = item.appearance, scale = scale, fonts = fonts, defaultFont = item.defaultFont
             )
         }
     }
@@ -553,7 +567,8 @@ object PolarRenderer {
         align: Paint.Align = Paint.Align.CENTER,
         appearance: TextAppearance? = null,
         scale: Float,
-        fonts: FontProvider = SystemFontProvider
+        fonts: FontProvider = SystemFontProvider,
+        defaultFont: String = FontNames.SYSTEM
     ) {
         if (value.isBlank()) return
         if (appearance != null && !appearance.visible) return
@@ -571,7 +586,8 @@ object PolarRenderer {
         val paint = TextPaint().apply {
             this.color = color
             isAntiAlias = true
-            typeface = fonts.typeface(appearance?.fontName ?: FontNames.SYSTEM, bold, italic)
+            // «Sistema» es el valor por omisión de una tarjeta: ahí manda la fuente propia del diseño.
+            typeface = fonts.typeface(appearance?.fontName?.takeIf { it != FontNames.SYSTEM } ?: defaultFont, bold, italic)
         }
         for (i in 0 until 16) {
             paint.textSize = (pointSize * scale).toFloat()
@@ -667,6 +683,21 @@ object PolarRenderer {
             QrResult.TooLong -> drawQrTooLong(canvas, r, scale, qrTooLongLabel)
             QrResult.Empty -> Unit
         }
+    }
+
+    /**
+     * QR de los diseños de música sobre un respaldo blanco con zona de silencio, para que se lea
+     * también sobre fondos de color. Sólo se dibuja si hay enlace.
+     */
+    private fun drawQrSticker(canvas: Canvas, card: PolarRect, s: PrintSettings, scale: Float) {
+        if (s.songURL.isBlank()) return
+        val slot = QrSlots.of(s.style) ?: return
+        val qr = GeometryDrawing.qrRect(card, slot)
+        val pad = qr.width * QrSlots.QUIET_ZONE
+        val back = qr.insetBy(-pad, -pad).toAndroidRectF(scale)
+        val radius = (pad * scale).toFloat()
+        canvas.drawRoundRect(back, radius, radius, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.WHITE })
+        drawQR(canvas, s.songURL, qr, scale)
     }
 
     /** Marcador visible: el enlace no cabe en un QR y nunca debe desaparecer en silencio. */
@@ -852,7 +883,10 @@ object PolarRenderer {
                 val slot = page * s.capacity + idx
                 val placement = project.placements.getOrNull(slot)
                 if (isPreview || placement != null) {
+                    canvas.save()
+                    canvas.clipPath(GeometryDrawing.shapePath(cards[idx].toAndroidRectF(scale), region.shape, region.radius))
                     drawPhoto(canvas, project.asset(placement), placement, cards[idx], parseColor(s.accentHex), Color.WHITE, isPreview, scale, bitmapProvider, LookResolver.resolve(project, slot), page * project.cardsPerPage + idx, cards[idx], pdfPhoto = pdfPhoto, backgroundPhoto = placement?.background?.imageID?.let { id -> project.photos.firstOrNull { it.id == id } }, photoDpi = photoDpi)
+                    canvas.restore()
                 }
             }
         }
@@ -868,7 +902,10 @@ object PolarRenderer {
                 val slot = page * s.capacity + idx
                 val placement = project.placements.getOrNull(slot)
                 if (isPreview || placement != null) {
+                    canvas.save()
+                    canvas.clipPath(GeometryDrawing.shapePath(cards[idx].toAndroidRectF(scale), region.shape, region.radius))
                     drawPhoto(canvas, project.asset(placement), placement, cards[idx], parseColor(s.accentHex), Color.WHITE, isPreview, scale, bitmapProvider, LookResolver.resolve(project, slot), page * project.cardsPerPage + idx, cards[idx], pdfPhoto = pdfPhoto, backgroundPhoto = placement?.background?.imageID?.let { id -> project.photos.firstOrNull { it.id == id } }, photoDpi = photoDpi)
+                    canvas.restore()
                 }
             }
         }

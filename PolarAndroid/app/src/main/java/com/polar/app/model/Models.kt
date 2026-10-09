@@ -128,7 +128,22 @@ enum class TemplateStyle(
     @SerialName("pets") PETS("Mi mascota", 2 to 3, 1, 0.80),
     @SerialName("heart") HEART("Corazón", 2 to 3, 1, 0.75),
     @SerialName("editorial") EDITORIAL("Editorial", 2 to 3, 1, 0.75),
+    // Diseños de la fase 3: su geometría vive en shared-fixtures/estilos-geometria.json (la comparte la Mac).
+    @SerialName("photobooth") PHOTOBOOTH("Fotomatón", 3 to 1, 4, 0.30),
+    @SerialName("instaxWide") INSTAX_WIDE("Instantánea ancha", 2 to 3, 1, 1.256),
+    @SerialName("vinyl") VINYL("Vinilo", 3 to 3, 1, 0.75),
+    @SerialName("cassette") CASSETTE("Casete", 2 to 4, 1, 1.6),
+    @SerialName("collage") COLLAGE("Collage", 2 to 3, 3, 0.75),
+    @SerialName("washi") WASHI("Cinta washi", 2 to 3, 1, 0.80),
     @SerialName("imported") IMPORTED("Plantilla importada", 1 to 1, 1, 0.75);
+}
+
+/** Forma del hueco de una foto. Un valor desconocido de una versión futura cae a [RECT]. */
+@Serializable
+enum class RegionShape(val displayName: String) {
+    @SerialName("rect") RECT("Rectángulo"),
+    @SerialName("round") ROUND("Redondeado"),
+    @SerialName("ellipse") ELLIPSE("Óvalo");
 }
 
 @Serializable
@@ -138,12 +153,16 @@ data class TemplateRegion(
     val y: Double = 0.0,
     val width: Double = 0.0,
     val height: Double = 0.0,
-    val isTransparent: Boolean = false
+    val isTransparent: Boolean = false,
+    /** Opcionales: un `.polar` anterior no los trae y se lee como rectángulo. */
+    val shape: RegionShape = RegionShape.RECT,
+    /** Fracción del lado menor del hueco (sólo [RegionShape.ROUND]). */
+    val radius: Double = 0.0
 ) {
     fun clamped(): TemplateRegion {
         val w = width.coerceIn(0.02, 1.0)
         val h = height.coerceIn(0.02, 1.0)
-        return copy(width = w, height = h, x = x.coerceIn(0.0, 1.0 - w), y = y.coerceIn(0.0, 1.0 - h))
+        return copy(radius = if (radius.isFinite()) radius.coerceIn(0.0, 0.5) else 0.0, width = w, height = h, x = x.coerceIn(0.0, 1.0 - w), y = y.coerceIn(0.0, 1.0 - h))
     }
 }
 
@@ -198,7 +217,7 @@ data class PhotoBackground(
 
 /** Sólo cambia el aspecto; conserva cuadrícula, fotos y posiciones. */
 @Serializable
-data class PageDesign(val style: TemplateStyle, val format: CardFormat = CardFormat.ORIGINAL)
+data class PageDesign(val style: TemplateStyle = TemplateStyle.POLAROID, val format: CardFormat = CardFormat.ORIGINAL)
 
 @Serializable
 data class PhotoPlacement(

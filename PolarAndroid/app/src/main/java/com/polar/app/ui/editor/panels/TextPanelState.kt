@@ -72,7 +72,7 @@ fun textPanelState(state: EditorUiState, zone: TimeZone = TimeZone.getDefault())
         dateStyle = s.dateStyle,
         dateSamples = DateStyle.entries.map { DateText.format(SAMPLE_DATE_MS, it, zone) },
         accentHex = s.accentHex,
-        showSongUrl = s.style == TemplateStyle.SPOTIFY,
+        showSongUrl = s.style.supportsQr,
         songUrl = s.songURL,
         isMusical = musical,
         songText = valueOf(TextRole.SONG),

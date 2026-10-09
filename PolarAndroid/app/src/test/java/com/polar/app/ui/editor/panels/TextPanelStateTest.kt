@@ -42,14 +42,24 @@ class TextPanelStateTest {
     }
 
     @Test
-    fun musicalDesignPutsSongSectionFirstWithLinkOnlyWhereThereIsAQr() {
+    fun everyMusicalDesignOffersTheQrLinkAndNoOtherDesignDoes() {
+        for (style in TemplateStyle.entries) {
+            val state = textPanelState(EditorUiState(loading = false, project = base.withStyle(style)))
+            assertEquals(style.name, style.category == DesignCategory.MUSIC, state.showSongUrl)
+        }
+        for (style in listOf(TemplateStyle.SPOTIFY, TemplateStyle.PLAYER_RED, TemplateStyle.PLAYER_GRAY, TemplateStyle.VINYL, TemplateStyle.CASSETTE))
+            assertTrue(style.name, style.supportsQr)
+    }
+
+    @Test
+    fun musicalDesignPutsSongSectionFirst() {
         val spotify = textPanelState(EditorUiState(loading = false, project = base.withStyle(TemplateStyle.SPOTIFY)))
         assertEquals(TextPanelSection.SONG, spotify.sections.first())
         assertTrue(spotify.isMusical)
         assertTrue(spotify.showSongUrl)
         val player = textPanelState(EditorUiState(loading = false, project = base.withStyle(TemplateStyle.PLAYER_RED)))
         assertEquals(TextPanelSection.SONG, player.sections.first())
-        assertFalse(player.showSongUrl)
+        assertTrue(player.showSongUrl)
     }
 
     @Test

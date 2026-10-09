@@ -9,11 +9,12 @@ enum class DesignCategory(val displayName: String) {
 val TemplateStyle.category: DesignCategory
     get() = when (this) {
         POLAROID, MINI, SQUARE, BORDERLESS, INSTAGRAM -> DesignCategory.CLASSIC
-        SPOTIFY, PLAYER_RED, PLAYER_GRAY -> DesignCategory.MUSIC
+        PHOTOBOOTH, INSTAX_WIDE -> DesignCategory.CLASSIC
+        SPOTIFY, PLAYER_RED, PLAYER_GRAY, VINYL, CASSETTE -> DesignCategory.MUSIC
         FILM_VERTICAL, FILM_HORIZONTAL -> DesignCategory.FILM
         CALENDAR -> DesignCategory.DATES
-        TICKET, CELEBRATION, HEART, PETS, BOTANICAL -> DesignCategory.OCCASIONS
-        CUSTOM, POSTCARD, EDITORIAL, IMPORTED -> DesignCategory.FREE
+        TICKET, CELEBRATION, HEART, PETS, BOTANICAL, WASHI -> DesignCategory.OCCASIONS
+        CUSTOM, POSTCARD, EDITORIAL, COLLAGE, IMPORTED -> DesignCategory.FREE
     }
 
 /** Fecha disponible salvo donde no hay lugar para ella o ya trae sus propias fechas. */
@@ -25,7 +26,10 @@ val TemplateStyle.textRoles: List<TextRole>
     get() {
         val base = when (this) {
             FILM_VERTICAL, FILM_HORIZONTAL, CALENDAR, BORDERLESS, IMPORTED -> emptyList()
-            SPOTIFY, PLAYER_RED, PLAYER_GRAY -> listOf(TextRole.SONG, TextRole.ARTIST)
+            SPOTIFY, PLAYER_RED, PLAYER_GRAY, VINYL, CASSETTE -> listOf(TextRole.SONG, TextRole.ARTIST)
+            PHOTOBOOTH, COLLAGE -> listOf(TextRole.TITLE, TextRole.CAPTION)
+            INSTAX_WIDE -> listOf(TextRole.TITLE, TextRole.SUBTITLE)
+            WASHI -> listOf(TextRole.CAPTION)
             INSTAGRAM -> listOf(TextRole.TITLE, TextRole.CAPTION)
             POSTCARD, EDITORIAL, CELEBRATION -> listOf(TextRole.TITLE, TextRole.SUBTITLE, TextRole.CAPTION)
             else -> listOf(TextRole.TITLE, TextRole.SUBTITLE)
@@ -55,6 +59,15 @@ val TemplateStyle.description: String
         HEART -> "Tu foto recortada en corazón"
         EDITORIAL -> "Como una revista"
         IMPORTED -> "Tu propio molde"
+        PHOTOBOOTH -> "Tira vertical de 4 fotos, como cabina"
+        INSTAX_WIDE -> "Formato ancho con pie grueso"
+        VINYL -> "Disco con tu foto de etiqueta"
+        CASSETTE -> "Casete con tu foto en la etiqueta"
+        COLLAGE -> "Una foto grande y dos pequeñas"
+        WASHI -> "Foto con cinta y pie manuscrito"
     }
 
 val TemplateStyle.suggestedPhotoPreset: String? get() = if(this == TemplateStyle.FILM_VERTICAL || this == TemplateStyle.FILM_HORIZONTAL) "bw" else null
+
+/** Los diseños de música admiten un enlace y dibujan su QR cuando existe. */
+val TemplateStyle.supportsQr: Boolean get() = category == DesignCategory.MUSIC
