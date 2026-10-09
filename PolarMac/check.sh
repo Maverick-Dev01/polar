@@ -5,8 +5,6 @@ cd "$BASE_DIR"
 mkdir -p .build
 export POLAR_GEOMETRY_JSON="$BASE_DIR/../shared-fixtures/estilos-geometria.json"
 export POLAR_HELP_JSON="$BASE_DIR/../shared-fixtures/help.json"
-# TEMPORAL: help.json aún no trae pasosMac; con el JSON nuevo de Android quitar esta línea para que las etiquetas sean estrictas.
-export POLAR_HELP_LABELS=warn
 export POLAR_MAC_SOURCES="$BASE_DIR/Sources"
 export POLAR_FIXTURES_DIR="$BASE_DIR/../shared-fixtures"
 export POLAR_FONT_DIRS="$BASE_DIR/../PolarAndroid/app/src/main/res/font:$BASE_DIR/../PolarAndroid/app/src/main/assets/fonts"

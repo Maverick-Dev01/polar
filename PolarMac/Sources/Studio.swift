@@ -56,7 +56,7 @@ enum MoodPreset: String, CaseIterable, Identifiable {
 enum TextSizePreset: String, CaseIterable, Identifiable {
     case auto, small, medium, large
     var id: String { rawValue }
-    var name: String { switch self { case .auto: return "Auto"; case .small: return "S"; case .medium: return "M"; case .large: return "L" } }
+    var name: String { switch self { case .auto: return "Auto"; case .small: return "Chica"; case .medium: return "Mediana"; case .large: return "Grande" } }
     var points: Double { switch self { case .auto: return 0; case .small: return 9; case .medium: return 12; case .large: return 18 } }
     static func matching(_ size: Double) -> TextSizePreset? { allCases.first { $0.points == size } }
 }

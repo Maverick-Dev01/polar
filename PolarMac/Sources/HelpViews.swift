@@ -46,7 +46,7 @@ struct BubbleLayout: Layout {
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize { proposal.replacingUnspecifiedDimensions() }
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
         guard let view = subviews.first else { return }
-        let size = view.sizeThatFits(ProposedViewSize(width: HelpBubble.width, height: nil))
+        let size = view.sizeThatFits(ProposedViewSize(width: HelpLayout.bubbleWidth, height: nil))
         let origin = HelpLayout.bubbleOrigin(target: target, bubble: size, container: bounds.size)
         view.place(at: CGPoint(x: bounds.minX + origin.x, y: bounds.minY + origin.y), anchor: .topLeading, proposal: ProposedViewSize(size))
     }
@@ -104,7 +104,7 @@ struct HelpBubble<Footer: View>: View {
                 .contentShape(Rectangle()).onTapGesture {}   // el fondo atenuado no deja pasar clics
                 .accessibilityHidden(true)
                 BubbleLayout(target: hole) {
-                    HelpBubble(title: step.titulo, text: step.texto, caption: "Paso \(place.n) de \(place.total)", animation: step.animacion) {
+                    HelpBubble(title: step.titulo, text: step.shownText, caption: "Paso \(place.n) de \(place.total)", animation: step.animacion) {
                         HStack {
                             Button("Saltar") { studio.endTour(seen: true) }.keyboardShortcut(.cancelAction)
                                 .accessibilityHint("Cierra el recorrido; no volverá a salir solo")
@@ -117,7 +117,7 @@ struct HelpBubble<Footer: View>: View {
                 }
                 .frame(width: size.width, height: size.height)
                 .task(id: index) {
-                    AccessibilityNotification.Announcement("Paso \(place.n) de \(place.total). \(step.titulo). \(step.texto)").post()
+                    AccessibilityNotification.Announcement("Paso \(place.n) de \(place.total). \(step.titulo). \(step.shownText)").post()
                 }
             } else {
                 Color.clear.frame(width: 1, height: 1)
@@ -164,7 +164,7 @@ struct HelpBubble<Footer: View>: View {
             }
             if let id = selected, let rect = rects[id], let control = content.control(id) {
                 BubbleLayout(target: rect) {
-                    HelpBubble(title: control.titulo, text: control.texto) {
+                    HelpBubble(title: control.titulo, text: control.shownText) {
                         Button("Entendido") { studio.helpSelected = nil }.keyboardShortcut(.defaultAction)
                     }
                 }
@@ -189,7 +189,7 @@ struct HelpBubble<Footer: View>: View {
         .frame(width: size.width, height: size.height, alignment: .topLeading)
         .onAppear { AccessibilityNotification.Announcement("Modo de ayuda. Elige un botón para saber qué hace. Escape para salir.").post() }
         .onChange(of: studio.helpSelected) { _, id in
-            if let id, let control = content.control(id) { AccessibilityNotification.Announcement("\(control.titulo). \(control.texto)").post() }
+            if let id, let control = content.control(id) { AccessibilityNotification.Announcement("\(control.titulo). \(control.shownText)").post() }
         }
     }
     private func area(_ id: String) -> CGFloat { rects[id].map { $0.width * $0.height } ?? 0 }
@@ -233,7 +233,7 @@ struct HelpBubble<Footer: View>: View {
     private func list(_ content: HelpContent) -> some View {
         VStack(alignment: .leading, spacing: Spacing.s) {
             TextField("Buscar en la ayuda", text: $query).textFieldStyle(.roundedBorder).accessibilityLabel("Buscar en la ayuda")
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 84), spacing: 6)], alignment: .leading, spacing: 6) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 6)], alignment: .leading, spacing: 6) {
                 chip("Todas", id: nil)
                 ForEach(content.categorias, id: \.id) { chip($0.titulo, id: $0.id) }
             }
@@ -278,8 +278,7 @@ struct HelpBubble<Footer: View>: View {
         if let article = selected {
             ScrollView {
                 VStack(alignment: .leading, spacing: Spacing.m) {
-                    HelpAnimationView(id: article.animacion).frame(height: 150).frame(maxWidth: .infinity)
-                        .background(polarSurface, in: RoundedRectangle(cornerRadius: PolarRadius.card))
+                    HelpAnimationView(id: article.animacion).frame(height: 190).frame(maxWidth: .infinity)
                     Text(article.titulo).font(.title2.bold())
                     Text(article.resumen).font(.body).foregroundStyle(.secondary)
                     VStack(alignment: .leading, spacing: Spacing.s) {

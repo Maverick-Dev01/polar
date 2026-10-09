@@ -30,7 +30,7 @@ struct HelpScene: View {
     let p: Double
     var body: some View {
         Canvas { ctx, size in HelpScene.draw(&ctx, size, id, p) }
-            .aspectRatio(2.2, contentMode: .fit)
+            .aspectRatio(2, contentMode: .fit)
     }
 
     private static func lerp(_ a: CGFloat, _ b: CGFloat, _ t: Double) -> CGFloat { a + (b - a) * CGFloat(min(1, max(0, t))) }
@@ -53,8 +53,11 @@ struct HelpScene: View {
     }
 
     static func draw(_ ctx: inout GraphicsContext, _ size: CGSize, _ id: String, _ p: Double) {
-        let w = size.width, h = size.height
         ctx.fill(Path(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: 10), with: .color(.gray.opacity(0.14)))
+        // Se dibuja en un lienzo virtual de 260×130 y se escala, para que se vea igual en la burbuja y en el artículo.
+        let scale = min(size.width / 260, size.height / 130)
+        ctx.translateBy(x: size.width / 2, y: size.height / 2); ctx.scaleBy(x: scale, y: scale); ctx.translateBy(x: -130, y: -65)
+        let w: CGFloat = 260, h: CGFloat = 130
         let center = CGPoint(x: w / 2, y: h / 2)
         switch id {
         case "tap":
@@ -110,15 +113,14 @@ struct HelpScene: View {
             let typed = String(line.prefix(n)) + (p < 1 ? "▏" : "")
             ctx.draw(Text(typed).font(.custom("Georgia", size: 15)).foregroundColor(ink), at: CGPoint(x: center.x, y: h - 20), anchor: .center)
         case "print":
-            let printer = CGRect(x: center.x - 60, y: h * 0.52, width: 120, height: 40)
+            let printer = CGRect(x: center.x - 60, y: 16, width: 120, height: 40)
             let sheetW: CGFloat = 54, sheetH: CGFloat = 70
-            let y = lerp(4, h * 0.52 + 36, p)
-            let sheet = CGRect(x: center.x - sheetW / 2, y: y, width: sheetW, height: sheetH)
+            let sheet = CGRect(x: center.x - sheetW / 2, y: lerp(-70, 48, p), width: sheetW, height: sheetH)
             ctx.fill(Path(roundedRect: sheet, cornerRadius: 3), with: .color(cardFill))
             for i in 0..<3 { ctx.fill(Path(CGRect(x: sheet.minX + 8, y: sheet.minY + 10 + CGFloat(i) * 16, width: sheetW - 16, height: 10)), with: .color(photoA.opacity(0.7))) }
             ctx.fill(Path(roundedRect: printer, cornerRadius: 8), with: .color(Color(white: 0.35)))
-            ctx.fill(Path(roundedRect: CGRect(x: printer.minX + 14, y: printer.minY + 16, width: printer.width - 28, height: 5), cornerRadius: 2), with: .color(.black.opacity(0.6)))
-            if p > 0.75 { ctx.draw(Text("100 %").font(.system(size: 12, weight: .bold)).foregroundColor(ink), at: CGPoint(x: center.x + 80, y: h * 0.5), anchor: .leading) }
+            ctx.fill(Path(roundedRect: CGRect(x: printer.minX + 14, y: printer.maxY - 12, width: printer.width - 28, height: 5), cornerRadius: 2), with: .color(.black.opacity(0.6)))
+            if p > 0.75 { ctx.draw(Text("100 %").font(.system(size: 13, weight: .bold)).foregroundColor(ink), at: CGPoint(x: center.x + 40, y: 98), anchor: .leading) }
         case "qr":
             let r = CGRect(x: center.x - 60, y: center.y - 40, width: 120, height: 80)
             card(&ctx, r, photo: Color(red: 0.4, green: 0.4, blue: 0.5))

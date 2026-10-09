@@ -439,7 +439,7 @@ private let cream = polarCream
                     Stepper("Columnas \(studio.project.settings.columns)", value: setting(\.columns), in: 1...4).frame(minHeight: 48)
                     Stepper("Filas \(studio.project.settings.rows)", value: setting(\.rows), in: 1...6).frame(minHeight: 48)
                 }.font(.system(size: 12))
-                controlSlider("Separación", value: setting(\.gap), range: 0...30, suffix: "pt")
+                controlSlider("Separación entre tarjetas", value: setting(\.gap), range: 0...30, suffix: "pt")
                 Toggle("Fotos con esquinas redondas", isOn: setting(\.roundedPhotos))
                 if studio.project.settings.style == .calendar {
                     Divider()
@@ -507,7 +507,7 @@ private let cream = polarCream
                                 selection: Binding(get: { studio.textCardScope }, set: { if let value = $0 { studio.textCardScope = value } }))
                 }
                 if studio.selectedTextRole == .date {
-                    Picker("Fecha", selection: Binding(get: { studio.dateSource }, set: { studio.setDateSource($0) })) {
+                    Picker("Qué fecha mostrar", selection: Binding(get: { studio.dateSource }, set: { studio.setDateSource($0) })) {
                         ForEach(DateSource.allCases) { Text($0.name).tag($0) }
                     }
                     if studio.dateSource == .chosen {

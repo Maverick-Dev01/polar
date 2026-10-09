@@ -172,15 +172,20 @@ import AppKit
         let dir = URL(fileURLWithPath: ProcessInfo.processInfo.environment["POLAR_MAC_SOURCES"] ?? "Sources")
         let files = try FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil).filter { $0.pathExtension == "swift" }
         let source = try files.filter { $0.lastPathComponent != "HelpContent.swift" }.map { try String(contentsOf: $0, encoding: .utf8) }.joined(separator: "\n")
-        let haystack = HelpSearch.normalize(source.replacingOccurrences(of: "\u{2026}", with: "").replacingOccurrences(of: "...", with: ""))
+        // Una «N» suelta en la etiqueta vale cualquier número: en el código es una interpolación \(…).
+        let interpolation = try NSRegularExpression(pattern: #"\\\([^)]*\)"#)
+        let flat = interpolation.stringByReplacingMatches(in: source, range: NSRange(source.startIndex..., in: source), withTemplate: "N")
+        let haystack = HelpSearch.normalize(flat.replacingOccurrences(of: "\u{2026}", with: "").replacingOccurrences(of: "...", with: ""))
         var missing: [String] = []
         let pattern = try NSRegularExpression(pattern: "«([^»]+)»")
-        for article in c.articulos {
-            for step in article.steps {
+        let texts: [(String, String)] = c.articulos.flatMap { a in a.steps.map { (a.id, $0) } }
+            + c.recorrido.map { ("recorrido \($0.id)", $0.shownText) } + c.controles.map { ("control \($0.id)", $0.shownText) }
+        for (owner, step) in texts {
+            do {
                 for match in pattern.matches(in: step, range: NSRange(step.startIndex..., in: step)) {
                     guard let range = Range(match.range(at: 1), in: step) else { continue }
                     let label = HelpSearch.normalize(String(step[range]).replacingOccurrences(of: "\u{2026}", with: "").replacingOccurrences(of: "...", with: ""))
-                    if !label.isEmpty, !haystack.contains(label) { missing.append("\(article.id): «\(step[range])»") }
+                    if !label.isEmpty, !haystack.contains(label) { missing.append("\(owner): «\(step[range])»") }
                 }
             }
         }

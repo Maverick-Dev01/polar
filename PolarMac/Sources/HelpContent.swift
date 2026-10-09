@@ -28,8 +28,17 @@ struct HelpArticle: Decodable, Equatable, Sendable, Identifiable {
     /// Los pasos que ve esta app.
     var steps: [String] { pasosMac ?? pasos }
 }
-struct TourStep: Decodable, Equatable, Sendable, Identifiable { var id: String, objetivo: String, animacion: String, titulo: String, texto: String }
-struct HelpControl: Decodable, Equatable, Sendable, Identifiable { var id: String, titulo: String, texto: String }
+/// `textoMac` (opcional) reemplaza a `texto` en esta app; `textoAndroid` se ignora.
+struct TourStep: Decodable, Equatable, Sendable, Identifiable {
+    var id: String, objetivo: String, animacion: String, titulo: String, texto: String
+    var textoMac: String?
+    var shownText: String { textoMac ?? texto }
+}
+struct HelpControl: Decodable, Equatable, Sendable, Identifiable {
+    var id: String, titulo: String, texto: String
+    var textoMac: String?
+    var shownText: String { textoMac ?? texto }
+}
 
 struct HelpContent: Decodable, Sendable {
     static let version = 1
