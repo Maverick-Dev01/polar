@@ -302,7 +302,7 @@ private fun EditorLayout(state: EditorUiState, vm: EditorViewModel, container: A
 @Composable
 private fun Hint() {
     Row(
-        Modifier.fillMaxWidth().height(48.dp).padding(horizontal = 16.dp),
+        Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(Icons.Outlined.Info, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))

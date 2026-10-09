@@ -183,7 +183,7 @@ private fun SheetPage(state: EditorUiState, page: Int, vm: EditorViewModel, cont
             selectedLocal?.let { rects.getOrNull(it) }?.let { r ->
                 Box(
                     Modifier.offset(with(density) { (r.left.toFloat() * ptToPx).toDp() } - 10.dp, with(density) { (r.top.toFloat() * ptToPx).toDp() } - 10.dp)
-                        .background(primary, RoundedCornerShape(8.dp)).padding(horizontal = 6.dp, vertical = 2.dp)
+                        .background(primary, MaterialTheme.shapes.small).padding(horizontal = 6.dp, vertical = 2.dp)
                         .clearAndSetSemantics { }
                 ) { Text("${state.selectedCardNumber ?: 1}", color = onPrimary, style = MaterialTheme.typography.labelSmall) }
             }

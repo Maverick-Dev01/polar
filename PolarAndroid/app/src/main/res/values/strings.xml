@@ -160,6 +160,7 @@
     <string name="catalog_no_results_hint">Prueba con otra palabra o revisa cómo la escribiste.</string>
     <string name="catalog_show_all">Ver todos</string>
     <string name="photos_add">Agregar</string>
+    <string name="photos_select_short">Seleccionar</string>
     <string name="photos_add_folder">Agregar carpeta</string>
     <string name="editor_folder_empty">No se encontraron fotos para agregar</string>
     <string name="editor_ignored_one">1 archivo ignorado</string>
@@ -310,8 +311,8 @@
     <string name="finish_open">Abrir</string>
     <string name="finish_preparing">Preparando el archivo…</string>
     <string name="tool_filters">Filtros</string>
-    <string name="tray_expand">Más opciones</string>
-    <string name="tray_compact">Ver fichas</string>
+    <string name="tray_expand">Ampliar</string>
+    <string name="tray_compact">Reducir</string>
     <string name="look_all">Todas</string>
     <string name="look_page">Esta página</string>
     <string name="look_pages">Varias páginas</string>

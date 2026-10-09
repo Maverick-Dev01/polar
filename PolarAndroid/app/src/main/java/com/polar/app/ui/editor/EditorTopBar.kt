@@ -35,6 +35,7 @@ fun EditorTopBar(name: String, styleName: String, status: String, canUndo: Boole
     val fontScale = LocalDensity.current.fontScale
     BoxWithConstraints {
         val redoInMenu = redoInMenu(maxWidth.value, fontScale)
+        val narrow = maxWidth < 480.dp
         TopAppBar(
             expandedHeight = if (fontScale >= 1.2f) 104.dp else 88.dp,
             navigationIcon = { IconButton(onClick = actions.onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.editor_back)) } },
@@ -42,7 +43,7 @@ fun EditorTopBar(name: String, styleName: String, status: String, canUndo: Boole
                 Column(Modifier.clickable(onClick = actions.onRename)) {
                     Text(name, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.semantics { contentDescription = name })
                     Text(
-                        "$styleName · $status", style = MaterialTheme.typography.bodySmall,
+                        if (narrow) status else "$styleName · $status", style = if (narrow) MaterialTheme.typography.labelSmall else MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis
                     )
                 }
