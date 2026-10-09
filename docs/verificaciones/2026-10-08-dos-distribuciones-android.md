@@ -64,3 +64,11 @@ No se publicó en Play Console ni se probó un teléfono físico o dispositivo d
 | APK | 5501757 | `6d230913e78d45950c7880ed9c867c25edd5cf8e68c850162e0b7f6ff18acb57` |
 | AAB Play | 8644359 | `8438ce3131716f5f463bc1c8b64a2b1696a3cb40e3502bff94c6921e678b38d5` |
 | ZIP Mac | 4086966 | `57e4b6a960eb94b63e249c6d0465ef31a6d1a35e01a9d8b6ab49bcb3c80d444c` |
+
+## Publicación y recorrido final de 2.3.1
+
+- Publicada `android-v2.3.1`, código `4c360b5`, en `global`. APK, AAB, ZIP Mac, manifiesto y SHA descargados de la URL pública y sus SHA-256 coinciden con los locales. `Latest` confirma 2.3.1 / 8. Se mantienen los archivos originales de 2.3.0.
+- Desde **GitHub 2.3.0**, ya con el actualizador en fuentes separadas, se recorrió Buscar → Descargar → Instalar. Polar mostró descarga verificada y Android pidió confirmar la actualización. El paquete instalado quedó en 2.3.1 / 8.
+- El usuario Demo conserva un diseño Polaroid: se abrió en el editor y renderizó las nueve fotos, textos y filtros anteriores. No se desinstaló ni se borró almacenamiento.
+- La variante Play 2.3.1 se instaló sobre los mismos datos: Ajustes muestra el canal Google Play, no incluye controles para descargar APK y el paquete no solicita el permiso del instalador. Se leyó completo el texto corregido de privacidad y la versión 2.3.1. Al concluir se restauró GitHub 2.3.1.
+- El AAB está disponible para subir a Play Console; esto no confirma publicación, aprobación de Google ni pruebas en teléfono físico. La segmentación positiva Android y la ejecución en dispositivo de 16 KiB siguen pendientes; las pruebas nativas anteriores fueron 9 aprobadas y 1 omitida.
