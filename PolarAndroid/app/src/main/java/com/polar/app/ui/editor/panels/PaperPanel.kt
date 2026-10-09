@@ -13,6 +13,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.polar.app.R
 import com.polar.app.data.Units
+import com.polar.app.data.formatMeasure
+import com.polar.app.data.pointsToUnit
+import com.polar.app.data.unitToPoints
 import com.polar.app.model.*
 import com.polar.app.ui.components.*
 import java.util.Locale
@@ -41,7 +44,6 @@ private fun show(mm: Double, units: Units): String =
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun PaperPanel(settings: PrintSettings, units: Units, cb: PaperCallbacks) {
-    var more by rememberSaveable { mutableStateOf(false) }
     val unitLabel = stringResource(if(units==Units.INCHES) R.string.unit_inches else R.string.unit_mm)
     var width by remember(settings.customWidthMM, units) { mutableStateOf(show(settings.customWidthMM, units)) }
     var height by remember(settings.customHeightMM, units) { mutableStateOf(show(settings.customHeightMM, units)) }
@@ -89,10 +91,9 @@ fun PaperPanel(settings: PrintSettings, units: Units, cb: PaperCallbacks) {
             }
         }
 
-        MoreOptions(more, { more = !more }, stringResource(R.string.paper_more_summary)) {
-            LabeledSlider(stringResource(R.string.paper_margin), settings.margin.toFloat(), 0f..60f, stringResource(R.string.unit_pt, settings.margin.toInt()),
-                cb.onMargin, cb.onGestureStart, cb.onGestureEnd)
-            SwitchRow(stringResource(R.string.paper_borders), settings.drawBorders, cb.onBorders, stringResource(R.string.paper_borders_help))
-        }
+        LabeledSlider(stringResource(R.string.paper_margin), pointsToUnit(settings.margin, units).toFloat(), 0f..pointsToUnit(60.0, units).toFloat(),
+            formatMeasure(settings.margin, units, unitLabel),
+            { cb.onMargin(unitToPoints(it.toDouble(), units).coerceIn(0.0, 60.0).toFloat()) }, cb.onGestureStart, cb.onGestureEnd)
+        SwitchRow(stringResource(R.string.paper_borders), settings.drawBorders, cb.onBorders, stringResource(R.string.paper_borders_help))
     }
 }

@@ -263,7 +263,6 @@
     <string name="paper_guides">Marcas de corte</string>
     <string name="paper_guides_help">Quedan fuera de las fotos</string>
     <string name="paper_tip">Al imprimir elige %1$s y «Tamaño real» o escala 100 %%.</string>
-    <string name="paper_more_summary">Margen, bordes</string>
     <string name="paper_margin">Margen de la hoja</string>
     <string name="paper_borders">Imprimir el borde de cada tarjeta</string>
     <string name="paper_borders_help">Si lo apagas, el borde no aparece en la foto recortada.</string>

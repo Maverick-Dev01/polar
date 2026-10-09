@@ -23,7 +23,7 @@ import com.polar.app.data.ThemeMode
 import com.polar.app.data.Units
 import com.polar.app.model.PaperSize
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun SettingsScreen(
     settings: AppSettings,
@@ -72,8 +72,8 @@ fun SettingsScreen(
                 }
             }
             Labeled(stringResource(R.string.settings_default_paper)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(PaperSize.LETTER, PaperSize.A4, PaperSize.OFICIO).forEach { p ->
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    PaperSize.entries.forEach { p ->
                         PolarChip(selected = settings.defaultPaper == p, onClick = { onPaper(p) }, label = { Text(p.displayName) })
                     }
                 }

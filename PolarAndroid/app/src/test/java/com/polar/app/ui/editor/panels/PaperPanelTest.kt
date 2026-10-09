@@ -50,4 +50,19 @@ class PaperPanelTest {
         assertNull(parseMeasure("2", Units.INCHES))
         assertNull(parseMeasure("abc", Units.MM))
     }
+
+    @Test
+    fun marginAndBordersAreVisibleWithoutMoreOptionsInTheChosenUnits() {
+        compose.setContent { PolarTheme(ThemeMode.LIGHT) { PaperPanel(PrintSettings(margin = 72.0), Units.INCHES, cb) } }
+        compose.onNodeWithText("Margen de la hoja").assertExists()
+        compose.onNodeWithText("1.00 pulg.").assertExists()
+        compose.onNodeWithText("Imprimir el borde de cada tarjeta").assertExists()
+        compose.onNodeWithText("Más opciones").assertDoesNotExist()
+    }
+
+    @Test
+    fun marginShowsMillimetersByDefault() {
+        compose.setContent { PolarTheme(ThemeMode.LIGHT) { PaperPanel(PrintSettings(margin = 24.0), Units.MM, cb) } }
+        compose.onNodeWithText("8.47 mm").assertExists()
+    }
 }
