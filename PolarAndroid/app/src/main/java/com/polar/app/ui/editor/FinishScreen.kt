@@ -58,7 +58,7 @@ fun FinishScreen(state: EditorUiState, vm: EditorViewModel, container: AppContai
         val summary: @Composable ColumnScope.() -> Unit = {
             LazyRow(
                 Modifier.fillMaxWidth().background(PolarColors.table, MaterialTheme.shapes.large).padding(vertical = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(horizontal = 16.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally), contentPadding = PaddingValues(horizontal = 16.dp)
             ) {
                 items((0 until minOf(p.pageCount, 12)).toList()) { page -> PageThumb(state, vm, container, page) }
             }
