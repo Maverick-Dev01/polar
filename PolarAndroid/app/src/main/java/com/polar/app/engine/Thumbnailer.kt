@@ -9,16 +9,18 @@ import java.io.ByteArrayOutputStream
 import kotlin.math.roundToInt
 
 class Thumbnailer(private val fonts: FontProvider) {
+    private companion object { const val CARD_POINTS = 200.0 }
     private val styles = LruCache<String, Bitmap>(48)
 
     fun styleCard(style: TemplateStyle, widthPx: Int): Bitmap {
         val key = "${style.name}@$widthPx"
         styles.get(key)?.let { return it }
         val aspect = if (style == TemplateStyle.IMPORTED) 0.75 else style.defaultAspect
-        val card = PolarRect(0.0, 0.0, 100.0, 100.0 / aspect)
-        val scale = widthPx / 100f
+        // Tarjeta del tamaño aproximado de una real (≈ 200 pt): el piso de 6 pt del texto no debe cortar la miniatura.
+        val card = PolarRect(0.0, 0.0, CARD_POINTS, CARD_POINTS / aspect)
+        val scale = widthPx / CARD_POINTS.toFloat()
         val bitmap = Bitmap.createBitmap(widthPx, (card.height * scale).roundToInt().coerceAtLeast(1), Bitmap.Config.ARGB_8888)
-        val project = PolarProject(settings = PrintSettings(style = style, cutGuides = false)).normalized()
+        val project = PolarProject(settings = PrintSettings(style = style, cutGuides = false, caption = "Tu mensaje", song = "Mi canción")).normalized()
         PolarRenderer.drawCardPreview(Canvas(bitmap), project, card, scale, fonts)
         styles.put(key, bitmap)
         return bitmap
