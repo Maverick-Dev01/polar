@@ -46,7 +46,7 @@ internal object PdfPhotoOptimizer {
     private val latin = Charsets.ISO_8859_1
     private data class Entry(val offset: Long, val generation: Int)
 
-    fun optimize(source: File, output: File, photos: Set<PdfPhotoFingerprint>): Boolean {
+    fun optimize(source: File, output: File, photos: Set<PdfPhotoFingerprint>, jpegQuality: Int = 94): Boolean {
         if (photos.isEmpty()) return false
         try {
             RandomAccessFile(source, "r").use { input ->
@@ -97,7 +97,7 @@ internal object PdfPhotoOptimizer {
                         val body = ByteArray(length.toInt()).also(input::readFully)
                         val header = "${item.key} ${item.value.generation} obj"
                         require(String(body, 0, minOf(body.size, header.length + 2), latin).startsWith(header))
-                        val compact = jpegImage(body, photos)
+                        val compact = jpegImage(body, photos, jpegQuality)
                         offsets[item.key] = dest.filePointer
                         dest.write(compact ?: body)
                         changed = changed || compact != null
@@ -123,7 +123,7 @@ internal object PdfPhotoOptimizer {
         }
     }
 
-    private fun jpegImage(body: ByteArray, photos: Set<PdfPhotoFingerprint>): ByteArray? {
+    private fun jpegImage(body: ByteArray, photos: Set<PdfPhotoFingerprint>, jpegQuality: Int): ByteArray? {
         val prefix = String(body, 0, minOf(body.size, 65_536), latin)
         val stream = Regex("\\bstream\\r?\\n").find(prefix) ?: return null
         val dictionary = prefix.substring(0, stream.range.first)
@@ -157,7 +157,7 @@ internal object PdfPhotoOptimizer {
         val bitmap = Bitmap.createBitmap(pixels, width, height, Bitmap.Config.ARGB_8888)
         val jpeg = try {
             ByteArrayOutputStream().apply {
-                if (!bitmap.compress(Bitmap.CompressFormat.JPEG, 94, this)) return null
+                if (!bitmap.compress(Bitmap.CompressFormat.JPEG, jpegQuality, this)) return null
             }.toByteArray()
         } finally { bitmap.recycle() }
         if (jpeg.size >= length) return null

@@ -55,4 +55,16 @@ class AndroidExportServiceTest {
         }
         assertNotEquals(requiredPhotoPixels(project, 0)[photo.id], requiredPhotoPixels(project, 1)[photo.id])
     }
+
+    @Test
+    fun lightQualityRequestsFewerPixelsThanHigh() {
+        val placement = PhotoPlacement(photo.id)
+        val project = PolarProject(settings = settings, photos = listOf(photo), placements = listOf(placement))
+        val light = requiredPhotoPixels(project, dpi = ExportQuality.LIGHT.dpi)[photo.id]!!
+        val high = requiredPhotoPixels(project, dpi = ExportQuality.HIGH.dpi)[photo.id]!!
+        assertTrue(light < high)
+        assertEquals(ExportQuality.HIGH.dpi, ExportQuality.MAX.dpi)
+        assertTrue(ExportQuality.LIGHT.jpegQuality < ExportQuality.HIGH.jpegQuality)
+        assertFalse(ExportQuality.MAX.optimizePhotos)
+    }
 }

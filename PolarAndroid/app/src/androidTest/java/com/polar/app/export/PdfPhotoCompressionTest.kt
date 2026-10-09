@@ -71,7 +71,7 @@ class PdfPhotoCompressionTest {
         val plain = File(cache, "qa-fit-plain.pdf")
         val compact = File(cache, "qa-fit-compact.pdf")
         try {
-            PolarExporter.exportPdf(project, plain, { bitmap }, optimizePhotos = false)
+            PolarExporter.exportPdf(project, plain, { bitmap }, quality = ExportQuality.MAX)
             PolarExporter.exportPdf(project, compact, { bitmap })
             println("Ajustar: sin optimizar=${plain.length()}, optimizado=${compact.length()}")
             assertTrue("Ajustar debe comprimir a la mitad", compact.length() < plain.length() / 2)
@@ -92,6 +92,21 @@ class PdfPhotoCompressionTest {
         } finally { bitmap.recycle() }
     }
 
+    @Test fun lightHighMaxSizesAreOrdered() {
+        val bitmap = photograph()
+        val asset = PhotoAsset(path = "fixture", pixelWidth = bitmap.width, pixelHeight = bitmap.height)
+        val project = PolarProject(settings = PrintSettings(columns = 2, rows = 3),
+            photos = listOf(asset), placements = List(6) { PhotoPlacement(assetID = asset.id) })
+        try {
+            val sizes = ExportQuality.values().associateWith { q ->
+                File(cache, "qa-quality-$q.pdf").also { PolarExporter.exportPdf(project, it, { bitmap }, quality = q) }.length()
+            }
+            println("Ligero=${sizes[ExportQuality.LIGHT]} Alta=${sizes[ExportQuality.HIGH]} Máxima=${sizes[ExportQuality.MAX]}")
+            assertTrue(sizes.getValue(ExportQuality.LIGHT) <= sizes.getValue(ExportQuality.HIGH))
+            assertTrue(sizes.getValue(ExportQuality.HIGH) < sizes.getValue(ExportQuality.MAX))
+        } finally { bitmap.recycle() }
+    }
+
     @Test fun thirtyFilteredPhotosKeepFivePrintablePagesAndOriginalPixels() {
         val bitmap = photograph()
         val original = bitmap.copy(bitmap.config!!, false)
@@ -102,7 +117,7 @@ class PdfPhotoCompressionTest {
         val lossless = File(cache, "qa-30-photos-lossless.pdf")
         val compact = File(cache, "qa-30-photos-compact.pdf")
         try {
-            PolarExporter.exportPdf(project, lossless, { bitmap }, optimizePhotos = false)
+            PolarExporter.exportPdf(project, lossless, { bitmap }, quality = ExportQuality.MAX)
             PolarExporter.exportPdf(project, compact, { bitmap })
             println("30 photos / 5 pages: lossless=${lossless.length()}, compact=${compact.length()}")
             assertTrue("Comprimir debe reducir al menos la mitad", compact.length() < lossless.length() / 2)

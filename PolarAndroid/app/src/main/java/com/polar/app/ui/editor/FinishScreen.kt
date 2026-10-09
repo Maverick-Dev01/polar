@@ -1,5 +1,6 @@
 package com.polar.app.ui.editor
 
+import com.polar.app.export.ExportQuality
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -39,7 +40,7 @@ import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FinishScreen(state: EditorUiState, vm: EditorViewModel, container: AppContainer, snackbar: SnackbarHostState, onAction: (ExportAction, ExportFormat) -> Unit) {
+fun FinishScreen(state: EditorUiState, vm: EditorViewModel, container: AppContainer, snackbar: SnackbarHostState, quality: ExportQuality, onQuality: (ExportQuality) -> Unit, onAction: (ExportAction, ExportFormat) -> Unit) {
     val p = state.project
     val low = remember(p) { vm.reviewSlots() }
     val empty = remember(p) { vm.emptySlotsOnUsedPages() }
@@ -88,13 +89,21 @@ fun FinishScreen(state: EditorUiState, vm: EditorViewModel, container: AppContai
                 }
             }
 
+            Text(stringResource(R.string.finish_quality), style = MaterialTheme.typography.titleSmall)
+            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                val options = listOf(ExportQuality.LIGHT to R.string.finish_quality_light, ExportQuality.HIGH to R.string.finish_quality_high, ExportQuality.MAX to R.string.finish_quality_max)
+                options.forEachIndexed { i, (q, label) ->
+                    SegmentedButton(selected = quality == q, onClick = { onQuality(q) }, shape = SegmentedButtonDefaults.itemShape(i, options.size)) { Text(stringResource(label)) }
+                }
+            }
+            Text(stringResource(when (quality) { ExportQuality.LIGHT -> R.string.finish_quality_light_hint; ExportQuality.HIGH -> R.string.finish_quality_high_hint; ExportQuality.MAX -> R.string.finish_quality_max_hint }),
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Button(onClick = { onAction(ExportAction.PRINT, ExportFormat.PDF) }, enabled = !state.busy, modifier = Modifier.fillMaxWidth().heightIn(min=56.dp)) {
                 Icon(Icons.Outlined.Print, null); Spacer(Modifier.width(10.dp)); Text(stringResource(R.string.finish_print))
             }
             ActionButton(Icons.Outlined.PictureAsPdf, stringResource(R.string.finish_save_pdf), stringResource(R.string.finish_save_pdf_hint), !state.busy) { onAction(ExportAction.SAVE, ExportFormat.PDF) }
             ActionButton(Icons.Outlined.Image, stringResource(R.string.finish_save_jpg), stringResource(R.string.finish_save_jpg_hint), !state.busy) { onAction(ExportAction.SAVE, ExportFormat.JPEG) }
             ActionButton(Icons.Outlined.Image, stringResource(R.string.finish_save_png), stringResource(R.string.finish_save_png_hint), !state.busy) { onAction(ExportAction.SAVE, ExportFormat.PNG) }
-            ActionButton(Icons.Outlined.PictureAsPdf, stringResource(R.string.finish_save_pdf_lossless), stringResource(R.string.finish_save_pdf_lossless_hint), !state.busy) { onAction(ExportAction.SAVE, ExportFormat.PDF_LOSSLESS) }
             ActionButton(Icons.Outlined.Share, stringResource(R.string.finish_share), stringResource(R.string.finish_share_hint), !state.busy) { onAction(ExportAction.SHARE, ExportFormat.PDF) }
             if (state.busy) Row(verticalAlignment = Alignment.CenterVertically) {
                 CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp); Spacer(Modifier.width(10.dp)); Text(stringResource(R.string.finish_preparing))

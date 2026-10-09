@@ -26,41 +26,41 @@ class AndroidExportService(
     private fun fileName(p: PolarProject, ext: String) =
         p.name.replace(Regex("[^\\p{L}\\p{N} _-]"), "").trim().ifBlank { "Polar" } + ".$ext"
 
-    private fun printTemplate(p: PolarProject, fallback: Bitmap?): Bitmap? {
+    private fun printTemplate(p: PolarProject, fallback: Bitmap?, dpi: Int): Bitmap? {
         val t = p.settings.importedTemplate ?: return fallback
         val rect = PolarRenderer.templateRect(p.settings)
-        val pixels = ceil(max(rect.width, rect.height) * 300 / 72).toInt().coerceIn(1, max(t.pixelWidth, t.pixelHeight))
+        val pixels = ceil(max(rect.width, rect.height) * dpi / 72).toInt().coerceIn(1, max(t.pixelWidth, t.pixelHeight))
         return bitmaps.loadForPrint(t.path, pixels)
     }
 
-    override suspend fun pdf(project: PolarProject, template: Bitmap?, optimizePhotos: Boolean): File = withContext(Dispatchers.IO) {
-        val sizes=requiredPhotoPixels(project)
+    override suspend fun pdf(project: PolarProject, template: Bitmap?, quality: ExportQuality): File = withContext(Dispatchers.IO) {
+        val sizes = requiredPhotoPixels(project, dpi = quality.dpi)
         File(dir(), fileName(project, "pdf")).also {
-            PolarExporter.exportPdf(project, it, { a -> bitmaps.loadForPrint(a.path, sizes[a.id] ?: BitmapLoader.EXPORT_MAX) }, printTemplate(project, template), fonts, optimizePhotos)
+            PolarExporter.exportPdf(project, it, { a -> bitmaps.loadForPrint(a.path, sizes[a.id] ?: BitmapLoader.EXPORT_MAX) }, printTemplate(project, template, quality.dpi), fonts, quality)
         }
     }
 
-    override suspend fun png(project: PolarProject, page: Int, template: Bitmap?): File = withContext(Dispatchers.IO) {
-        val sizes=requiredPhotoPixels(project,page)
+    override suspend fun png(project: PolarProject, page: Int, template: Bitmap?, quality: ExportQuality): File = withContext(Dispatchers.IO) {
+        val sizes = requiredPhotoPixels(project, page, quality.dpi)
         File(dir(), fileName(project, "png").replace(".png", " · hoja ${page + 1}.png")).also {
-            PolarExporter.exportPng(project, page, it, 300, { a -> bitmaps.loadForPrint(a.path, sizes[a.id] ?: BitmapLoader.EXPORT_MAX) }, printTemplate(project, template), fonts)
+            PolarExporter.exportPng(project, page, it, quality.dpi, { a -> bitmaps.loadForPrint(a.path, sizes[a.id] ?: BitmapLoader.EXPORT_MAX) }, printTemplate(project, template, quality.dpi), fonts)
         }
     }
 
-    override suspend fun jpg(project: PolarProject, page: Int, template: Bitmap?): File = withContext(Dispatchers.IO) {
-        val sizes = requiredPhotoPixels(project, page)
+    override suspend fun jpg(project: PolarProject, page: Int, template: Bitmap?, quality: ExportQuality): File = withContext(Dispatchers.IO) {
+        val sizes = requiredPhotoPixels(project, page, quality.dpi)
         File(dir(), fileName(project, "jpg").replace(".jpg", " · hoja ${page + 1}.jpg")).also {
-            PolarExporter.exportJpeg(project, page, it, 300, { a -> bitmaps.loadForPrint(a.path, sizes[a.id] ?: BitmapLoader.EXPORT_MAX) }, printTemplate(project, template), fonts)
+            PolarExporter.exportJpeg(project, page, it, quality.dpi, { a -> bitmaps.loadForPrint(a.path, sizes[a.id] ?: BitmapLoader.EXPORT_MAX) }, printTemplate(project, template, quality.dpi), fonts, quality.jpegQuality)
         }
     }
 }
 
-/** Resolución útil a 300 ppp, con el mismo ajuste/rotación que el motor. */
-internal fun requiredPhotoPixels(project: PolarProject, page: Int? = null): Map<String,Int> {
+/** Resolución útil a los ppp indicados (300 por defecto), con el mismo ajuste/rotación que el motor. */
+internal fun requiredPhotoPixels(project: PolarProject, page: Int? = null, dpi: Int = 300): Map<String,Int> {
     val targets=mutableMapOf<String,Int>()
     fun include(asset: PhotoAsset, placement: PhotoPlacement, rect: PolarRect) {
         val fit=PhotoFit.compute(rect.width,rect.height,asset.pixelWidth,asset.pixelHeight,placement)
-        val target=ceil(max(fit.width,fit.height)*300/72).toInt()
+        val target=ceil(max(fit.width,fit.height)*dpi/72).toInt()
             .coerceIn(1,max(asset.pixelWidth,asset.pixelHeight))
         targets[asset.id]=max(targets[asset.id] ?: 0,target)
     }

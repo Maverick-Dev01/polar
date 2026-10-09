@@ -21,4 +21,12 @@ class SettingsRepositoryTest {
         repo.setDefaultPaper(PaperSize.A4); repo.setOnboardingSeen(true)
         assertEquals(AppSettings(ThemeMode.DARK, Units.INCHES, PaperSize.A4, true), repo.settings.first())
     }
+
+    @Test
+    fun exportQualityDefaultsToHighAndPersists() = runTest {
+        val repo = SettingsRepository(ApplicationProvider.getApplicationContext())
+        assertEquals(com.polar.app.export.ExportQuality.HIGH, repo.settings.first().exportQuality)
+        repo.setExportQuality(com.polar.app.export.ExportQuality.LIGHT)
+        assertEquals(com.polar.app.export.ExportQuality.LIGHT, SettingsRepository(ApplicationProvider.getApplicationContext()).settings.first().exportQuality)
+    }
 }

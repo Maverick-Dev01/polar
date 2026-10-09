@@ -1,5 +1,8 @@
 package com.polar.app.ui.editor
 
+import com.polar.app.export.ExportQuality
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -166,12 +169,16 @@ fun EditorScreen(vm: EditorViewModel, container: AppContainer, notice: String?, 
             onBack = { vm.setMode(EditorMode.EDIT) }
         )
         EditorMode.CROP -> CropScreen(state, vm, container)
-        EditorMode.FINISH -> FinishScreen(state, vm, container, snackbar) { action, format ->
-            pendingAction = action
-            when (format) {
-                ExportFormat.PDF, ExportFormat.PDF_LOSSLESS -> vm.exportPdf(format == ExportFormat.PDF)
-                ExportFormat.PNG -> vm.exportPng()
-                ExportFormat.JPEG -> vm.exportJpg()
+        EditorMode.FINISH -> {
+            val quality by remember { container.settings.settings.map { it.exportQuality } }.collectAsState(ExportQuality.HIGH)
+            val scope = rememberCoroutineScope()
+            FinishScreen(state, vm, container, snackbar, quality, { q -> scope.launch { container.settings.setExportQuality(q) } }) { action, format ->
+                pendingAction = action
+                when (format) {
+                    ExportFormat.PDF -> vm.exportPdf(quality)
+                    ExportFormat.PNG -> vm.exportPng(quality)
+                    ExportFormat.JPEG -> vm.exportJpg(quality)
+                }
             }
         }
         else -> EditorLayout(state, vm, container, snackbar, onBack)

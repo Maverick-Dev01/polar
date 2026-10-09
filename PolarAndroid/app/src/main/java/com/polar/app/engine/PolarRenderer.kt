@@ -164,7 +164,8 @@ object PolarRenderer {
         bitmapProvider: (PhotoAsset) -> Bitmap? = { null },
         templateBitmap: Bitmap? = null,
         fonts: FontProvider = SystemFontProvider,
-        pdfPhoto: ((Bitmap) -> Unit)? = null
+        pdfPhoto: ((Bitmap) -> Unit)? = null,
+        photoDpi: Int = 300
     ) {
         // Una transición puede medir temporalmente la hoja a cero: no rasterizar texto/emoji a escala infinita.
         if (!scale.isFinite() || scale <= 0f) return
@@ -176,7 +177,7 @@ object PolarRenderer {
         canvas.drawRect(paper.toAndroidRectF(scale), whitePaint)
 
         if (s.style == TemplateStyle.IMPORTED && s.importedTemplate != null) {
-            drawImported(canvas, project, page, isPreview, scale, bitmapProvider, templateBitmap, fonts, pdfPhoto)
+            drawImported(canvas, project, page, isPreview, scale, bitmapProvider, templateBitmap, fonts, pdfPhoto, photoDpi)
             return
         }
 
@@ -189,7 +190,7 @@ object PolarRenderer {
 
             if (!isPreview && !hasAssigned) continue
 
-            drawCard(canvas, card, project, firstSlot, cardIndex, isPreview, scale, bitmapProvider, fonts, pdfPhoto)
+            drawCard(canvas, card, project, firstSlot, cardIndex, isPreview, scale, bitmapProvider, fonts, pdfPhoto, photoDpi)
             if (s.cutGuides) {
                 drawGuides(canvas, card, s.cutStyle, paper, cards, scale)
             }
@@ -246,7 +247,8 @@ object PolarRenderer {
         scale: Float,
         bitmapProvider: (PhotoAsset) -> Bitmap?,
         fonts: FontProvider,
-        pdfPhoto: ((Bitmap) -> Unit)? = null
+        pdfPhoto: ((Bitmap) -> Unit)? = null,
+        photoDpi: Int = 300
     ) {
         val s = project.settingsForCard(cardIndex)
         val style = s.style
@@ -328,7 +330,7 @@ object PolarRenderer {
                 canvas.clipRect(rect.toAndroidRectF(scale))
             }
 
-            drawPhoto(canvas, photo, placement, rect, accent, bgColor, isPreview, scale, bitmapProvider, LookResolver.resolve(project, slot), cardIndex, card, pdfPhoto = pdfPhoto, backgroundPhoto = placement?.background?.imageID?.let { id -> project.photos.firstOrNull { it.id == id } }, opaqueUnder = bgColor)
+            drawPhoto(canvas, photo, placement, rect, accent, bgColor, isPreview, scale, bitmapProvider, LookResolver.resolve(project, slot), cardIndex, card, pdfPhoto = pdfPhoto, backgroundPhoto = placement?.background?.imageID?.let { id -> project.photos.firstOrNull { it.id == id } }, opaqueUnder = bgColor, photoDpi = photoDpi)
             canvas.restore()
         }
 
@@ -432,7 +434,8 @@ object PolarRenderer {
         clipPhoto: Boolean = true,
         pdfPhoto: ((Bitmap) -> Unit)? = null,
         backgroundPhoto: PhotoAsset? = null,
-        opaqueUnder: Int? = null
+        opaqueUnder: Int? = null,
+        photoDpi: Int = 300
     ) {
         if (photo == null || placement == null) {
             if (isPreview) {
@@ -472,7 +475,7 @@ object PolarRenderer {
         canvas.save()
         if(clipPhoto) canvas.clipRect(rect.toAndroidRectF(scale)) // También los moldes importados recortan exactamente su hueco.
         if (clipPhoto && (options != null || pdfPhoto != null || PhotoFilters.grainStrength(look) > 0 || (!isPreview && scale <= 1.001f && !look.isNeutral))) {
-            val rasterScale=if(!isPreview && scale<=1.001f) 300f/72f else scale
+            val rasterScale=if(!isPreview && scale<=1.001f) photoDpi/72f else scale
             val layer = Bitmap.createBitmap(ceil(rect.width*rasterScale).toInt().coerceAtLeast(1), ceil(rect.height*rasterScale).toInt().coerceAtLeast(1), Bitmap.Config.ARGB_8888)
             try {
                 val layerCanvas = Canvas(layer)
@@ -788,7 +791,8 @@ object PolarRenderer {
         bitmapProvider: (PhotoAsset) -> Bitmap?,
         templateBitmap: Bitmap?,
         @Suppress("UNUSED_PARAMETER") fonts: FontProvider,
-        pdfPhoto: ((Bitmap) -> Unit)? = null
+        pdfPhoto: ((Bitmap) -> Unit)? = null,
+        photoDpi: Int = 300
     ) {
         val s = project.settings
         val template = s.importedTemplate ?: return
@@ -801,7 +805,7 @@ object PolarRenderer {
                 val slot = page * s.capacity + idx
                 val placement = project.placements.getOrNull(slot)
                 if (isPreview || placement != null) {
-                    drawPhoto(canvas, project.asset(placement), placement, cards[idx], parseColor(s.accentHex), Color.WHITE, isPreview, scale, bitmapProvider, LookResolver.resolve(project, slot), page * project.cardsPerPage + idx, cards[idx], pdfPhoto = pdfPhoto, backgroundPhoto = placement?.background?.imageID?.let { id -> project.photos.firstOrNull { it.id == id } })
+                    drawPhoto(canvas, project.asset(placement), placement, cards[idx], parseColor(s.accentHex), Color.WHITE, isPreview, scale, bitmapProvider, LookResolver.resolve(project, slot), page * project.cardsPerPage + idx, cards[idx], pdfPhoto = pdfPhoto, backgroundPhoto = placement?.background?.imageID?.let { id -> project.photos.firstOrNull { it.id == id } }, photoDpi = photoDpi)
                 }
             }
         }
@@ -817,7 +821,7 @@ object PolarRenderer {
                 val slot = page * s.capacity + idx
                 val placement = project.placements.getOrNull(slot)
                 if (isPreview || placement != null) {
-                    drawPhoto(canvas, project.asset(placement), placement, cards[idx], parseColor(s.accentHex), Color.WHITE, isPreview, scale, bitmapProvider, LookResolver.resolve(project, slot), page * project.cardsPerPage + idx, cards[idx], pdfPhoto = pdfPhoto, backgroundPhoto = placement?.background?.imageID?.let { id -> project.photos.firstOrNull { it.id == id } })
+                    drawPhoto(canvas, project.asset(placement), placement, cards[idx], parseColor(s.accentHex), Color.WHITE, isPreview, scale, bitmapProvider, LookResolver.resolve(project, slot), page * project.cardsPerPage + idx, cards[idx], pdfPhoto = pdfPhoto, backgroundPhoto = placement?.background?.imageID?.let { id -> project.photos.firstOrNull { it.id == id } }, photoDpi = photoDpi)
                 }
             }
         }

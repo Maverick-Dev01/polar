@@ -66,8 +66,9 @@ object PolarExporter {
         dpi: Int = 300,
         bitmapProvider: (PhotoAsset) -> Bitmap? = { null },
         templateBitmap: Bitmap? = null,
-        fonts: FontProvider = SystemFontProvider
-    ) = exportImage(project, page, outputFile, dpi, bitmapProvider, templateBitmap, fonts, Bitmap.CompressFormat.JPEG, 94)
+        fonts: FontProvider = SystemFontProvider,
+        jpegQuality: Int = 94
+    ) = exportImage(project, page, outputFile, dpi, bitmapProvider, templateBitmap, fonts, Bitmap.CompressFormat.JPEG, jpegQuality)
 
     private fun exportImage(
         project: PolarProject, page: Int, outputFile: File, dpi: Int,
@@ -104,8 +105,9 @@ object PolarExporter {
         bitmapProvider: (PhotoAsset) -> Bitmap? = { null },
         templateBitmap: Bitmap? = null,
         fonts: FontProvider = SystemFontProvider,
-        optimizePhotos: Boolean = true
+        quality: ExportQuality = ExportQuality.HIGH
     ) {
+        val optimizePhotos = quality.optimizePhotos
         project.validated()
         val paper = PolarRenderer.paperRect(project.settings)
         val widthPt = paper.width.roundToInt().coerceAtLeast(1)
@@ -130,6 +132,7 @@ object PolarExporter {
                     bitmapProvider = bitmapProvider,
                     templateBitmap = templateBitmap,
                     fonts = fonts,
+                    photoDpi = quality.dpi,
                     pdfPhoto = { bitmap ->
                         PdfPhotoFingerprint.fromBitmap(bitmap)?.let { if (optimizePhotos) photos.add(it) }
                     }
@@ -143,7 +146,7 @@ object PolarExporter {
             }
             pdfDocument.close()
 
-            if (optimizePhotos && PdfPhotoOptimizer.optimize(tempFile, compactFile, photos)) {
+            if (optimizePhotos && PdfPhotoOptimizer.optimize(tempFile, compactFile, photos, quality.jpegQuality)) {
                 compactFile.copyTo(tempFile, overwrite = true)
             }
 

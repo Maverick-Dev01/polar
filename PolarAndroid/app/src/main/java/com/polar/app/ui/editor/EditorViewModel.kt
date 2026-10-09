@@ -1,5 +1,6 @@
 package com.polar.app.ui.editor
 
+import com.polar.app.export.ExportQuality
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import android.util.Log
@@ -565,20 +566,20 @@ class EditorViewModel(private val projectId: String, private val deps: EditorDep
 
     // ---------- exportar ----------
 
-    fun exportPdf(optimizePhotos: Boolean = true) = export(if (optimizePhotos) ExportFormat.PDF else ExportFormat.PDF_LOSSLESS)
-    fun exportPng() = export(ExportFormat.PNG)
-    fun exportJpg() = export(ExportFormat.JPEG)
+    fun exportPdf(quality: ExportQuality = ExportQuality.HIGH) = export(ExportFormat.PDF, quality)
+    fun exportPng(quality: ExportQuality = ExportQuality.HIGH) = export(ExportFormat.PNG, quality)
+    fun exportJpg(quality: ExportQuality = ExportQuality.HIGH) = export(ExportFormat.JPEG, quality)
 
-    private fun export(format: ExportFormat) {
+    private fun export(format: ExportFormat, quality: ExportQuality) {
         if (locked || _state.value.busy) return
         _state.update { it.copy(busy = true) }
         viewModelScope.launch {
             try {
                 val s = _state.value
                 val file = when (format) {
-                    ExportFormat.PDF, ExportFormat.PDF_LOSSLESS -> deps.exports.pdf(s.project, templateBitmap, format == ExportFormat.PDF)
-                    ExportFormat.PNG -> deps.exports.png(s.project, s.page, templateBitmap)
-                    ExportFormat.JPEG -> deps.exports.jpg(s.project, s.page, templateBitmap)
+                    ExportFormat.PDF -> deps.exports.pdf(s.project, templateBitmap, quality)
+                    ExportFormat.PNG -> deps.exports.png(s.project, s.page, templateBitmap, quality)
+                    ExportFormat.JPEG -> deps.exports.jpg(s.project, s.page, templateBitmap, quality)
                 }
                 _events.send(EditorEvent.Exported(file, format.mime, format.pdf))
             } catch (e: CancellationException) {

@@ -1,5 +1,6 @@
 package com.polar.app.ui.editor
 
+import com.polar.app.export.ExportQuality
 import android.graphics.Bitmap
 import com.polar.app.core.edit.MoodPreset
 import com.polar.app.data.PhotoSource
@@ -19,7 +20,7 @@ enum class DesignScope { ALL, PAGE, CARD }
 enum class TextScope { ALL, CARD }
 enum class ExportAction { PRINT, SAVE, SHARE }
 enum class ExportFormat(val mime: String, val pdf: Boolean) {
-    PDF("application/pdf", true), PDF_LOSSLESS("application/pdf", true),
+    PDF("application/pdf", true),
     PNG("image/png", false), JPEG("image/jpeg", false)
 }
 
@@ -65,9 +66,9 @@ sealed interface EditorEvent {
 }
 
 interface ExportService {
-    suspend fun pdf(project: PolarProject, template: Bitmap?, optimizePhotos: Boolean = true): File
-    suspend fun png(project: PolarProject, page: Int, template: Bitmap?): File
-    suspend fun jpg(project: PolarProject, page: Int, template: Bitmap?): File
+    suspend fun pdf(project: PolarProject, template: Bitmap?, quality: ExportQuality = ExportQuality.HIGH): File
+    suspend fun png(project: PolarProject, page: Int, template: Bitmap?, quality: ExportQuality = ExportQuality.HIGH): File
+    suspend fun jpg(project: PolarProject, page: Int, template: Bitmap?, quality: ExportQuality = ExportQuality.HIGH): File
 }
 
 class EditorDeps(
