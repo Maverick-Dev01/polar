@@ -98,7 +98,7 @@ private let cream = polarCream
             topbar
             Divider()
             HStack(spacing: 0) {
-                designs.frame(width: 216)
+                designs.frame(width: 248)
                 Divider()
                 VStack(spacing: 0) {
                     pageBar
@@ -182,10 +182,10 @@ private let cream = polarCream
                 Text("Elige un diseño").font(.system(size: 16, weight: .semibold))
                 Text("Un molde para cada recuerdo.")
                     .font(.system(size: 11)).foregroundStyle(.secondary)
-                Picker("Aplicar diseño a", selection: $studio.designScope) {
-                    Text("Colección").tag(0)
-                    Text("Esta hoja").tag(1)
-                    Text("Esta tarjeta").tag(2)
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    Text("Aplicar diseño a").font(.system(size: 12)).foregroundStyle(.secondary)
+                    EqualChoice(title: "Aplicar diseño a", options: [(0, "Colección"), (1, "Hoja"), (2, "Tarjeta")],
+                                selection: Binding(get: { studio.designScope }, set: { if let value = $0 { studio.designScope = value } }))
                 }.disabled(studio.project.settings.style == .imported)
                 Text("La cuadrícula es común. Puedes combinar estilos con la misma cantidad de fotos por tarjeta.").font(.caption).foregroundStyle(.secondary)
                 TextField("Buscar diseño", text: $studio.designSearch).textFieldStyle(.roundedBorder).font(.system(size: 12))
@@ -392,7 +392,7 @@ private let cream = polarCream
                     ForEach(MoodPreset.allCases) { mood in
                         Button(mood.name) { studio.applyMood(mood) }
                     }
-                } label: { Label("Estilos de texto", systemImage: "wand.and.stars") }
+                } label: { Label("Estilos de texto", systemImage: "wand.and.stars").frame(maxWidth: .infinity, minHeight: 48) }
                 Text("Cambia la tipografía y los colores sin reemplazar tus frases.")
                     .font(.system(size: 11)).foregroundStyle(.secondary)
                 ViewThatFits(in: .horizontal) {
@@ -405,7 +405,7 @@ private let cream = polarCream
                 ColorPicker("Otro color", selection: accentColor, supportsOpacity: false)
                 Divider()
                 section("Fotos por hoja")
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 54))], spacing: 8) {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: Spacing.s), count: 4), spacing: Spacing.s) {
                     ForEach([1, 2, 4, 6, 8, 9, 12, 16], id: \.self) { count in
                         Button("\(count)") { studio.applyLayout(count) }
                             .frame(maxWidth: .infinity, minHeight: 48)
@@ -479,12 +479,15 @@ private let cream = polarCream
             } else {
                 if isMusicDesign { songSection }
                 section(isMusicDesign ? "Estilo del texto" : "Texto y tipografía")
-                Picker(isMusicDesign ? "Dar estilo a" : "Texto", selection: $studio.selectedTextRole) {
-                    ForEach(studio.textRoles) { role in Text(role.name).tag(role) }
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    Text(isMusicDesign ? "Dar estilo a" : "Texto").font(.system(size: 12)).foregroundStyle(.secondary)
+                    EqualChoice(title: isMusicDesign ? "Dar estilo a" : "Texto", options: studio.textRoles.map { ($0, $0.name) },
+                                selection: Binding(get: { studio.selectedTextRole }, set: { if let value = $0 { studio.selectedTextRole = value } }))
                 }
-                Picker("Aplicar a", selection: $studio.textCardScope) {
-                    Text("Todas las tarjetas").tag(false)
-                    Text("Sólo tarjeta \(studio.selectedCard + 1)").tag(true)
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    Text("Aplicar a").font(.system(size: 12)).foregroundStyle(.secondary)
+                    EqualChoice(title: "Aplicar a", options: [(false, "Todas las tarjetas"), (true, "Sólo tarjeta \(studio.selectedCard + 1)")],
+                                selection: Binding(get: { studio.textCardScope }, set: { if let value = $0 { studio.textCardScope = value } }))
                 }
                 if studio.selectedTextRole == .date {
                     Picker("Fecha", selection: Binding(get: { studio.dateSource }, set: { studio.setDateSource($0) })) {
@@ -516,19 +519,18 @@ private let cream = polarCream
                     .lineLimit(2).frame(maxWidth: .infinity, alignment: .leading).padding(Spacing.m).background(Color.white, in: RoundedRectangle(cornerRadius: PolarRadius.small))
                 VStack(alignment: .leading, spacing: Spacing.s) {
                     Text("Tamaño").font(.system(size: 12))
-                    Picker("Tamaño", selection: Binding(get: { TextSizePreset.matching(textSetting(\.size).wrappedValue) }, set: { value in
+                    EqualChoice(title: "Tamaño", options: TextSizePreset.allCases.map { ($0, $0.name) },
+                                selection: Binding(get: { TextSizePreset.matching(textSetting(\.size).wrappedValue) }, set: { value in
                         if let value { studio.editText { $0.size = value.points } }
-                    })) {
-                        ForEach(TextSizePreset.allCases) { Text($0.name).tag(Optional($0)) }
-                    }.pickerStyle(.segmented).labelsHidden()
+                    }))
                     if !automaticTextSize.wrappedValue {
                         Stepper("Exacto \(Int(textSetting(\.size).wrappedValue)) pt", value: textSetting(\.size), in: 6...96, step: 1)
                         Slider(value: textSetting(\.size), in: 6...96, step: 1, onEditingChanged: { editing in if editing { studio.beginEditing() } else { studio.endEditing() } })
                     }
                 }
-                HStack(spacing: Spacing.m) {
-                    Toggle("Negrita", isOn: textSetting(\.bold)).frame(maxWidth: .infinity, minHeight: 48)
-                    Toggle("Cursiva", isOn: textSetting(\.italic)).frame(maxWidth: .infinity, minHeight: 48)
+                HStack(spacing: Spacing.s) {
+                    ToggleChip(title: "Negrita", isOn: textSetting(\.bold))
+                    ToggleChip(title: "Cursiva", isOn: textSetting(\.italic))
                 }
                 ColorPicker("Color del texto", selection: textColor, supportsOpacity: false)
                 Button("Usar color del diseño") { studio.editText { $0.hex = "" } }.font(.system(size: 12))

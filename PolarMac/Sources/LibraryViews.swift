@@ -187,7 +187,7 @@ extension TemplateStyle {
             VStack(alignment: .leading, spacing: Spacing.s) {
                 Picker("Calidad", selection: $studio.preferences.exportQuality) {
                     ForEach(ExportQuality.allCases) { Text($0.title).tag($0) }
-                }.pickerStyle(.segmented).frame(maxWidth: 420).disabled(studio.busy)
+                }.pickerStyle(.segmented).frame(maxWidth: 480, alignment: .leading).disabled(studio.busy)
                 Text(studio.preferences.exportQuality.help).font(.callout).foregroundStyle(.secondary)
             }
             if studio.busy { ProgressView("Preparando archivo…") }
@@ -201,13 +201,19 @@ extension TemplateStyle {
     }
     @ViewBuilder private var finishActions: some View {
         ActionTile(title: "Imprimir", icon: "printer") { studio.printDesign() }.disabled(studio.printPDF == nil || studio.busy)
-        Menu {
-            Button("PDF · todas las hojas") { studio.export(.pdf) }
-        } label: { Label("Guardar PDF", systemImage: "doc").padding(Spacing.m) }.disabled(studio.busy)
-        Menu {
-            Button("JPG · esta hoja") { studio.export(.jpeg) }
-            Button("PNG · sin pérdida · más peso") { studio.export(.png) }
-        } label: { Label("Guardar imagen", systemImage: "photo").padding(Spacing.m) }.disabled(studio.busy)
+        ActionTileLabel(title: "Guardar PDF", icon: "doc").opacity(studio.busy ? 0.4 : 1).overlay {
+            Menu {
+                Button("PDF · todas las hojas") { studio.export(.pdf) }
+            } label: { Color.clear.frame(maxWidth: .infinity, maxHeight: .infinity).contentShape(Rectangle()) }
+                .menuStyle(.borderlessButton).menuIndicator(.hidden).disabled(studio.busy).accessibilityLabel("Guardar PDF")
+        }
+        ActionTileLabel(title: "Guardar imagen", icon: "photo").opacity(studio.busy ? 0.4 : 1).overlay {
+            Menu {
+                Button("JPG · esta hoja") { studio.export(.jpeg) }
+                Button("PNG · sin pérdida · más peso") { studio.export(.png) }
+            } label: { Color.clear.frame(maxWidth: .infinity, maxHeight: .infinity).contentShape(Rectangle()) }
+                .menuStyle(.borderlessButton).menuIndicator(.hidden).disabled(studio.busy).accessibilityLabel("Guardar imagen")
+        }
         ActionTile(title: "Compartir PDF", icon: "square.and.arrow.up") { if let url = studio.printPDF { studio.share(url) } }.disabled(studio.printPDF == nil || studio.busy)
     }
 }
