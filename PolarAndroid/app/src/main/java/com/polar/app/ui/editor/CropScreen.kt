@@ -62,7 +62,7 @@ fun CropScreen(state: EditorUiState,vm: EditorViewModel,container: AppContainer)
     }
     val slots=state.project.placements.indices.filter { state.project.placements[it]!=null }
     val position=slots.indexOf(slot)
-    val dpi=vm.dpiOf(slot); val low=dpi!=null && dpi<LOW_RES_DPI
+    val quality=vm.qualityOf(slot) ?: PhotoQuality.GOOD
     fun fit()=vm.editSelectedPlacement { it.copy(zoom=PhotoFit.fitZoom(rect.width,rect.height,asset.pixelWidth,asset.pixelHeight,it.quarterTurns),offsetX=0.0,offsetY=0.0) }
     fun fill()=vm.editSelectedPlacement { it.copy(zoom=1.0,offsetX=0.0,offsetY=0.0) }
     fun move(dx: Double,dy: Double)=vm.editSelectedPlacement { it.copy(offsetX=it.offsetX+dx,offsetY=it.offsetY+dy) }
@@ -128,8 +128,10 @@ fun CropScreen(state: EditorUiState,vm: EditorViewModel,container: AppContainer)
                         }
                     }
                 }
-                Surface(color=if(low) PolarColors.warningContainer else PolarColors.successContainer,shape=MaterialTheme.shapes.medium,modifier=Modifier.fillMaxWidth()) {
-                    Text(stringResource(if(low) R.string.crop_quality_low else R.string.crop_quality_ok),color=if(low) PolarColors.onWarningContainer else PolarColors.onSuccessContainer,modifier=Modifier.padding(12.dp),style=MaterialTheme.typography.labelLarge)
+                val qBg=when(quality){PhotoQuality.LOW->MaterialTheme.colorScheme.errorContainer;PhotoQuality.FAIR->PolarColors.warningContainer;PhotoQuality.GOOD->PolarColors.successContainer}
+                val qFg=when(quality){PhotoQuality.LOW->MaterialTheme.colorScheme.onErrorContainer;PhotoQuality.FAIR->PolarColors.onWarningContainer;PhotoQuality.GOOD->PolarColors.onSuccessContainer}
+                Surface(color=qBg,shape=MaterialTheme.shapes.medium,modifier=Modifier.fillMaxWidth()) {
+                    Text(stringResource(when(quality){PhotoQuality.LOW->R.string.crop_quality_low;PhotoQuality.FAIR->R.string.crop_quality_fair;PhotoQuality.GOOD->R.string.crop_quality_ok}),color=qFg,modifier=Modifier.padding(12.dp),style=MaterialTheme.typography.labelLarge)
                 }
                 com.polar.app.ui.editor.panels.BackgroundControls(state, vm, container)
                 LensRing(stringResource(R.string.crop_zoom),placement.zoom,minimumZoom..4.0,String.format(Locale.ROOT,"%.1f×",placement.zoom),.1,{ v->vm.editSelectedPlacement { it.copy(zoom=v) } },vm::beginGesture,vm::endGesture)

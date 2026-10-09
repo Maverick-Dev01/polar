@@ -9,7 +9,8 @@ import com.polar.app.core.edit.MoodPreset
 import com.polar.app.core.edit.ProjectEdits
 import com.polar.app.core.history.UndoStack
 import com.polar.app.core.look.LookResolver
-import com.polar.app.engine.LOW_RES_DPI
+import com.polar.app.engine.PhotoQuality
+import com.polar.app.engine.photoQuality
 import com.polar.app.engine.PolarRenderer
 import com.polar.app.model.*
 import com.polar.app.ui.UiText
@@ -544,8 +545,14 @@ class EditorViewModel(private val projectId: String, private val deps: EditorDep
         return p.effectiveDPI(slot, rect.width, rect.height)
     }
 
+    fun qualityOf(slot: Int): PhotoQuality? = dpiOf(slot)?.let(::photoQuality)
+
     fun lowResSlots(): List<Int> =
-        _state.value.project.placements.indices.filter { slot -> dpiOf(slot)?.let { it < LOW_RES_DPI } == true }
+        _state.value.project.placements.indices.filter { qualityOf(it) == PhotoQuality.LOW }
+
+    /** Fotos con resolución baja o aceptable, en orden de hoja. */
+    fun reviewSlots(): List<Int> =
+        _state.value.project.placements.indices.filter { qualityOf(it).let { q -> q == PhotoQuality.LOW || q == PhotoQuality.FAIR } }
 
     fun emptySlotsOnUsedPages(): Int {
         val p = _state.value.project

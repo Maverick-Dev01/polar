@@ -8,6 +8,18 @@ import kotlin.math.abs
 /** Por debajo de estos puntos por pulgada una foto se avisa como de baja resolución. */
 const val LOW_RES_DPI = 150.0
 
+/** Entre LOW_RES_DPI y este valor la foto es aceptable pero no ideal. */
+const val FAIR_DPI = 220.0
+
+enum class PhotoQuality { LOW, FAIR, GOOD }
+
+/** Nivel de calidad de impresión por puntos por pulgada efectivos. */
+fun photoQuality(dpi: Double): PhotoQuality = when {
+    dpi < LOW_RES_DPI -> PhotoQuality.LOW
+    dpi < FAIR_DPI -> PhotoQuality.FAIR
+    else -> PhotoQuality.GOOD
+}
+
 /** Foto ya colocada: centro relativo a la esquina superior izquierda del hueco, tamaño del bitmap sin girar y giro. */
 data class PhotoFitResult(val centerX: Double, val centerY: Double, val width: Double, val height: Double, val degrees: Float)
 

@@ -41,7 +41,7 @@ import kotlinx.coroutines.withContext
 @Composable
 fun FinishScreen(state: EditorUiState, vm: EditorViewModel, container: AppContainer, snackbar: SnackbarHostState, onAction: (ExportAction, ExportFormat) -> Unit) {
     val p = state.project
-    val low = remember(p) { vm.lowResSlots() }
+    val low = remember(p) { vm.reviewSlots() }
     val empty = remember(p) { vm.emptySlotsOnUsedPages() }
     val expanded = LocalLayout.current == LayoutKind.EXPANDED
     val sheets = pluralStringResource(R.plurals.home_sheets, p.pageCount, p.pageCount)

@@ -66,4 +66,10 @@ class PhotoFitTest {
         assertEquals(before.centerX+10,after.centerX,.001);assertEquals(before.centerY-20,after.centerY,.001)
     }
 
+    @Test fun qualityThresholdsAreExact() {
+        assertEquals(PhotoQuality.LOW, photoQuality(149.9))
+        assertEquals(PhotoQuality.FAIR, photoQuality(150.0))
+        assertEquals(PhotoQuality.FAIR, photoQuality(219.9))
+        assertEquals(PhotoQuality.GOOD, photoQuality(220.0))
+    }
 }

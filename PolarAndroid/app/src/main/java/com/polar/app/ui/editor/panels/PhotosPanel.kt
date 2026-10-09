@@ -36,6 +36,7 @@ fun PhotosPanel(
     photos: List<PhotoAsset>,
     used: Set<String>,
     lowRes: Set<String>,
+    fairRes: Set<String> = emptySet(),
     missingPhotos: Int,
     thumbnail: suspend (PhotoAsset) -> ImageBitmap?,
     onAdd: () -> Unit,
@@ -71,7 +72,7 @@ fun PhotosPanel(
             itemsIndexed(photos, key = { _, p -> p.id }) { i, photo ->
                 val label = context.getString(R.string.photos_item, i + 1) +
                     (if (photo.id in used) context.getString(R.string.photos_in_use) else "") +
-                    (if (photo.id in lowRes) context.getString(R.string.photos_low) else "")
+                    (if (photo.id in lowRes) context.getString(R.string.photos_low) else if (photo.id in fairRes) context.getString(R.string.photos_fair) else "")
                 val image by produceState<ImageBitmap?>(null, photo.id) { value = thumbnail(photo) }
                 Box(
                     Modifier.aspectRatio(1f).clip(MaterialTheme.shapes.small).background(PolarColors.table)
@@ -83,8 +84,11 @@ fun PhotosPanel(
                         contentAlignment = Alignment.Center
                     ) { Icon(Icons.Filled.Check, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(14.dp)) }
                     if (photo.id in lowRes) Surface(
+                        color = MaterialTheme.colorScheme.errorContainer, shape = CircleShape, modifier = Modifier.align(Alignment.BottomStart).padding(4.dp)
+                    ) { Text(stringResource(R.string.photos_low_badge), color = MaterialTheme.colorScheme.onErrorContainer, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 6.dp)) }
+                    else if (photo.id in fairRes) Surface(
                         color = PolarColors.warningContainer, shape = CircleShape, modifier = Modifier.align(Alignment.BottomStart).padding(4.dp)
-                    ) { Text(stringResource(R.string.photos_low_badge), color = PolarColors.onWarningContainer, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 6.dp)) }
+                    ) { Text(stringResource(R.string.photos_fair_badge), color = PolarColors.onWarningContainer, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 6.dp)) }
                 }
             }
             item(span = { GridItemSpan(maxLineSpan) }) {

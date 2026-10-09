@@ -102,6 +102,8 @@ private fun SheetPage(state: EditorUiState, page: Int, vm: EditorViewModel, cont
     val warning = PolarColors.onWarningContainer
     val rects = remember(project, page) { SheetGeometry.slotRects(project, page) }
     val lowRes = remember(project) { vm.lowResSlots().toSet() }
+    val fairRes = remember(project) { vm.reviewSlots().toSet() - lowRes }
+    val errorColor = MaterialTheme.colorScheme.error
     val cap = settings.capacity
     val currentSettings by rememberUpdatedState(settings)
 
@@ -173,7 +175,8 @@ private fun SheetPage(state: EditorUiState, page: Int, vm: EditorViewModel, cont
                     )
                 }
                 rects.forEachIndexed { i, r ->
-                    if (page * cap + i in lowRes) drawCircle(warning, radius = 7.dp.toPx(),
+                    val dot = if (page * cap + i in lowRes) errorColor else if (page * cap + i in fairRes) warning else null
+                    if (dot != null) drawCircle(dot, radius = 7.dp.toPx(),
                         center = Offset(r.right.toFloat() * ptToPx - 9.dp.toPx(), r.bottom.toFloat() * ptToPx - 9.dp.toPx()))
                 }
             }
@@ -190,7 +193,7 @@ private fun SheetPage(state: EditorUiState, page: Int, vm: EditorViewModel, cont
                 val empty = project.placements.getOrNull(slot) == null
                 val number = project.cardOfSlot(slot) % project.cardsPerPage + 1
                 val label = (if (empty) context.getString(R.string.editor_card_empty, number) else context.getString(R.string.editor_card, number)) +
-                    (if (slot in lowRes) context.getString(R.string.editor_card_low) else "")
+                    (if (slot in lowRes) context.getString(R.string.editor_card_low) else if (slot in fairRes) context.getString(R.string.editor_card_fair) else "")
                 Box(
                     Modifier.offset(with(density) { (r.left.toFloat() * ptToPx).toDp() }, with(density) { (r.top.toFloat() * ptToPx).toDp() })
                         .size(with(density) { (r.width.toFloat() * ptToPx).toDp() }, with(density) { (r.height.toFloat() * ptToPx).toDp() })

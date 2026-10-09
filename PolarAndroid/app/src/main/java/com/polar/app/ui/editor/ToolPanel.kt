@@ -73,11 +73,14 @@ fun ToolPanel(tool: Tool, state: EditorUiState, vm: EditorViewModel, container: 
                         val lowResIds = remember(state.project) {
                             vm.lowResSlots().mapNotNull { state.project.placements.getOrNull(it)?.assetID }.toSet()
                         }
+                        val fairResIds = remember(state.project) {
+                            vm.reviewSlots().mapNotNull { state.project.placements.getOrNull(it)?.assetID }.toSet() - lowResIds
+                        }
                         val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia()) { uris ->
                             vm.addPhotos(uris.map { it.toString() })
                         }
                         if (state.multiSelecting) BatchPhotosPanel(state, vm, container) else PhotosPanel(
-                            photos = state.project.photos.filter { !it.isBackground }, used = state.usedAssetIds, lowRes = lowResIds,
+                            photos = state.project.photos.filter { !it.isBackground }, used = state.usedAssetIds, lowRes = lowResIds, fairRes = fairResIds,
                             missingPhotos = state.missingPhotos,
                             thumbnail = { a -> withContext(Dispatchers.IO) { container.bitmaps.load(a.path, 256)?.asImageBitmap() } },
                             onAdd = { picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },

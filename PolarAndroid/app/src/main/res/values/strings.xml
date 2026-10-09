@@ -132,6 +132,7 @@
     <string name="editor_card">Tarjeta %1$d</string>
     <string name="editor_card_empty">Tarjeta %1$d, vacía</string>
     <string name="editor_card_low">, poca resolución</string>
+    <string name="editor_card_fair">, resolución aceptable</string>
     <string name="ctx_change">Cambiar</string>
     <string name="ctx_crop">Encuadrar</string>
     <string name="ctx_rotate">Girar</string>
@@ -157,6 +158,8 @@
     <string name="photos_in_use">, en la hoja</string>
     <string name="photos_low">, poca resolución</string>
     <string name="photos_low_badge">Baja</string>
+    <string name="photos_fair">, resolución aceptable</string>
+    <string name="photos_fair_badge">Aceptable</string>
     <string name="design_current">Diseño actual</string>
     <string name="design_change">Cambiar diseño</string>
     <string name="design_color">Color</string>
@@ -257,6 +260,7 @@
     <string name="crop_vertical">Mover arriba o abajo</string>
     <string name="crop_rotate">Girar</string>
     <string name="crop_reset">Restablecer</string>
+    <string name="crop_quality_fair">Resolución aceptable: se imprimirá bien, pero sin la mejor nitidez</string>
     <string name="crop_quality_ok">Calidad buena para imprimir</string>
     <string name="crop_quality_low">Poca resolución para este tamaño: puede verse borrosa</string>
     <string name="crop_zoom_value">%1$s×</string>
@@ -264,7 +268,7 @@
     <string name="finish_title">Terminar</string>
     <string name="finish_summary">%1$s · %2$s · %3$s</string>
     <plurals name="finish_photos"><item quantity="one">%1$d foto</item><item quantity="other">%1$d fotos</item></plurals>
-    <plurals name="finish_low"><item quantity="one">%1$d foto puede verse borrosa a este tamaño</item><item quantity="other">%1$d fotos pueden verse borrosas a este tamaño</item></plurals>
+    <plurals name="finish_low"><item quantity="one">%1$d foto con resolución baja o aceptable</item><item quantity="other">%1$d fotos con resolución baja o aceptable</item></plurals>
     <string name="finish_review">Revisar</string>
     <plurals name="finish_empty"><item quantity="one">%1$d espacio vacío: no se imprime</item><item quantity="other">%1$d espacios vacíos: no se imprimen</item></plurals>
     <plurals name="finish_missing"><item quantity="one">Falta %1$d foto: se imprime un espacio en blanco</item><item quantity="other">Faltan %1$d fotos: se imprime un espacio en blanco</item></plurals>
