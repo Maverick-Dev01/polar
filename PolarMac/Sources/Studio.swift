@@ -127,6 +127,12 @@ struct FontChoice: Identifiable {
     @Published var showingLibrary = true
     @Published var showingSettings = false
     @Published var showingWelcome = false
+    // Guía: centro de ayuda, modo «?» y recorrido (índice del paso en help.json, nil = sin recorrido).
+    @Published var showingHelp = false
+    @Published var helpArticleID: String?
+    @Published var helpMode = false
+    @Published var helpSelected: String?
+    @Published var tourIndex: Int?
     @Published var showingFinish = false
     @Published var showingCrop = false
     @Published var comparing = false
@@ -622,7 +628,26 @@ struct FontChoice: Identifiable {
         if runPanel(panel) == .OK { importURLs(panel.urls, fill: true) }
     }
 
-    func importURLs(_ urls: [URL], fill: Bool) {
+    static let folderPhotoLimit = 500
+    /// «Agregar carpeta…»: sólo carpetas; las imágenes del primer nivel, por nombre, hasta 500.
+    func addFolder() {
+        let panel = NSOpenPanel()
+        panel.title = "Elige una carpeta con fotos"
+        panel.prompt = "Agregar carpeta"
+        panel.canChooseFiles = false; panel.canChooseDirectories = true; panel.allowsMultipleSelection = false
+        guard runPanel(panel) == .OK, let folder = panel.url else { return }
+        importFolder(folder)
+    }
+    func importFolder(_ folder: URL) {
+        let children = (try? FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: [.isDirectoryKey], options: .skipsHiddenFiles)) ?? []
+        let images = children.filter { url in
+            (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) != true
+                && UTType(filenameExtension: url.pathExtension.lowercased())?.conforms(to: .image) == true
+        }.sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
+        importURLs(Array(images.prefix(Self.folderPhotoLimit)), fill: true, omitted: images.count > Self.folderPhotoLimit, folder: true)
+    }
+
+    func importURLs(_ urls: [URL], fill: Bool, omitted: Bool = false, folder: Bool = false) {
         guard !busy else { return }
         busy = true; status = "Leyendo fotos…"
         DispatchQueue.global(qos: .userInitiated).async {
@@ -655,6 +680,11 @@ struct FontChoice: Identifiable {
                     self.thumbnails.removeAll()
                 }
                 self.status = "\(added.count) \(added.count == 1 ? "foto agregada" : "fotos agregadas"). \(self.project.photos.count) en tu galería."
+                if folder {
+                    self.status = "\(added.count) \(added.count == 1 ? "foto agregada" : "fotos agregadas")" + (result.skipped.isEmpty ? "" : " · \(result.skipped.count) no se pudieron leer")
+                    if omitted { self.status = "Se agregaron las primeras \(Self.folderPhotoLimit); el resto se omitió" }
+                    if incoming.count <= added.count { return }
+                }
                 if incoming.count > added.count { self.errorMessage = "La galería admite hasta 2000 fotos. No se agregaron las restantes." }
                 else if !result.skipped.isEmpty { self.errorMessage = "No se pudieron leer: " + result.skipped.prefix(5).joined(separator: ", ") }
             }

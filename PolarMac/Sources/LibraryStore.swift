@@ -20,6 +20,8 @@ struct AppPreferences: Codable {
     var defaultPaper: PaperSize = .letter
     var onboardingSeen = false
     var exportQuality: ExportQuality = .high
+    /// El recorrido inicial ya se completó o se saltó. Un valor ausente o dañado cuenta como «no visto».
+    var tourSeen = false
 
     init() {}
     init(from decoder: Decoder) throws {
@@ -29,6 +31,7 @@ struct AppPreferences: Codable {
         defaultPaper = try c.decodeIfPresent(PaperSize.self, forKey: .defaultPaper) ?? defaultPaper
         onboardingSeen = try c.decodeIfPresent(Bool.self, forKey: .onboardingSeen) ?? onboardingSeen
         exportQuality = (try? c.decodeIfPresent(ExportQuality.self, forKey: .exportQuality)) ?? .high
+        tourSeen = (try? c.decodeIfPresent(Bool.self, forKey: .tourSeen)) ?? false
     }
 }
 

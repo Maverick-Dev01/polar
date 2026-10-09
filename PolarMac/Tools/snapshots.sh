@@ -1,15 +1,18 @@
 #!/bin/zsh
-# Capturas fuera de pantalla de las pantallas de Polar con datos demo (sin abrir la app real).
-# Uso: Tools/snapshots.sh [carpeta de salida] [filtro]   (por defecto docs/capturas/fase-3/sub3/mac)
+# Capturas fuera de pantalla de la guía (recorrido, modo «?», centro de ayuda, artículo) en claro y oscuro.
+# No abre Polar.app: compila un ejecutable aparte que dibuja ventanas sin mostrarlas. Salida: docs/capturas/fase-3/sub4/mac/
 set -eu
 BASE_DIR="$(cd -- "$(dirname -- "$0")/.." && pwd)"
-OUT="${1:-$BASE_DIR/../docs/capturas/fase-3/sub3/mac}"
-WORK="$BASE_DIR/.build/snapshots-src"
-rm -rf "$WORK"; mkdir -p "$WORK" "$BASE_DIR/.build"
-for f in "$BASE_DIR"/Sources/*.swift; do sed 's/^@main //' "$f" > "$WORK/${f:t}"; done
-cp "$BASE_DIR/Tools/SnapshotMain.swift" "$WORK/main.swift"
+OUT="${1:-$BASE_DIR/../docs/capturas/fase-3/sub4/mac}"
+WORK="$BASE_DIR/.build/snapshots"
+mkdir -p "$WORK/src" "$OUT"
+rm -f "$WORK/src"/*.swift
+for f in "$BASE_DIR"/Sources/*.swift; do cp "$f" "$WORK/src/"; done
+sed -i '' 's/^@main @MainActor struct PolarApp/@MainActor struct PolarAppUnused/' "$WORK/src/PolarApp.swift"
+cp "$BASE_DIR/Tools/Snapshots.swift" "$WORK/src/main.swift"
+xcrun swiftc -swift-version 5 -module-cache-path /private/tmp/polar-module-cache "$WORK"/src/*.swift -o "$WORK/snapshots"
+export POLAR_HELP_JSON="$BASE_DIR/../shared-fixtures/help.json"
 export POLAR_GEOMETRY_JSON="$BASE_DIR/../shared-fixtures/estilos-geometria.json"
-export POLAR_FIXTURES_DIR="$BASE_DIR/../shared-fixtures"
 export POLAR_FONT_DIRS="$BASE_DIR/../PolarAndroid/app/src/main/res/font:$BASE_DIR/../PolarAndroid/app/src/main/assets/fonts"
-xcrun swiftc -swift-version 5 -module-cache-path /private/tmp/polar-module-cache "$WORK"/*.swift -o "$BASE_DIR/.build/polar-snapshots"
-"$BASE_DIR/.build/polar-snapshots" "$OUT" "${2:-}"
+"$WORK/snapshots" "$OUT"
+print "Capturas en $OUT"

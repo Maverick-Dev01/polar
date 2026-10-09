@@ -147,6 +147,7 @@ struct MoldRegionEditor: View {
 
 /// Asistente de 3 pasos: elegir la imagen, revisar los espacios, nombre y guardar.
 @MainActor struct MoldWizardView: View {
+    @NativeState<Studio.MoldUse> private var moldUse = .currentProject
     @ObservedObject var studio: Studio
     private var state: Binding<MoldWizardState> {
         Binding(get: { studio.moldWizard ?? MoldWizardState() }, set: { studio.moldWizard = $0 })
@@ -343,12 +344,13 @@ struct MoldRegionEditor: View {
                 Text("\(current.regions.count) \(current.regions.count == 1 ? "espacio" : "espacios") para fotos. Se guarda en Mis moldes para usarlo en otros proyectos.")
                     .font(.system(size: 12)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 Divider()
-                Button { studio.finishMoldWizard(.currentProject) } label: { Text("Guardar y usar en este proyecto").frame(maxWidth: .infinity) }
+                Picker("Dónde usarlo", selection: $moldUse) {
+                    Text("En este proyecto").tag(Studio.MoldUse.currentProject)
+                    Text("En un proyecto nuevo").tag(Studio.MoldUse.newProject)
+                    Text("Sólo guardar en Mis moldes").tag(Studio.MoldUse.saveOnly)
+                }
+                Button { studio.finishMoldWizard(moldUse) } label: { Text("Guardar y usar").frame(maxWidth: .infinity) }
                     .buttonStyle(PolarButtonStyle(primary: true, expands: true)).disabled(!current.canGoNext)
-                Button { studio.finishMoldWizard(.newProject) } label: { Text("Guardar y usar en un proyecto nuevo").frame(maxWidth: .infinity) }
-                    .buttonStyle(PolarButtonStyle(expands: true)).disabled(!current.canGoNext)
-                Button { studio.finishMoldWizard(.saveOnly) } label: { Text("Sólo guardar en Mis moldes").frame(maxWidth: .infinity) }
-                    .buttonStyle(PolarButtonStyle(expands: true)).disabled(!current.canGoNext)
                 Spacer()
             }.frame(maxWidth: 380)
         }.padding(Spacing.l)

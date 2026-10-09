@@ -60,7 +60,8 @@ private let cream = polarCream
             }
             CommandMenu("Fotos") {
                 Button("Agregar fotos…") { studio.addPhotos() }.keyboardShortcut("i")
-                Button("Rellenar todas las hojas") { studio.fillAll() }
+                Button("Agregar carpeta…") { studio.addFolder() }
+                Button("Rellenar todo") { studio.fillAll() }
                 Button("Vaciar esta hoja") { studio.clearPage() }
             }
             CommandMenu("Imprimir") {
@@ -73,12 +74,9 @@ private let cream = polarCream
                 Button("Descargar última versión…") {
                     NSWorkspace.shared.open(URL(string: "https://github.com/Maverick-Dev01/polar/releases/latest")!)
                 }
-                Button("Cómo usar Polar") {
-                    let alert = NSAlert()
-                    alert.messageText = "Fotos que se quedan"
-                    alert.informativeText = "1. Elige un diseño y agrega tus fotos.\n2. Selecciona una tarjeta para cambiar su foto o encuadre.\n3. En Texto, edita todas las tarjetas o sólo la seleccionada, con fuentes y fechas.\n4. Usa Imprimir para revisar resolución y hojas y guardar PDF, JPG o PNG.\n\nTu trabajo se guarda automáticamente en Tus diseños. Los originales se conservan; Polar guarda una copia para trabajar. Puedes exportar un .polar editable; para abrirlo en otro equipo necesitarás también sus fotos.\n\nElige el mismo papel y orientación en la impresora y usa Tamaño real / 100 %."
-                    alert.runModal()
-                }
+                Button("Ayuda y guía de uso") { studio.openHelp() }.keyboardShortcut("?", modifiers: .command)
+                Button(studio.helpMode ? "Salir de «¿Qué hace cada botón?»" : "¿Qué hace cada botón?") { studio.toggleHelpMode() }
+                Button("Ver el recorrido inicial") { studio.startTour() }
             }
         }
         Settings { PreferencesView(studio: studio) }
@@ -126,6 +124,14 @@ private let cream = polarCream
         .tint(ink)
         .buttonStyle(PolarButtonStyle())
         .background(cream)
+        .overlayPreferenceValue(HelpTargetKey.self) { anchors in
+            GeometryReader { proxy in HelpLayer(studio: studio, anchors: anchors, proxy: proxy) }
+        }
+        .task(id: studio.showingWelcome) {
+            // El recorrido sale solo la primera vez, cuando el editor ya se ve y la bienvenida se cerró.
+            try? await Task.sleep(nanoseconds: 700_000_000)
+            if !Task.isCancelled, studio.shouldAutoStartTour { studio.startTour() }
+        }
         .background(PhotoKeys(compare: studio.setComparing).frame(width: 0, height: 0))
         .onChange(of: textFocused) { _, focused in if focused { studio.beginEditing() } else { studio.endEditing() } }
         .onChange(of: studio.selectedTextRole) { _, _ in studio.endEditing() }
@@ -143,15 +149,16 @@ private let cream = polarCream
                 Image(systemName: "photo.on.rectangle.angled").font(.system(size: 23)).foregroundStyle(ink)
                 Text("Polar").font(.custom("Georgia", size: 29)).foregroundStyle(ink).fixedSize()
                 TextField("Nombre del diseño", text: Binding(get: { studio.project.name }, set: { value in studio.change { $0.name = String(value.prefix(120)) } }))
-                    .textFieldStyle(.plain).font(.system(size: 13, weight: .medium)).frame(maxWidth: .infinity, minHeight: 48).accessibilityLabel("Nombre completo: \(studio.project.name)")
+                    .textFieldStyle(.plain).font(.system(size: 13, weight: .medium)).frame(maxWidth: .infinity, minHeight: 48).accessibilityLabel("Nombre completo: \(studio.project.name)").helpTarget("top.nombre")
                 Spacer()
                 Text(studio.saveFailed ? "Sin guardar" : studio.isDirty ? "Guardando…" : "Guardado").font(.system(size: 11)).foregroundStyle(.secondary).fixedSize()
-                Button { studio.showLibrary() } label: { Label("Tus diseños", systemImage: "square.grid.2x2") }.disabled(studio.busy)
+                Button { studio.showLibrary() } label: { Label("Tus diseños", systemImage: "square.grid.2x2") }.disabled(studio.busy).helpTarget("top.back")
+                Button { studio.toggleHelpMode() } label: { Image(systemName: "questionmark.circle") }.accessibilityLabel("¿Qué hace cada botón?").help("¿Qué hace cada botón?")
                 SettingsLink { Image(systemName: "gearshape") }.accessibilityLabel("Ajustes")
             }
             HStack(spacing: Spacing.s) {
-                Button { studio.undo() } label: { Image(systemName: "arrow.uturn.backward") }.disabled(!studio.canUndo).accessibilityLabel("Deshacer")
-                Button { studio.redo() } label: { Image(systemName: "arrow.uturn.forward") }.disabled(!studio.canRedo).accessibilityLabel("Rehacer")
+                Button { studio.undo() } label: { Image(systemName: "arrow.uturn.backward") }.disabled(!studio.canUndo).accessibilityLabel("Deshacer").helpTarget("top.deshacer")
+                Button { studio.redo() } label: { Image(systemName: "arrow.uturn.forward") }.disabled(!studio.canRedo).accessibilityLabel("Rehacer").helpTarget("top.rehacer")
                 Menu {
                     Button("Nuevo diseño") { studio.newProject() }
                     Button("Abrir diseño…") { studio.openProject() }
@@ -159,8 +166,8 @@ private let cream = polarCream
                     Button("Guardar como…") { studio.saveProject(asNew: true) }
                     Divider()
                     Button("Importar molde…") { studio.importTemplate() }
-                } label: { Label("Proyecto", systemImage: "folder") }
-                Button { studio.addPhotos() } label: { Label("Agregar fotos", systemImage: "plus") }
+                } label: { Label("Proyecto", systemImage: "folder") }.helpTarget("top.mas")
+                Button { studio.addPhotos() } label: { Label("Agregar fotos", systemImage: "plus") }.helpTarget("cta.fotos")
                 Spacer()
                 Menu {
                     Button("PDF · todas las hojas") { studio.export(.pdf) }
@@ -168,7 +175,7 @@ private let cream = polarCream
                     Button("PNG · esta hoja · sin pérdida") { studio.export(.png) }
                 } label: { Label("Exportar", systemImage: "square.and.arrow.up") }
                     .menuStyle(.borderedButton).disabled(studio.busy || studio.project.placedCount == 0)
-                Button { studio.finish() } label: { Label("Imprimir", systemImage: "printer") }.buttonStyle(PolarButtonStyle(primary: true)).disabled(studio.busy || studio.project.placedCount == 0)
+                Button { studio.finish() } label: { Label("Imprimir", systemImage: "printer") }.buttonStyle(PolarButtonStyle(primary: true)).disabled(studio.busy || studio.project.placedCount == 0).helpTarget("top.imprimir")
             }
         }
         .buttonStyle(PolarButtonStyle()).controlSize(.regular)
@@ -214,11 +221,13 @@ private let cream = polarCream
             Text(studio.project.settingsForPage(studio.page).style.name).font(.system(size: 13, weight: .semibold))
             Text("\(studio.project.settings.capacity) \(studio.project.settings.capacity == 1 ? "foto" : "fotos") por hoja").font(.system(size: 11)).foregroundStyle(.secondary)
             Spacer()
+            HStack(spacing: Spacing.s) {
             Button { studio.navigate(studio.page - 1) } label: { Image(systemName: "chevron.left") }
                 .disabled(studio.page == 0).accessibilityLabel("Hoja anterior")
             Text("\(studio.page + 1) / \(studio.project.pageCount)").font(.system(size: 12, weight: .medium)).monospacedDigit()
             Button { studio.navigate(studio.page + 1) } label: { Image(systemName: "chevron.right") }
                 .disabled(studio.page + 1 == studio.project.pageCount).accessibilityLabel("Hoja siguiente")
+            }.helpTarget("hoja.paginas")
             Menu {
                 Button("Agregar hoja") { studio.addPage() }
                 Button("Vaciar esta hoja") { studio.clearPage() }
@@ -278,8 +287,9 @@ private let cream = polarCream
             .position(x: geo.size.width / 2, y: geo.size.height / 2)
         }
         .background(Color(nsColor: .unemphasizedSelectedContentBackgroundColor))
+        .helpTarget("hoja")
         .background(SheetNavigationKeys(go: { studio.navigate(studio.page + $0) },
-                                        canGo: { !studio.isInTransaction && NSEvent.pressedMouseButtons == 0 && !studio.editingTemplate && !studio.busy && !studio.dropTarget && !studio.batchSelecting && !studio.showingCrop && !studio.showingFinish && !studio.showingLibrary && studio.project.pageCount > 1 }).frame(width: 0, height: 0))
+                                        canGo: { !studio.isInTransaction && NSEvent.pressedMouseButtons == 0 && !studio.editingTemplate && !studio.busy && !studio.dropTarget && !studio.batchSelecting && !studio.showingCrop && !studio.showingFinish && !studio.showingLibrary && !studio.helpMode && studio.tourIndex == nil && !studio.showingHelp && studio.project.pageCount > 1 }).frame(width: 0, height: 0))
     }
 
     private var gallery: some View {
@@ -346,6 +356,7 @@ private let cream = polarCream
         }
         .padding(.horizontal, Spacing.l).padding(.vertical, Spacing.m)
         .background(studio.dropTarget ? ink.opacity(0.1) : polarSurface)
+        .helpTarget("panel.fotos")
         .onDrop(of: ["public.file-url"], isTargeted: $studio.dropTarget) { providers in
             let group = DispatchGroup(), lock = NSLock()
             var urls: [URL] = []
@@ -384,6 +395,7 @@ private let cream = polarCream
                     }
                 }.padding(.horizontal, Spacing.m).padding(.bottom, Spacing.l)
             }
+            .helpTarget(studio.inspectorTab == 3 ? "ctx" : HelpIds.panel(forTab: studio.inspectorTab))
         }.background(polarSurface)
     }
 
