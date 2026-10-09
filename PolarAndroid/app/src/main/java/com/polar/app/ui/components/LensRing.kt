@@ -36,7 +36,7 @@ fun LensRing(label: String, value: Double, range: ClosedFloatingPointRange<Doubl
     Column {
         Row(Modifier.fillMaxWidth()) {
             Text(label, modifier=Modifier.weight(1f).alignByBaseline(), style=MaterialTheme.typography.bodyMedium)
-            Text(valueText, modifier=Modifier.widthIn(min=64.dp).alignByBaseline(), color=ink, style=MaterialTheme.typography.bodyMedium)
+            Text(valueText, modifier=Modifier.widthIn(min=64.dp).alignByBaseline(), color=ink, style=MaterialTheme.typography.bodyMedium, textAlign=androidx.compose.ui.text.style.TextAlign.End)
         }
         Canvas(Modifier.fillMaxWidth().height(56.dp)
             .semantics {

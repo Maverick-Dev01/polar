@@ -140,7 +140,12 @@ fun CropScreen(state: EditorUiState,vm: EditorViewModel,container: AppContainer)
                 Box(Modifier.bringIntoViewRequester(backgroundRequester)) { com.polar.app.ui.editor.panels.BackgroundControls(state, vm, container) }
                 LensRing(stringResource(R.string.crop_zoom),placement.zoom,minimumZoom..4.0,String.format(Locale.ROOT,"%.1f×",placement.zoom),.1,{ v->vm.editSelectedPlacement { it.copy(zoom=v) } },vm::beginGesture,vm::endGesture)
                 val actions=listOf(stringResource(R.string.crop_rotate) to vm::rotateSelected,stringResource(R.string.crop_fill) to ::fill,stringResource(R.string.crop_fit) to ::fit,stringResource(R.string.crop_center) to {vm.editSelectedPlacement {it.copy(offsetX=0.0,offsetY=0.0)}},stringResource(R.string.crop_reset) to vm::resetSelectedPlacement)
-                LazyRow(horizontalArrangement=Arrangement.spacedBy(12.dp)) { items(actions.size) { i->val (label,action)=actions[i];OutlinedButton(onClick=action,modifier=Modifier.width(104.dp).heightIn(min=56.dp),contentPadding=PaddingValues(8.dp),shape=MaterialTheme.shapes.medium){Text(label,maxLines=2,textAlign=androidx.compose.ui.text.style.TextAlign.Center)} } }
+                actions.chunked(3).forEach { rowActions->
+                    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+                        rowActions.forEach { (label,action)->OutlinedButton(onClick=action,modifier=Modifier.weight(1f).heightIn(min=56.dp),contentPadding=PaddingValues(8.dp),shape=MaterialTheme.shapes.medium){Text(label,maxLines=2,textAlign=androidx.compose.ui.text.style.TextAlign.Center)} }
+                        repeat(3-rowActions.size) { Spacer(Modifier.weight(1f)) }
+                    }
+                }
                 TextButton(onClick={fine=!fine},modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(stringResource(R.string.crop_fine))}
                 if(fine) accessibilityActions.chunked(2).forEach { pair->Row(horizontalArrangement=Arrangement.spacedBy(12.dp)){pair.forEach{(label,action)->OutlinedButton(onClick=action,modifier=Modifier.weight(1f).heightIn(min=48.dp)){Text(label)}}} }
                 Text(stringResource(R.string.crop_gesture_hint),style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
